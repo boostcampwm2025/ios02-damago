@@ -116,6 +116,9 @@ xcuserdata
 !*.xcodeproj/xcshareddata/
 !*.xcodeproj/project.xcworkspace/
 !*.xcworkspace/contents.xcworkspacedata
+
+# Ensure xcuserdata inside project.xcworkspace is ignored
+*.xcodeproj/project.xcworkspace/xcuserdata/
 /*.gcno
 **/xcshareddata/WorkspaceSettings.xcsettings
 
