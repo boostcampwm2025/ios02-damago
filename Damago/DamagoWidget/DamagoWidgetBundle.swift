@@ -11,7 +11,6 @@ import SwiftUI
 @main
 struct DamagoWidgetBundle: WidgetBundle {
     var body: some Widget {
-        DamagoWidget()
         DamagoWidgetLiveActivity()
     }
 }
