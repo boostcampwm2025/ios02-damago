@@ -1,0 +1,177 @@
+# SwiftLint Configuration
+# Based on StyleShare Swift Style Guide
+
+excluded:
+
+# 비활성화할 규칙
+disabled_rules:
+  - todo # TODO 주석 허용 (대문자로 작성하는 컨벤션 있음)
+  - trailing_whitespace # 자동 수정 가능한 규칙
+  - function_body_length
+  - cyclomatic_complexity
+  - nesting
+  
+  
+# 활성화할 추가 규칙
+opt_in_rules:
+  # 네이밍 관련
+  - attributes # 속성은 함수와 타입에 대해 같은 줄 또는 전용 줄에 있어야 함
+  - closure_end_indentation # 클로저 끝 중괄호는 시작한 줄과 같은 들여쓰기를 가져야 함
+  - closure_spacing # 클로저 표현식은 각 중괄호 안에 단일 공백이 있어야 함
+  - collection_alignment # 컬렉션 리터럴의 모든 요소는 수직으로 정렬되어야 함
+  - contains_over_filter_count # filter(where:).count 대신 contains 사용
+  - contains_over_filter_is_empty # filter(where:).isEmpty 대신 contains 사용
+  - contains_over_first_not_nil # first(where:) != nil 대신 contains 사용
+  - contains_over_range_nil_comparison # range(of:) != nil 대신 contains 사용
+  - empty_count # count == 0 대신 isEmpty 사용
+  - empty_string # string == "" 대신 isEmpty 사용
+  - first_where # filter().first 대신 first(where:) 사용
+  - flatmap_over_map_reduce # map().reduce([], +) 대신 flatMap() 사용
+  - implicit_return # 클로저에서 암시적 리턴 선호
+  - joined_default_parameter # joined(separator: "") 대신 joined() 사용
+  - literal_expression_end_indentation # 리터럴 표현식 끝 들여쓰기
+  - lower_acl_than_parent # 자식의 접근 제어 수준은 부모보다 낮아야 함
+  - multiline_arguments # 함수 호출 인자는 같은 줄이거나 한 줄에 하나씩
+  - multiline_function_chains # 체인된 함수 호출은 같은 줄이거나 한 줄에 하나씩
+  - multiline_literal_brackets # 여러 줄 리터럴은 자체 줄에 괄호가 있어야 함
+  - multiline_parameters # 함수 매개변수는 같은 줄이거나 한 줄에 하나씩
+  - operator_usage_whitespace # 연산자는 단일 공백으로 둘러싸여야 함
+  - optional_enum_case_matching # 옵셔널 열거형 매칭 시 ? 사용
+  - prefer_self_type_over_type_of_self # type(of: self) 대신 Self 사용
+  - redundant_nil_coalescing # nil ?? nil 제거
+  - redundant_type_annotation # 중복된 타입 어노테이션 제거
+  - sorted_first_last # sorted().first 대신 min() 사용
+  - trailing_closure # 후행 클로저 사용 권장
+  - unneeded_parentheses_in_closure_argument # 클로저 인자의 불필요한 괄호 제거
+  - vertical_parameter_alignment_on_call # 함수 호출 시 매개변수 수직 정렬
+  - yoda_condition # 상수가 왼쪽에 오는 조건문 방지
+
+# 규칙 설정
+analyzer_rules:
+  - explicit_self # self 명시적 사용 강제
+
+# 라인 길이 설정
+line_length:
+  error: 150
+  ignores_function_declarations: false
+  ignores_comments: true
+  ignores_interpolated_strings: true
+  ignores_urls: true
+
+# 파일 길이 설정
+file_length:
+  error: 1000
+  ignore_comment_only_lines: true
+
+# 타입 이름 규칙 (UpperCamelCase)
+type_name:
+  min_length: 3
+  max_length:
+    warning: 50
+    error: 60
+  excluded:
+    - ID
+    - URL
+    - URI
+  validates_start_with_lowercase: false
+
+# 식별자 이름 규칙 (lowerCamelCase)
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 40
+    error: 60
+  excluded:
+    - id
+    - ID
+    - url
+    - URL
+    - uri
+    - URI
+    - x
+    - y
+    - z
+    - i
+    - j
+    - k
+  validates_start_with_lowercase: true
+
+# 함수 매개변수 갯수
+function_parameter_count:
+  warning: 7
+
+# 클로저 파라미터 위치
+closure_parameter_position:
+  severity: warning
+
+# 콜론 규칙 (오른쪽에만 공백)
+colon:
+  flexible_right_spacing: false
+  apply_to_dictionaries: true
+
+# 제어문 규칙 (조건문을 괄호로 감싸지 않음)
+control_statement:
+  severity: warning
+
+# 사용하지 않는 클로저 파라미터 (_로 표시)
+unused_closure_parameter:
+  severity: warning
+
+# 사용하지 않는 열거형 케이스
+unused_enumerated:
+  severity: warning
+
+# 수직 공백 규칙 (파일 끝 빈 줄)
+vertical_whitespace:
+  max_empty_lines: 1
+  severity: warning
+
+# 후행 공백 제거
+trailing_newline:
+  severity: warning
+
+# 연산자 공백 규칙
+function_name_whitespace:
+  severity: warning
+
+# Return 화살표 공백
+return_arrow_whitespace:
+  severity: warning
+
+# Switch case 정렬
+switch_case_alignment:
+  indented_cases: false
+
+# 문 위치 (같은 줄에 여러 문장 금지)
+statement_position:
+  statement_mode: default
+  severity: warning
+
+# 클래스 delegate 프로토콜은 weak로 선언
+class_delegate_protocol:
+  severity: warning
+
+# 닫는 괄호 규칙
+closing_brace:
+  severity: warning
+
+# 여는 괄호 규칙  
+opening_brace:
+  severity: warning
+
+# Array 및 Dictionary 축약 문법 사용
+syntactic_sugar:
+  severity: warning
+
+# 후행 세미콜론 금지
+trailing_semicolon:
+  severity: error
+
+# Void 리턴 규칙
+void_return:
+  severity: warning
+
+# Reporter 타입 (Xcode, json, csv, checkstyle, codeclimate, junit, html, emoji, sonarqube, markdown)
+reporter: xcode
