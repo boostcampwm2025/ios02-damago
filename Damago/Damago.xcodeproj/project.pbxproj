@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		29AA91C12EF18BBF0069F1F4 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 29AA91C02EF18BBF0069F1F4 /* Gifu */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		4B5FE2D42EF130B6005E31DA /* Damago.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Damago.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				29AA91C12EF18BBF0069F1F4 /* Gifu in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,6 +84,7 @@
 			);
 			name = Damago;
 			packageProductDependencies = (
+				29AA91C02EF18BBF0069F1F4 /* Gifu */,
 			);
 			productName = Damago;
 			productReference = 4B5FE2D42EF130B6005E31DA /* Damago.app */;
@@ -110,6 +116,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */,
+				29AA91BF2EF18BBF0069F1F4 /* XCRemoteSwiftPackageReference "Gifu" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4B5FE2D52EF130B6005E31DA /* Products */;
@@ -368,6 +375,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		29AA91BF2EF18BBF0069F1F4 /* XCRemoteSwiftPackageReference "Gifu" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kaishin/Gifu.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.1;
+			};
+		};
 		4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SimplyDanny/SwiftLintPlugins";
@@ -379,6 +394,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		29AA91C02EF18BBF0069F1F4 /* Gifu */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 29AA91BF2EF18BBF0069F1F4 /* XCRemoteSwiftPackageReference "Gifu" */;
+			productName = Gifu;
+		};
 		4B5FE4162EF139F6005E31DA /* SwiftLintBuildToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
