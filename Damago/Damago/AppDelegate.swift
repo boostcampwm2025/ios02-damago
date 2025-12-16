@@ -5,12 +5,13 @@
 //  Created by 김재영 on 12/16/25.
 //
 
-import UIKit
 import FirebaseCore
 import FirebaseMessaging
+import OSLog
+import UIKit
 
 @main
-class AppDelegate: UIResponder, UIApplicationDelegate {
+final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     /// 앱이 처음 실행될 때 호출되는 메소드입니다.
     /// Firebase 설정, 알림 권한 요청, Delegate 연결 등의 초기화 작업을 수행합니다.
@@ -29,7 +30,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // 3. 사용자에게 알림 권한 요청 (알림, 뱃지, 사운드)
         // -> 앱 최초 실행 시 "알림을 허용하시겠습니까?" 팝업이 뜹니다.
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { _, _ in }
+        Task {
+            do {
+                let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: authOptions)
+                SharedLogger.apns.info("알림 권한 허용 여부: \(granted)")
+            } catch {
+                SharedLogger.apns.error("알림 권한 요청 에러: \(error)")
+            }
+        }
 
         // 4. Apple Push Notification Service(APNs)에 기기 등록
         // -> Apple 서버로부터 디바이스 고유 토큰(Device Token)을 받기 위함
@@ -63,7 +71,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
-        print("✅ APNs token retrieved: \(deviceToken)")
+        SharedLogger.apns.info("✅ APNs token retrieved: \(deviceToken)")
 
         // 발급받은 APNs 토큰을 Firebase Messaging에 연결합니다.
         // 이 과정이 없으면 Firebase Console이나 API로 보낸 푸시가 기기에 도착하지 않습니다.
@@ -100,7 +108,7 @@ extension AppDelegate: MessagingDelegate {
     /// - Parameter fcmToken: **서버(Cloud Function/Firestore)에 저장해야 할 실제 주소 값**입니다.
     /// - Note: 앱을 지웠다 깔거나, 새 기기에서 로그인할 때 갱신될 수 있습니다.
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        print("🔥 Firebase registration token: \(String(describing: fcmToken))")
+        SharedLogger.apns.info("🔥 Firebase registration token: \(String(describing: fcmToken))")
 
         // TODO: 해당 delegate 호출시 서버에 fcm token 정보를 유저 정보와 함께 저장 혹은 업데이트해야 합니다.
         // 예: NetworkManager.shared.updateMyFCMToken(token: fcmToken!)

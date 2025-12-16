@@ -10,5 +10,5 @@ import OSLog
 enum SharedLogger {
     static var subSystem: String { Bundle.main.bundleIdentifier ?? "" }
 
-    static let someLogger = Logger(subsystem: subSystem, category: "some")
+    static let apns = Logger(subsystem: subSystem, category: "apnsLogger")
 }
