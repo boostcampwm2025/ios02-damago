@@ -157,6 +157,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4B0596532EF196EC00730D84 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				4B1E30302EF16EDC00EB96A1 /* DamagoWidget */,
@@ -270,6 +271,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4B0596532EF196EC00730D84 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 4B0596522EF196EC00730D84 /* SwiftLintBuildToolPlugin */;
+		};
 		4B1E303D2EF16EDD00EB96A1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
@@ -294,7 +299,7 @@
 				INFOPLIST_FILE = DamagoWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DamagoWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -325,7 +330,7 @@
 				INFOPLIST_FILE = DamagoWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DamagoWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -583,6 +588,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		4B0596522EF196EC00730D84 /* SwiftLintBuildToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
+			productName = "plugin:SwiftLintBuildToolPlugin";
+		};
 		4B5FE4162EF139F6005E31DA /* SwiftLintBuildToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
