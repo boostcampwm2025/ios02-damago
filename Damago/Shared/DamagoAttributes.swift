@@ -1,10 +1,19 @@
+//
+//  DamagoAttributes.swift
+//  Damago
+//
+//  Created by 김재영 on 12/16/25.
+//
+
 import ActivityKit
 
 struct DamagoAttributes: ActivityAttributes {
+    // MARK: - Dynamic State
     public struct ContentState: Codable, Hashable {
-        // Dynamic stateful properties about your activity go here!
-        var emoji: String
+        var petImageName: String
+        var statusImageName: String
     }
-    // Fixed non-changing properties about your activity go here!
-    var name: String
+
+    // MARK: - Static Data
+    var petName: String
 }

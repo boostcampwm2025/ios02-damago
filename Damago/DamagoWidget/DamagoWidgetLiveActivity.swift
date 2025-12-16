@@ -12,59 +12,63 @@ import SwiftUI
 struct DamagoWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: DamagoAttributes.self) { context in
-            // Lock screen/banner UI goes here
-            VStack {
-                Text("Hello \(context.state.emoji)")
-            }
-            .activityBackgroundTint(Color.cyan)
-            .activitySystemActionForegroundColor(Color.black)
-
+            LockScreenLiveActivityView(context: context)
         } dynamicIsland: { context in
             DynamicIsland {
-                // Expanded UI goes here.  Compose the expanded UI through
-                // various regions, like leading/trailing/center/bottom
-                DynamicIslandExpandedRegion(.leading) {
-                    Text("Leading")
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    Text("Trailing")
+                DynamicIslandExpandedRegion(.center) {
+                    Image(context.state.petImageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 60, height: 60)
+                        .clipShape(Circle())
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text("Bottom \(context.state.emoji)")
-                    // more content
+                    Button("콕 찌르기") {
+                        print("찔렸습니다.")
+                    }
                 }
             } compactLeading: {
-                Text("L")
+                Image(context.state.petImageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 26, height: 26)
+                    .clipShape(Rectangle())
             } compactTrailing: {
-                Text("T \(context.state.emoji)")
+                Image(context.state.statusImageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 26, height: 26)
+                    .clipShape(Circle())
             } minimal: {
-                Text(context.state.emoji)
+                Image(context.state.petImageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 26, height: 26)
+                    .clipShape(Rectangle())
             }
-            .widgetURL(URL(string: "http://www.apple.com"))
-            .keylineTint(Color.red)
         }
     }
 }
 
 extension DamagoAttributes {
     fileprivate static var preview: DamagoAttributes {
-        DamagoAttributes(name: "World")
+        DamagoAttributes(petName: "Base Pet")
     }
 }
 
 extension DamagoAttributes.ContentState {
-    fileprivate static var smiley: DamagoAttributes.ContentState {
-        DamagoAttributes.ContentState(emoji: "😀")
+    fileprivate static var base: DamagoAttributes.ContentState {
+        .init(petImageName: "PetBase", statusImageName: "BaseHeart")
      }
-     
-     fileprivate static var starEyes: DamagoAttributes.ContentState {
-         DamagoAttributes.ContentState(emoji: "🤩")
+
+     fileprivate static var hungry: DamagoAttributes.ContentState {
+         .init(petImageName: "PetHungry", statusImageName: "NeedFood")
      }
 }
 
 #Preview("Notification", as: .content, using: DamagoAttributes.preview) {
    DamagoWidgetLiveActivity()
 } contentStates: {
-    DamagoAttributes.ContentState.smiley
-    DamagoAttributes.ContentState.starEyes
+    DamagoAttributes.ContentState.base
+    DamagoAttributes.ContentState.hungry
 }
