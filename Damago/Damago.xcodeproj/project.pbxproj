@@ -51,6 +51,13 @@
 			);
 			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
 		};
+		4B1E304C2EF1700E00EB96A1 /* Exceptions for "Shared" folder in "DamagoWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				DamagoAttributes.swift,
+			);
+			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
+		};
 		4B5FE2E62EF130B7005E31DA /* Exceptions for "Damago" folder in "Damago" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -67,6 +74,14 @@
 				4B1E30432EF16EDD00EB96A1 /* Exceptions for "DamagoWidget" folder in "DamagoWidgetExtension" target */,
 			);
 			path = DamagoWidget;
+			sourceTree = "<group>";
+		};
+		4B1E304A2EF1700900EB96A1 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4B1E304C2EF1700E00EB96A1 /* Exceptions for "Shared" folder in "DamagoWidgetExtension" target */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		4B5FE2D62EF130B6005E31DA /* Damago */ = {
@@ -111,6 +126,7 @@
 		4B5FE2CB2EF130B6005E31DA = {
 			isa = PBXGroup;
 			children = (
+				4B1E304A2EF1700900EB96A1 /* Shared */,
 				4B5FE2D62EF130B6005E31DA /* Damago */,
 				4B1E30302EF16EDC00EB96A1 /* DamagoWidget */,
 				4B1E302B2EF16EDC00EB96A1 /* Frameworks */,
@@ -168,6 +184,7 @@
 				4B1E303D2EF16EDD00EB96A1 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				4B1E304A2EF1700900EB96A1 /* Shared */,
 				4B5FE2D62EF130B6005E31DA /* Damago */,
 			);
 			name = Damago;

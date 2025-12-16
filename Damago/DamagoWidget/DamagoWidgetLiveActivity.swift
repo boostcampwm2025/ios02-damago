@@ -9,19 +9,9 @@ import ActivityKit
 import WidgetKit
 import SwiftUI
 
-struct DamagoWidgetAttributes: ActivityAttributes {
-    public struct ContentState: Codable, Hashable {
-        // Dynamic stateful properties about your activity go here!
-        var emoji: String
-    }
-
-    // Fixed non-changing properties about your activity go here!
-    var name: String
-}
-
 struct DamagoWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: DamagoWidgetAttributes.self) { context in
+        ActivityConfiguration(for: DamagoAttributes.self) { context in
             // Lock screen/banner UI goes here
             VStack {
                 Text("Hello \(context.state.emoji)")
@@ -56,25 +46,25 @@ struct DamagoWidgetLiveActivity: Widget {
     }
 }
 
-extension DamagoWidgetAttributes {
-    fileprivate static var preview: DamagoWidgetAttributes {
-        DamagoWidgetAttributes(name: "World")
+extension DamagoAttributes {
+    fileprivate static var preview: DamagoAttributes {
+        DamagoAttributes(name: "World")
     }
 }
 
-extension DamagoWidgetAttributes.ContentState {
-    fileprivate static var smiley: DamagoWidgetAttributes.ContentState {
-        DamagoWidgetAttributes.ContentState(emoji: "😀")
+extension DamagoAttributes.ContentState {
+    fileprivate static var smiley: DamagoAttributes.ContentState {
+        DamagoAttributes.ContentState(emoji: "😀")
      }
      
-     fileprivate static var starEyes: DamagoWidgetAttributes.ContentState {
-         DamagoWidgetAttributes.ContentState(emoji: "🤩")
+     fileprivate static var starEyes: DamagoAttributes.ContentState {
+         DamagoAttributes.ContentState(emoji: "🤩")
      }
 }
 
-#Preview("Notification", as: .content, using: DamagoWidgetAttributes.preview) {
+#Preview("Notification", as: .content, using: DamagoAttributes.preview) {
    DamagoWidgetLiveActivity()
 } contentStates: {
-    DamagoWidgetAttributes.ContentState.smiley
-    DamagoWidgetAttributes.ContentState.starEyes
+    DamagoAttributes.ContentState.smiley
+    DamagoAttributes.ContentState.starEyes
 }
