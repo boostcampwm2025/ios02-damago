@@ -1,0 +1,14 @@
+//
+//  Logger+Shared.swift
+//  Damago
+//
+//  Created by 박현수 on 12/16/25.
+//
+
+import OSLog
+
+enum SharedLogger {
+    static var subSystem: String { Bundle.main.bundleIdentifier ?? "" }
+
+    static let someLogger = Logger(subsystem: subSystem, category: "some")
+}
