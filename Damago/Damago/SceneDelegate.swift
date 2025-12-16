@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import ActivityKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -21,5 +22,31 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = UINavigationController(rootViewController: ViewController())
         self.window = window
         window.makeKeyAndVisible()
+        
+        startLiveActivity()
+    }
+    
+    private func startLiveActivity() {
+        guard Activity<DamagoAttributes>.activities.isEmpty else { return }
+        
+        if ActivityAuthorizationInfo().areActivitiesEnabled {
+            let initialContentState = DamagoAttributes.ContentState(
+                petImageName: "PetBase",
+                statusImageName: "BaseHeart"
+            )
+            let activityAttributes = DamagoAttributes(petName: "Base Pet")
+            
+            do {
+                let _ = try Activity.request(
+                    attributes: activityAttributes,
+                    content: .init(
+                        state: initialContentState,
+                        staleDate: nil
+                    )
+                )
+            } catch {
+                print("Error requesting activity: \(error.localizedDescription)")
+            }
+        }
     }
 }
