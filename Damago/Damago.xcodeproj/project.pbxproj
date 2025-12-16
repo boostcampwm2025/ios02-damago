@@ -6,6 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		DF2969722EF1564B0096DB9E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969712EF1564B0096DB9E /* FirebaseAuth */; };
+		DF2969742EF1564B0096DB9E /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969732EF1564B0096DB9E /* FirebaseCore */; };
+		DF2969762EF1564B0096DB9E /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969752EF1564B0096DB9E /* FirebaseFirestore */; };
+		DF2969782EF1564B0096DB9E /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969772EF1564B0096DB9E /* FirebaseFunctions */; };
+		DF29697A2EF1564B0096DB9E /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969792EF1564B0096DB9E /* FirebaseMessaging */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		4B5FE2D42EF130B6005E31DA /* Damago.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Damago.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +44,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DF2969742EF1564B0096DB9E /* FirebaseCore in Frameworks */,
+				DF2969722EF1564B0096DB9E /* FirebaseAuth in Frameworks */,
+				DF29697A2EF1564B0096DB9E /* FirebaseMessaging in Frameworks */,
+				DF2969762EF1564B0096DB9E /* FirebaseFirestore in Frameworks */,
+				DF2969782EF1564B0096DB9E /* FirebaseFunctions in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,6 +92,11 @@
 			);
 			name = Damago;
 			packageProductDependencies = (
+				DF2969712EF1564B0096DB9E /* FirebaseAuth */,
+				DF2969732EF1564B0096DB9E /* FirebaseCore */,
+				DF2969752EF1564B0096DB9E /* FirebaseFirestore */,
+				DF2969772EF1564B0096DB9E /* FirebaseFunctions */,
+				DF2969792EF1564B0096DB9E /* FirebaseMessaging */,
 			);
 			productName = Damago;
 			productReference = 4B5FE2D42EF130B6005E31DA /* Damago.app */;
@@ -110,6 +128,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */,
+				DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4B5FE2D52EF130B6005E31DA /* Products */;
@@ -376,6 +395,14 @@
 				minimumVersion = 0.62.2;
 			};
 		};
+		DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.7.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -383,6 +410,31 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
 			productName = "plugin:SwiftLintBuildToolPlugin";
+		};
+		DF2969712EF1564B0096DB9E /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		DF2969732EF1564B0096DB9E /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		DF2969752EF1564B0096DB9E /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		DF2969772EF1564B0096DB9E /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
+		};
+		DF2969792EF1564B0096DB9E /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
