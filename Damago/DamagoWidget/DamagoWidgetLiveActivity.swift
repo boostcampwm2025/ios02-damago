@@ -16,11 +16,8 @@ struct DamagoWidgetLiveActivity: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.center) {
-                    Image(context.state.petImageName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 60, height: 60)
-                        .clipShape(Circle())
+                    DynamicIslandIconImage(for: context.state.petImageName, size: 60)
+                        .clipShape(Rectangle())
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     Button("콕 찌르기") {
@@ -28,22 +25,13 @@ struct DamagoWidgetLiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                Image(context.state.petImageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 26, height: 26)
+                DynamicIslandIconImage(for: context.state.petImageName, size: 26)
                     .clipShape(Rectangle())
             } compactTrailing: {
-                Image(context.state.statusImageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 26, height: 26)
+                DynamicIslandIconImage(for: context.state.statusImageName, size: 26)
                     .clipShape(Circle())
             } minimal: {
-                Image(context.state.petImageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 26, height: 26)
+                DynamicIslandIconImage(for: context.state.petImageName, size: 26)
                     .clipShape(Rectangle())
             }
         }
