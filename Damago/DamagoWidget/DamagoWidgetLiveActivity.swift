@@ -48,7 +48,7 @@ extension DamagoAttributes.ContentState {
     fileprivate static var base: DamagoAttributes.ContentState {
         .init(characterName: "Teddy", isHungry: false, statusMessage: "우리가 함께 키우는 작은 행복 🍀")
     }
-    
+
     fileprivate static var hungry: DamagoAttributes.ContentState {
         .init(characterName: "Teddy", isHungry: true, statusMessage: "우리가 함께 키우는 작은 행복 🍀")
     }
