@@ -110,7 +110,52 @@ extension AppDelegate: MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         SharedLogger.apns.info("🔥 Firebase registration token: \(String(describing: fcmToken))")
 
+        Task {
+            do {
+                guard let fcmToken: String = fcmToken else { return }
+                let code = try await generateFirebaseCode(fcmToken)
+                print(code)
+            } catch {
+               // TODO: 전파된 Error 처리
+            }
+        }
         // TODO: 해당 delegate 호출시 서버에 fcm token 정보를 유저 정보와 함께 저장 혹은 업데이트해야 합니다.
         // 예: NetworkManager.shared.updateMyFCMToken(token: fcmToken!)
     }
+
+    private func generateFirebaseCode(_ fcmToken: String) async throws -> String {
+        guard let url = URL(string: "https://generate-code-wrjwddcv2q-uc.a.run.app") else {
+            // TODO: Error로 교체
+            return ""
+        }
+        print("시작")
+        print(fcmToken)
+        var request = URLRequest(url: url)
+        let body = ["fcmToken": fcmToken]
+        request.httpMethod = "POST"
+        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        print("받아옴")
+        guard let httpResponse = response as? HTTPURLResponse else {
+            return "response 변환 실패"
+        }
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            // TODO: Error로 교체
+            let bodyString = String(data: data, encoding: .utf8) ?? "알 수 없는 data"
+            print(bodyString)
+            return "응답에 문제 있음\(httpResponse.statusCode)"
+        }
+        let codeResponse = try JSONDecoder().decode(
+            CodeResponse.self,
+            from: data
+        ).code
+
+        return codeResponse
+    }
+}
+
+private struct CodeResponse: Decodable {
+    let code: String
 }
