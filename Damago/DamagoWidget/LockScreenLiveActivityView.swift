@@ -15,14 +15,37 @@ struct LockScreenLiveActivityView: View {
     var body: some View {
         ZStack {
             if isLuminanceReduced {
-                Image(context.state.petImageName)
-                    .saturation(0)
-                    .opacity(0.6)
+                content.saturation(0).opacity(0.6)
             } else {
-                Image(context.state.petImageName)
+                content
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.black.opacity(0.8))
+    }
+}
+
+private extension LockScreenLiveActivityView {
+    var content: some View {
+        HStack(spacing: 16) {
+            Image(context.state.largeImageName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 80, height: 80)
+            VStack(alignment: .leading) {
+                Text("다마고")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.orange)
+
+                /// 추후 동적으로 문구 변경
+                /// 예시: "우리의 사랑이 이만큼 자랐어요! 🌱",
+                /// "[애칭]님의 사랑으로 배부르는 중 💕",
+                /// "꼬르륵... 밥 먹을 시간이에요! 🍚"
+                Text(context.state.statusMessage)
+                    .font(.body)
+                    .foregroundColor(.white)
+            }
+        }
     }
 }

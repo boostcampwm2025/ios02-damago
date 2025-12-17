@@ -40,8 +40,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
               ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         
         let initialContentState = DamagoAttributes.ContentState(
-            petImageName: "PetBase",
-            statusImageName: "BaseHeart"
+            characterName: "Teddy",
+            isHungry: false,
+            statusMessage: "우리가 함께 키우는 작은 행복 🍀"
         )
         let activityAttributes = DamagoAttributes(petName: "Base Pet")
         

@@ -10,8 +10,23 @@ import ActivityKit
 struct DamagoAttributes: ActivityAttributes {
     // MARK: - Dynamic State
     public struct ContentState: Codable, Hashable {
-        var petImageName: String
-        var statusImageName: String
+        var characterName: String
+        var isHungry: Bool
+        var statusMessage: String
+
+        var largeImageName: String {
+            let stateName = isHungry ? "hungry" : "base"
+            return "\(characterName)/\(stateName)"
+        }
+
+        var iconImageName: String {
+            let stateName = isHungry ? "iconHungry" : "iconBase"
+            return "\(characterName)/\(stateName)"
+        }
+
+        var statusImageName: String {
+            isHungry ? "NeedFood" : "BaseHeart"
+        }
     }
 
     // MARK: - Static Data
