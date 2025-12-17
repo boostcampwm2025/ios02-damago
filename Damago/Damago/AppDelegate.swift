@@ -71,7 +71,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
-        SharedLogger.apns.info("✅ APNs token retrieved: \(deviceToken)")
+        SharedLogger.apns.info("✅ APNs token retrieved: \(deviceToken.map { String(format: "%02.2hhx", $0) }.joined())")
 
         // 발급받은 APNs 토큰을 Firebase Messaging에 연결합니다.
         // 이 과정이 없으면 Firebase Console이나 API로 보낸 푸시가 기기에 도착하지 않습니다.
