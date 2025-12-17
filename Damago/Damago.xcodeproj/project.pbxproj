@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		29AA91C12EF18BBF0069F1F4 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 29AA91C02EF18BBF0069F1F4 /* Gifu */; };
-/* End PBXBuildFile section */
-
 		4B1E302D2EF16EDC00EB96A1 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B1E302C2EF16EDC00EB96A1 /* WidgetKit.framework */; };
 		4B1E302F2EF16EDC00EB96A1 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B1E302E2EF16EDC00EB96A1 /* SwiftUI.framework */; };
 		4B1E303E2EF16EDD00EB96A1 /* DamagoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -632,6 +630,7 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 29AA91BF2EF18BBF0069F1F4 /* XCRemoteSwiftPackageReference "Gifu" */;
 			productName = Gifu;
+        };
 		4B0596522EF196EC00730D84 /* SwiftLintBuildToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
