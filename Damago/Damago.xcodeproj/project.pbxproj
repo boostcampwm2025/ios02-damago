@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4B1E302D2EF16EDC00EB96A1 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B1E302C2EF16EDC00EB96A1 /* WidgetKit.framework */; };
+		4B1E302F2EF16EDC00EB96A1 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B1E302E2EF16EDC00EB96A1 /* SwiftUI.framework */; };
+		4B1E303E2EF16EDD00EB96A1 /* DamagoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DF2969722EF1564B0096DB9E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969712EF1564B0096DB9E /* FirebaseAuth */; };
 		DF2969742EF1564B0096DB9E /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969732EF1564B0096DB9E /* FirebaseCore */; };
 		DF2969762EF1564B0096DB9E /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969752EF1564B0096DB9E /* FirebaseFirestore */; };
@@ -14,11 +17,52 @@
 		DF29697A2EF1564B0096DB9E /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969792EF1564B0096DB9E /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		4B1E303C2EF16EDD00EB96A1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4B5FE2CC2EF130B6005E31DA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4B1E30292EF16EDC00EB96A1;
+			remoteInfo = DamagoWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4B1E303F2EF16EDD00EB96A1 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				4B1E303E2EF16EDD00EB96A1 /* DamagoWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DamagoWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4B1E302C2EF16EDC00EB96A1 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		4B1E302E2EF16EDC00EB96A1 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		4B5FE2D42EF130B6005E31DA /* Damago.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Damago.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4B1E30432EF16EDD00EB96A1 /* Exceptions for "DamagoWidget" folder in "DamagoWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
+		};
+		4B1E304C2EF1700E00EB96A1 /* Exceptions for "Shared" folder in "DamagoWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				DamagoAttributes.swift,
+			);
+			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
+		};
 		4B5FE2E62EF130B7005E31DA /* Exceptions for "Damago" folder in "Damago" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -29,6 +73,22 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		4B1E30302EF16EDC00EB96A1 /* DamagoWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4B1E30432EF16EDD00EB96A1 /* Exceptions for "DamagoWidget" folder in "DamagoWidgetExtension" target */,
+			);
+			path = DamagoWidget;
+			sourceTree = "<group>";
+		};
+		4B1E304A2EF1700900EB96A1 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4B1E304C2EF1700E00EB96A1 /* Exceptions for "Shared" folder in "DamagoWidgetExtension" target */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		4B5FE2D62EF130B6005E31DA /* Damago */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -40,6 +100,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4B1E30272EF16EDC00EB96A1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B1E302F2EF16EDC00EB96A1 /* SwiftUI.framework in Frameworks */,
+				4B1E302D2EF16EDC00EB96A1 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4B5FE2D12EF130B6005E31DA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -55,10 +124,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4B1E302B2EF16EDC00EB96A1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4B1E302C2EF16EDC00EB96A1 /* WidgetKit.framework */,
+				4B1E302E2EF16EDC00EB96A1 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		4B5FE2CB2EF130B6005E31DA = {
 			isa = PBXGroup;
 			children = (
+				4B1E304A2EF1700900EB96A1 /* Shared */,
 				4B5FE2D62EF130B6005E31DA /* Damago */,
+				4B1E30302EF16EDC00EB96A1 /* DamagoWidget */,
+				4B1E302B2EF16EDC00EB96A1 /* Frameworks */,
 				4B5FE2D52EF130B6005E31DA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -67,6 +148,7 @@
 			isa = PBXGroup;
 			children = (
 				4B5FE2D42EF130B6005E31DA /* Damago.app */,
+				4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -74,6 +156,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4B1E30422EF16EDD00EB96A1 /* Build configuration list for PBXNativeTarget "DamagoWidgetExtension" */;
+			buildPhases = (
+				4B1E30262EF16EDC00EB96A1 /* Sources */,
+				4B1E30272EF16EDC00EB96A1 /* Frameworks */,
+				4B1E30282EF16EDC00EB96A1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4B0596532EF196EC00730D84 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4B1E30302EF16EDC00EB96A1 /* DamagoWidget */,
+			);
+			name = DamagoWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = DamagoWidgetExtension;
+			productReference = 4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		4B5FE2D32EF130B6005E31DA /* Damago */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4B5FE2E72EF130B7005E31DA /* Build configuration list for PBXNativeTarget "Damago" */;
@@ -81,13 +186,16 @@
 				4B5FE2D02EF130B6005E31DA /* Sources */,
 				4B5FE2D12EF130B6005E31DA /* Frameworks */,
 				4B5FE2D22EF130B6005E31DA /* Resources */,
+				4B1E303F2EF16EDD00EB96A1 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				4B5FE4172EF139F6005E31DA /* PBXTargetDependency */,
+				4B1E303D2EF16EDD00EB96A1 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				4B1E304A2EF1700900EB96A1 /* Shared */,
 				4B5FE2D62EF130B6005E31DA /* Damago */,
 			);
 			name = Damago;
@@ -112,6 +220,9 @@
 				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
+					4B1E30292EF16EDC00EB96A1 = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
 					4B5FE2D32EF130B6005E31DA = {
 						CreatedOnToolsVersion = 26.1.1;
 					};
@@ -136,11 +247,19 @@
 			projectRoot = "";
 			targets = (
 				4B5FE2D32EF130B6005E31DA /* Damago */,
+				4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		4B1E30282EF16EDC00EB96A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4B5FE2D22EF130B6005E31DA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -151,6 +270,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4B1E30262EF16EDC00EB96A1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4B5FE2D02EF130B6005E31DA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -161,6 +287,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4B0596532EF196EC00730D84 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 4B0596522EF196EC00730D84 /* SwiftLintBuildToolPlugin */;
+		};
+		4B1E303D2EF16EDD00EB96A1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
+			targetProxy = 4B1E303C2EF16EDD00EB96A1 /* PBXContainerItemProxy */;
+		};
 		4B5FE4172EF139F6005E31DA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = 4B5FE4162EF139F6005E31DA /* SwiftLintBuildToolPlugin */;
@@ -168,6 +303,68 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		4B1E30402EF16EDD00EB96A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B3PWYBKFUK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DamagoWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DamagoWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = kr.codesquad.boostcamp10.Damago.DamagoWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4B1E30412EF16EDD00EB96A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B3PWYBKFUK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DamagoWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DamagoWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = kr.codesquad.boostcamp10.Damago.DamagoWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		4B5FE2E82EF130B7005E31DA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -368,6 +565,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4B1E30422EF16EDD00EB96A1 /* Build configuration list for PBXNativeTarget "DamagoWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4B1E30402EF16EDD00EB96A1 /* Debug */,
+				4B1E30412EF16EDD00EB96A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		4B5FE2CF2EF130B6005E31DA /* Build configuration list for PBXProject "Damago" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -408,6 +614,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		4B0596522EF196EC00730D84 /* SwiftLintBuildToolPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
+			productName = "plugin:SwiftLintBuildToolPlugin";
+		};
 		4B5FE4162EF139F6005E31DA /* SwiftLintBuildToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
