@@ -39,10 +39,8 @@ final class CodeConnectionViewController: UIViewController {
             guard let self else { return }
 
             do {
-                let code = try await self.viewModel.resolveMyCode()
-                await MainActor.run {
-                    self.codeConnectionView.setMyCode(code)
-                }
+                guard let code = try await self.viewModel.resolveMyCode() else { return }
+                await MainActor.run { self.codeConnectionView.setMyCode(code) }
             } catch {
                 // Code를 발급 받지 못했을 때 처리
             }
