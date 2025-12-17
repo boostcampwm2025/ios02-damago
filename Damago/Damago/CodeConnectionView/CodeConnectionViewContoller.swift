@@ -23,16 +23,22 @@ final class CodeConnectionViewController: UIViewController {
     override func loadView() {
         view = codeConnectionView
     }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        viewModel.onConnected = { [weak self] in
+        viewModel.onConnected = { [weak self] isSuccessed in
             guard let self else { return }
-            let homeViewController = ViewController()
-            self.navigationController?
-                .setViewControllers([homeViewController], animated: true)
+            if isSuccessed {
+                let homeViewController = ViewController()
+                self.navigationController?
+                    .setViewControllers([homeViewController], animated: true)
+            } else {
+                codeConnectionView.errorMessageLabel.text = "커플 연결에 실패했습니다."
+            }
         }
 
+        codeConnectionView.codeTextField.delegate = self
         codeConnectionView.onConnectTap = viewModel.connectCouple
 
         Task { [weak self] in
@@ -45,5 +51,16 @@ final class CodeConnectionViewController: UIViewController {
                 // Code를 발급 받지 못했을 때 처리
             }
         }
+    }
+}
+
+extension CodeConnectionViewController: UITextFieldDelegate {
+    func textFieldDidEndEditing(_ textFiteld: UITextField) {
+        viewModel.targetCode = textFiteld.text
+    }
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
 }

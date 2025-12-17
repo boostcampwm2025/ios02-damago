@@ -10,25 +10,29 @@ import UIKit
 
 final class CodeConnectionViewModel {
     var udid: String? { UIDevice.current.identifierForVendor?.uuidString }
-    private let code: String = "exapleCode_123"
-    var onConnected: (() -> Void)?
-
-    func connectCouple(pairCode: String) async throws {
-        // 입력받은 코드를 통해 cloud functions에 연결 요청
-        // 연결 성공 시 home 화면으로 이동
-        await MainActor.run { [weak self] in
-            self?.onConnected?()
-        }
-    }
+    var code: String = ""
+    var targetCode: String?
+    var onConnected: ((Bool) -> Void)?
 
     func resolveMyCode() async throws -> String? {
         guard let fcmToken = await waitForFCMToken(), // FCM 토큰 가져오기
               let newCode = try await requestGenerateCode(fcmToken: fcmToken) // API 호출하여 코드 생성
         else { return nil }
-
+        self.code = newCode
         return newCode
     }
+
+    func connectCouple(pairCode: String) async throws {
+        do {
+            try await requestConnectCouple()
+            await MainActor.run { [weak self] in self?.onConnected?(true) }
+        } catch {
+            await MainActor.run { [weak self] in self?.onConnected?(false) }
+        }
+    }
 }
+
+// MARK: - 코드 생성
 
 extension CodeConnectionViewModel {
     private func waitForFCMToken() async -> String? {
@@ -55,9 +59,44 @@ extension CodeConnectionViewModel {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode)
-        else { return nil }
+        guard let httpResponse = response as? HTTPURLResponse else { throw NetworkError.invalidResponse }
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidStatusCode(
+                httpResponse.statusCode,
+                String(data: data, encoding: .utf8) ?? "invalid data"
+            )
+        }
 
         return String(data: data, encoding: .utf8)
     }
+}
+
+// MARK: - 커플 연결
+
+extension CodeConnectionViewModel {
+    private func requestConnectCouple() async throws {
+        guard let url = URL(string: "https://connect-couple-wrjwddcv2q-uc.a.run.app") else { return }
+
+        var request = URLRequest(url: url)
+        let body = ["my_code": code, "target_code": targetCode]
+
+        request.httpMethod = "POST"
+        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else { throw NetworkError.invalidResponse }
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw NetworkError.invalidStatusCode(
+                httpResponse.statusCode,
+                String(data: data, encoding: .utf8) ?? "invalid data"
+            )
+        }
+    }
+}
+
+enum NetworkError: Error {
+    case invalidStatusCode(Int, String)
+    case invalidResponse
 }

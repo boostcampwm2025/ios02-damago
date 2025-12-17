@@ -48,7 +48,7 @@ final class CodeConnectionView: UIView {
         return label
     }()
 
-    private let codeTextField: UITextField = {
+    let codeTextField: UITextField = {
         let textField = UITextField()
         textField.borderStyle = .roundedRect
         textField.placeholder = "Code"
@@ -66,6 +66,14 @@ final class CodeConnectionView: UIView {
 
         let button = UIButton(configuration: configuration)
         return button
+    }()
+
+    let errorMessageLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .systemRed
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        return label
     }()
 
     private let contentStackView: UIStackView = {
@@ -126,6 +134,7 @@ final class CodeConnectionView: UIView {
         contentStackView.addArrangedSubview(instructionLabel)
         contentStackView.addArrangedSubview(codeTextField)
         contentStackView.addArrangedSubview(connectButton)
+        contentStackView.addArrangedSubview(errorMessageLabel)
 
         myCodeTitleLabel.textAlignment = .center
         codeTextField.heightAnchor.constraint(equalToConstant: 44).isActive = true
