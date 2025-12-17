@@ -27,26 +27,25 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
     
     private func startLiveActivity() {
-        guard Activity<DamagoAttributes>.activities.isEmpty else { return }
+        guard Activity<DamagoAttributes>.activities.isEmpty,
+              ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         
-        if ActivityAuthorizationInfo().areActivitiesEnabled {
-            let initialContentState = DamagoAttributes.ContentState(
-                petImageName: "PetBase",
-                statusImageName: "BaseHeart"
-            )
-            let activityAttributes = DamagoAttributes(petName: "Base Pet")
-            
-            do {
-                let _ = try Activity.request(
-                    attributes: activityAttributes,
-                    content: .init(
-                        state: initialContentState,
-                        staleDate: nil
-                    )
+        let initialContentState = DamagoAttributes.ContentState(
+            petImageName: "PetBase",
+            statusImageName: "BaseHeart"
+        )
+        let activityAttributes = DamagoAttributes(petName: "Base Pet")
+        
+        do {
+            _ = try Activity.request(
+                attributes: activityAttributes,
+                content: .init(
+                    state: initialContentState,
+                    staleDate: nil
                 )
-            } catch {
-                print("Error requesting activity: \(error.localizedDescription)")
-            }
+            )
+        } catch {
+            print("Error requesting activity: \(error.localizedDescription)")
         }
     }
 }
