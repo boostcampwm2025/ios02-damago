@@ -10,7 +10,7 @@
 		4B1E302D2EF16EDC00EB96A1 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B1E302C2EF16EDC00EB96A1 /* WidgetKit.framework */; };
 		4B1E302F2EF16EDC00EB96A1 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B1E302E2EF16EDC00EB96A1 /* SwiftUI.framework */; };
 		4B1E303E2EF16EDD00EB96A1 /* DamagoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-    DF2969722EF1564B0096DB9E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969712EF1564B0096DB9E /* FirebaseAuth */; };
+		DF2969722EF1564B0096DB9E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969712EF1564B0096DB9E /* FirebaseAuth */; };
 		DF2969742EF1564B0096DB9E /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969732EF1564B0096DB9E /* FirebaseCore */; };
 		DF2969762EF1564B0096DB9E /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969752EF1564B0096DB9E /* FirebaseFirestore */; };
 		DF2969782EF1564B0096DB9E /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969772EF1564B0096DB9E /* FirebaseFunctions */; };

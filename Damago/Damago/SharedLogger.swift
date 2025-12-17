@@ -11,4 +11,5 @@ enum SharedLogger {
     static var subSystem: String { Bundle.main.bundleIdentifier ?? "" }
 
     static let apns = Logger(subsystem: subSystem, category: "apnsLogger")
+    static let dynamicIsland = Logger(subsystem: subSystem, category: "dynamicIslandLogger")
 }

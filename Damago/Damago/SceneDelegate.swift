@@ -7,6 +7,7 @@
 
 import UIKit
 import ActivityKit
+import OSLog
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -45,7 +46,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 )
             )
         } catch {
-            print("Error requesting activity: \(error.localizedDescription)")
+            SharedLogger.dynamicIsland.error("Error requesting activity: \(error)")
         }
     }
 }
