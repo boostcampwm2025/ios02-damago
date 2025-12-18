@@ -59,15 +59,15 @@ final class LiveActivityManager {
     
     func startMonitoringPushToStartToken() {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-            
-if #available(iOS 17.2, *) {
+
+        if #available(iOS 17.2, *) {
             Task {
                 for await pushToken in Activity<DamagoAttributes>.pushToStartTokenUpdates {
                     let tokenString = pushToken.map { String(format: "%02x", $0) }.joined()
                     self.sendStartTokenToServer(token: tokenString)
                 }
             }
-}
+        }
     }
 
     private func startActivity(attributes: DamagoAttributes, contentState: DamagoAttributes.ContentState) {
