@@ -30,6 +30,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = navigationViewController
         self.window = window
         window.makeKeyAndVisible()
-        
+    }
+
+    // 사용자가 Foreground에 돌아왔을 때 서버와 동기화
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        LiveActivityManager.shared.synchronizeActivity()
     }
 }

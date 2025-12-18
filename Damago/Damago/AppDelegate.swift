@@ -47,6 +47,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // -> FCM 토큰 생성 및 갱신 이벤트를 감지하기 위함
         Messaging.messaging().delegate = self
 
+        // 라이브 액티비티 원격 실행을 위한 토큰 감시
+        LiveActivityManager.shared.startMonitoringPushToStartToken()
         return true
     }
 
