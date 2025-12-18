@@ -1,0 +1,4 @@
+firebase_functions~=0.1.0
+nanoid
+firebase-admin
+google-cloud-firestore

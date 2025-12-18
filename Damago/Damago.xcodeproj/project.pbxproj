@@ -630,7 +630,7 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 29AA91BF2EF18BBF0069F1F4 /* XCRemoteSwiftPackageReference "Gifu" */;
 			productName = Gifu;
-        };
+		};
 		4B0596522EF196EC00730D84 /* SwiftLintBuildToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
