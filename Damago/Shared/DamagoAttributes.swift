@@ -31,4 +31,5 @@ struct DamagoAttributes: ActivityAttributes {
 
     // MARK: - Static Data
     var petName: String
+    var udid: String
 }
