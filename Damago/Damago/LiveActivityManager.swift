@@ -19,6 +19,8 @@ struct ActivityData {
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
 
+    private var monitoredActivityIDs: Set<String> = []
+
     func synchronizeActivity() {
         fetchActivityData { activityData in
             guard let activityData else {
@@ -43,6 +45,11 @@ final class LiveActivityManager {
             }
         }
     }
+    
+    func startMonitoring() {
+        startMonitoringPushToStartToken()
+        monitoringLiveActivities()
+    }
 
     private func fetchActivityData(completion: @escaping (ActivityData?) -> Void) {
         // TODO: 서버의 데이터로부터 가져오도록 수정
@@ -57,7 +64,7 @@ final class LiveActivityManager {
         }
     }
     
-    func startMonitoringPushToStartToken() {
+    private func startMonitoringPushToStartToken() {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
 
         if #available(iOS 17.2, *) {
@@ -66,6 +73,20 @@ final class LiveActivityManager {
                     let tokenString = pushToken.map { String(format: "%02x", $0) }.joined()
                     self.sendStartTokenToServer(token: tokenString)
                 }
+            }
+        }
+    }
+    
+    private func monitoringLiveActivities() {
+        Task {
+            // 이미 실행 중인 액티비티 감시
+            for activity in Activity<DamagoAttributes>.activities {
+                monitorPushToken(activity)
+            }
+            
+            // 앞으로 생기거나 시스템에 의해 생성되는 액티비티 감시
+            for await activity in Activity<DamagoAttributes>.activityUpdates {
+                monitorPushToken(activity)
             }
         }
     }
@@ -80,12 +101,7 @@ final class LiveActivityManager {
                 pushType: .token
             )
             
-            Task {
-                for await pushToken in activity.pushTokenUpdates {
-                    let tokenString = pushToken.map { String(format: "%02x", $0) }.joined()
-                    self.sendUpdateTokenToServer(token: tokenString)
-                }
-            }
+            monitorPushToken(activity)
         } catch {
             SharedLogger.liveActivityManger.error("Failed to request Live Activity. Error: \(error)")
         }
@@ -108,5 +124,19 @@ final class LiveActivityManager {
     private func sendUpdateTokenToServer(token: String) {
         print("🤝 서버로 전송할 업데이트용 Push Token: \(token)")
         // TODO: 서버와 통신하여 이 토큰을 저장하는 네트워크 코드 구현
+    }
+    
+    private func monitorPushToken(_ activity: Activity<DamagoAttributes>) {
+        guard !monitoredActivityIDs.contains(activity.id) else { return }
+        
+        monitoredActivityIDs.insert(activity.id)
+        
+        Task {
+            for await pushToken in activity.pushTokenUpdates {
+                let tokenString = pushToken.map { String(format: "%02x", $0) }.joined()
+                self.sendUpdateTokenToServer(token: tokenString)
+            }
+            monitoredActivityIDs.remove(activity.id)
+        }
     }
 }

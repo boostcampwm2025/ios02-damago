@@ -48,7 +48,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         Messaging.messaging().delegate = self
 
         // 라이브 액티비티 원격 실행을 위한 토큰 감시
-        LiveActivityManager.shared.startMonitoringPushToStartToken()
+        LiveActivityManager.shared.startMonitoring()
         return true
     }
 
