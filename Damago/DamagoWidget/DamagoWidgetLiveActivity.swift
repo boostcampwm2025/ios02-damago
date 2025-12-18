@@ -16,7 +16,7 @@ struct DamagoWidgetLiveActivity: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.center) {
-                    DynamicIslandIconImage(for: context.state.petImageName, size: 60)
+                    DynamicIslandIconImage(for: context.state.largeImageName, size: 60)
                         .clipShape(Rectangle())
                 }
                 DynamicIslandExpandedRegion(.bottom) {
@@ -25,13 +25,13 @@ struct DamagoWidgetLiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                DynamicIslandIconImage(for: context.state.petImageName, size: 26)
+                DynamicIslandIconImage(for: context.state.iconImageName, size: 26)
                     .clipShape(Rectangle())
             } compactTrailing: {
                 DynamicIslandIconImage(for: context.state.statusImageName, size: 26)
                     .clipShape(Circle())
             } minimal: {
-                DynamicIslandIconImage(for: context.state.petImageName, size: 26)
+                DynamicIslandIconImage(for: context.state.iconImageName, size: 26)
                     .clipShape(Rectangle())
             }
         }
@@ -46,12 +46,12 @@ extension DamagoAttributes {
 
 extension DamagoAttributes.ContentState {
     fileprivate static var base: DamagoAttributes.ContentState {
-        .init(petImageName: "PetBase", statusImageName: "BaseHeart")
-     }
+        .init(characterName: "Teddy", isHungry: false, statusMessage: "우리가 함께 키우는 작은 행복 🍀")
+    }
 
-     fileprivate static var hungry: DamagoAttributes.ContentState {
-         .init(petImageName: "PetHungry", statusImageName: "NeedFood")
-     }
+    fileprivate static var hungry: DamagoAttributes.ContentState {
+        .init(characterName: "Teddy", isHungry: true, statusMessage: "우리가 함께 키우는 작은 행복 🍀")
+    }
 }
 
 #Preview("Notification", as: .content, using: DamagoAttributes.preview) {
