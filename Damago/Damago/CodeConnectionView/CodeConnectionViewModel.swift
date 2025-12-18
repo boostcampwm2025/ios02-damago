@@ -9,7 +9,6 @@ import Foundation
 import UIKit
 
 final class CodeConnectionViewModel {
-    var udid: String? { UIDevice.current.identifierForVendor?.uuidString }
     var code: String = ""
     var onConnected: ((Bool) -> Void)?
 
@@ -34,6 +33,8 @@ final class CodeConnectionViewModel {
 // MARK: - 코드 생성
 
 extension CodeConnectionViewModel {
+    var udid: String? { UIDevice.current.identifierForVendor?.uuidString }
+
     private func waitForFCMToken() async -> String? {
         // 이미 있으면 반환
         if let token = UserDefaults.standard.string(forKey: "fcmToken") { return token }

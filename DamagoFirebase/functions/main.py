@@ -4,7 +4,7 @@
 
 from firebase_functions import https_fn
 from firebase_functions.options import set_global_options
-from firebase_admin import initialize_app, firestore
+from firebase_admin import initialize_app, firestore, messaging
 from nanoid import generate
 import google.cloud.firestore
 
@@ -162,3 +162,64 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
 
     # --- [Step 5] 반환 ---
     return https_fn.Response(result_message)
+
+@https_fn.on_request()
+def poke(req: https_fn.Request) -> https_fn.Response:
+    # --- [Parameters] ---
+    data = req.get_json(silent=True) or req.args
+    my_udid = data.get("udid")
+
+    if not my_udid:
+        return https_fn.Response("Missing 'udid'", status=400)
+
+    db = firestore.client()
+
+    # --- [Step 1] 내 정보 조회 ---
+    my_user_ref = db.collection("users").document(my_udid)
+    my_user_doc = my_user_ref.get()
+
+    if not my_user_doc.exists:
+        return https_fn.Response("User not found", status=404)
+
+    my_user_data = my_user_doc.to_dict()
+    couple_id = my_user_data.get("couple_id")
+
+    if not couple_id:
+        return https_fn.Response("User is not in a couple", status=400)
+
+    # --- [Step 2] 상대방 정보 조회 ---
+    couple_ref = db.collection("couples").document(couple_id)
+    couple_doc = couple_ref.get()
+
+    if not couple_doc.exists:
+        return https_fn.Response("Couple not found", status=404)
+
+    couple_data = couple_doc.to_dict()
+    user_a = couple_data.get("user_a")
+    user_b = couple_data.get("user_b")
+
+    target_fcm_token = None
+    if user_a and user_a.get("id") != my_udid:
+        target_fcm_token = user_a.get("fcm")
+    elif user_b and user_b.get("id") != my_udid:
+        target_fcm_token = user_b.get("fcm")
+
+    if not target_fcm_token:
+        return https_fn.Response("Opponent's FCM token not found", status=404)
+
+    # --- [Step 3] 푸시 알림 보내기 ---
+    try:
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title="콕!",
+                body="상대방이 당신을 콕 찔렀어요!",
+            ),
+            token=target_fcm_token
+        )
+        response = messaging.send(message)
+        print("Successfully sent message:", response)
+        return https_fn.Response("Push notification sent successfully")
+
+    except Exception as e:
+        print("Error sending message:", e)
+        return https_fn.Response(f"Error sending push notification: {str(e)}", status=500)

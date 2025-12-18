@@ -20,14 +20,26 @@ final class ViewController: UIViewController {
         imageView.isUserInteractionEnabled = true
         return imageView
     }()
-    
+
+    private lazy var pokeButton: UIButton = {
+        let action = UIAction { [weak self] _ in self?.sendNotification() }
+        let button = UIButton(type: .system, primaryAction: action)
+        button.setTitle("찌르기", for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         
         view.addSubview(gifImageView)
-        
+        view.addSubview(pokeButton)
+
         NSLayoutConstraint.activate([
+            pokeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 60),
+            pokeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+
             gifImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             gifImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             gifImageView.widthAnchor.constraint(equalToConstant: 200),
@@ -87,5 +99,32 @@ extension ViewController {
         
         // 계산된 시간이 있으면 반환, 없으면 기본값 반환
         return totalDuration > 0 ? totalDuration : 1.5
+    }
+}
+
+extension ViewController {
+    var udid: String? { UIDevice.current.identifierForVendor?.uuidString }
+
+    private func sendNotification() {
+        Task {
+            guard let url = URL(string: "https://poke-wrjwddcv2q-uc.a.run.app") else { return }
+
+            var request = URLRequest(url: url)
+            let body = ["udid": udid]
+
+            request.httpMethod = "POST"
+            request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONEncoder().encode(body)
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else { throw NetworkError.invalidResponse }
+            guard (200..<300).contains(httpResponse.statusCode) else {
+                throw NetworkError.invalidStatusCode(
+                    httpResponse.statusCode,
+                    String(data: data, encoding: .utf8) ?? "invalid data"
+                )
+            }
+        }
     }
 }
