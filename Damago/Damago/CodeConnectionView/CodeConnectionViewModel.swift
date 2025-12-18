@@ -11,7 +11,6 @@ import UIKit
 final class CodeConnectionViewModel {
     var udid: String? { UIDevice.current.identifierForVendor?.uuidString }
     var code: String = ""
-    var targetCode: String?
     var onConnected: ((Bool) -> Void)?
 
     func resolveMyCode() async throws -> String? {
@@ -22,9 +21,9 @@ final class CodeConnectionViewModel {
         return newCode
     }
 
-    func connectCouple(pairCode: String) async throws {
+    func connectCouple(targetCode: String) async throws {
         do {
-            try await requestConnectCouple()
+            try await requestConnectCouple(targetCode: targetCode)
             await MainActor.run { [weak self] in self?.onConnected?(true) }
         } catch {
             await MainActor.run { [weak self] in self?.onConnected?(false) }
@@ -42,7 +41,7 @@ extension CodeConnectionViewModel {
         // 알림이 올 때까지 기다림 (첫 번째 알림만 받고 끝냄)
         _ = await NotificationCenter.default.notifications(named: .fcmTokenDidUpdate).first { _ in true }
 
-        return nil
+        return UserDefaults.standard.string(forKey: "fcmToken")
     }
 
     private func requestGenerateCode(fcmToken: String) async throws -> String? {
@@ -74,7 +73,7 @@ extension CodeConnectionViewModel {
 // MARK: - 커플 연결
 
 extension CodeConnectionViewModel {
-    private func requestConnectCouple() async throws {
+    private func requestConnectCouple(targetCode: String) async throws {
         guard let url = URL(string: "https://connect-couple-wrjwddcv2q-uc.a.run.app") else { return }
 
         var request = URLRequest(url: url)

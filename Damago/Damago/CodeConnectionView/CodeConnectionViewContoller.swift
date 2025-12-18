@@ -55,10 +55,6 @@ final class CodeConnectionViewController: UIViewController {
 }
 
 extension CodeConnectionViewController: UITextFieldDelegate {
-    func textFieldDidEndEditing(_ textFiteld: UITextField) {
-        viewModel.targetCode = textFiteld.text
-    }
-
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
