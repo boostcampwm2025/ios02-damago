@@ -6,8 +6,9 @@
 //
 
 import ActivityKit
-import WidgetKit
+import AppIntents
 import SwiftUI
+import WidgetKit
 
 struct DamagoWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
@@ -20,8 +21,8 @@ struct DamagoWidgetLiveActivity: Widget {
                         .clipShape(Rectangle())
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Button("콕 찌르기") {
-                        print("찔렸습니다.")
+                    Button(intent: PokeAppIntent(udid: context.attributes.udid)) {
+                        Text("콕 찌르기")
                     }
                 }
             } compactLeading: {
@@ -40,7 +41,7 @@ struct DamagoWidgetLiveActivity: Widget {
 
 extension DamagoAttributes {
     fileprivate static var preview: DamagoAttributes {
-        DamagoAttributes(petName: "Base Pet")
+        DamagoAttributes(petName: "Base Pet", udid: "preview-udid")
     }
 }
 
@@ -48,14 +49,14 @@ extension DamagoAttributes.ContentState {
     fileprivate static var base: DamagoAttributes.ContentState {
         .init(characterName: "Teddy", isHungry: false, statusMessage: "우리가 함께 키우는 작은 행복 🍀")
     }
-
+    
     fileprivate static var hungry: DamagoAttributes.ContentState {
         .init(characterName: "Teddy", isHungry: true, statusMessage: "우리가 함께 키우는 작은 행복 🍀")
     }
 }
 
 #Preview("Notification", as: .content, using: DamagoAttributes.preview) {
-   DamagoWidgetLiveActivity()
+    DamagoWidgetLiveActivity()
 } contentStates: {
     DamagoAttributes.ContentState.base
     DamagoAttributes.ContentState.hungry
