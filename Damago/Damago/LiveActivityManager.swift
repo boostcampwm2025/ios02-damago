@@ -8,6 +8,7 @@
 import Foundation
 import ActivityKit
 import OSLog
+import UIKit
 
 struct ActivityData {
     let petName: String
@@ -34,7 +35,10 @@ final class LiveActivityManager {
                 isHungry: activityData.isHungry,
                 statusMessage: activityData.statusMessage
             )
-            let attributes = DamagoAttributes(petName: activityData.petName)
+            let attributes = DamagoAttributes(
+                petName: activityData.petName,
+                udid: UIDevice.current.identifierForVendor?.uuidString ?? "Not Available"
+            )
 
             if let activity = Activity<DamagoAttributes>.activities.first {
                 Task {
