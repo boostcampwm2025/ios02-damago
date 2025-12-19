@@ -20,4 +20,4 @@
 
 ## 프로토타입 설치 QR
 
-<img width="330" height="330" alt="image" src="https://github.com/user-attachments/assets/8d61dd45-6d65-4913-a0a5-7bd5b4465597" />
+<img width="330" height="330" alt="image" src="https://github.com/user-attachments/assets/8d5e3032-46b2-4b39-8c8e-726ebe919df6" />
