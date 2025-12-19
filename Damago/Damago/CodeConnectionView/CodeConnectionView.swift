@@ -8,7 +8,7 @@
 import UIKit
 
 final class CodeConnectionView: UIView {
-    var onConnectTap: ((String) async throws -> Void)?
+    var onConnectTap: ((String) -> Void)?
 
     private let logoImageView: UIImageView = {
         let imageView = UIImageView(image: UIImage(named: "AppLogo"))
@@ -111,15 +111,7 @@ final class CodeConnectionView: UIView {
             UIAction { [weak self] _ in
                 guard let self else { return }
                 let code = self.codeTextField.text ?? ""
-
-                Task { [weak self] in
-                    guard let self else { return }
-                    do {
-                        try await self.onConnectTap?(code)
-                    } catch {
-                        // TODO: 커플 연결 실패에 대한 처리
-                    }
-                }
+                self.onConnectTap?(code)
             },
             for: .touchUpInside
         )
