@@ -7,7 +7,6 @@
 
 import UIKit
 import ActivityKit
-import OSLog
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -31,34 +30,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = navigationViewController
         self.window = window
         window.makeKeyAndVisible()
-
-        startLiveActivity()
     }
 
-    private func startLiveActivity() {
-        guard Activity<DamagoAttributes>.activities.isEmpty,
-              ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-
-        let initialContentState = DamagoAttributes.ContentState(
-            characterName: "Teddy",
-            isHungry: false,
-            statusMessage: "우리가 함께 키우는 작은 행복 🍀"
-        )
-        let activityAttributes = DamagoAttributes(
-            petName: "Base Pet",
-            udid: UIDevice.current.identifierForVendor?.uuidString ?? "Not Available"
-        )
-
-        do {
-            _ = try Activity.request(
-                attributes: activityAttributes,
-                content: .init(
-                    state: initialContentState,
-                    staleDate: nil
-                )
-            )
-        } catch {
-            SharedLogger.dynamicIsland.error("Error requesting activity: \(error)")
-        }
+    // 사용자가 Foreground에 돌아왔을 때 서버와 동기화
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        LiveActivityManager.shared.synchronizeActivity()
     }
 }
