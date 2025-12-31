@@ -39,7 +39,16 @@ final class CodeConnectionViewController: UIViewController {
         }
 
         codeConnectionView.codeTextField.delegate = self
-        codeConnectionView.onConnectTap = viewModel.connectCouple
+        codeConnectionView.onConnectTap = { [weak self] targetCode in
+            guard let self else { return }
+            Task {
+                do {
+                    try await self.viewModel.connectCouple(targetCode: targetCode)
+                } catch {
+                    self.codeConnectionView.errorMessageLabel.text = "연결 오류가 발생했습니다."
+                }
+            }
+        }
 
         Task { [weak self] in
             guard let self else { return }
