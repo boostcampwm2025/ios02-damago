@@ -7,6 +7,8 @@ from firebase_functions.options import set_global_options
 from firebase_admin import initialize_app, firestore, messaging
 from nanoid import generate
 import google.cloud.firestore
+import time
+import os
 
 # For cost control, you can set the maximum number of containers that can be
 # running at the same time. This helps mitigate the impact of unexpected
@@ -15,6 +17,10 @@ import google.cloud.firestore
 # parameter in the decorator, e.g. @https_fn.on_request(max_instances=5).
 set_global_options(max_instances=10)
 initialize_app()
+
+# 앱의 번들 ID (APNS Topic 설정용)
+# 환경 변수에서 가져오거나, 없으면 기본값 사용
+BUNDLE_ID = os.environ.get("BUNDLE_ID", "kr.codesquad.boostcamp10.Damago")
 
 @https_fn.on_request()
 def generate_code(req: https_fn.Request) -> https_fn.Response:
@@ -42,8 +48,11 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
         current_db_token = user_data.get("fcmToken")
 
         if current_db_token != fcm_token:
-            doc_ref.update({"fcmToken": fcm_token})
-            print(f"Updated FCM token for user {udid}")  # 로그 기록 (선택)
+            doc_ref.update({
+                "fcmToken": fcm_token,
+                "updatedAt": firestore.SERVER_TIMESTAMP
+            })
+            print(f"Updated FCM token for user {udid}")
 
         return https_fn.Response(f"{existing_code}")
 
@@ -68,11 +77,22 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response("Unable to generate new code", status=500)
 
     # --- [Step 3] 신규 유저 생성 ---
+    # Schema.dbml 기반으로 모든 필드 초기화 (iOS Codable 호환성 향상)
     doc_ref.set({
         "udid": udid,
         "code": unique_code,
+        "partnerUDID": None,
+        "damagoID": None,
+        "coupleID": None,
+        "anniversaryDate": None,
+        "nickname": None,
         "fcmToken": fcm_token,
-        "couple_id": None
+        "laStartToken": None,
+        "laUpdateToken": None,
+        "useFCM": True,
+        "useLiveActivity": True,
+        "createdAt": firestore.SERVER_TIMESTAMP,
+        "updatedAt": firestore.SERVER_TIMESTAMP
     })
 
     # --- [Step 4] 코드 리턴 ---
@@ -82,11 +102,11 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
 def connect_couple(req: https_fn.Request) -> https_fn.Response:
     # --- [Parameters] ---
     data = req.get_json(silent=True) or req.args
-    my_code = data.get("my_code")
-    target_code = data.get("target_code")
+    my_code = data.get("myCode")
+    target_code = data.get("targetCode")
 
     if not my_code or not target_code:
-        return https_fn.Response("Missing 'my_code' or 'target_code'", status=400)
+        return https_fn.Response("Missing 'myCode' or 'targetCode'", status=400)
 
     if my_code == target_code:
         return https_fn.Response("Cannot connect to yourself", status=400)
@@ -107,43 +127,62 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     my_doc = my_snapshot[0]
     target_doc = target_snapshot[0]
 
-    my_data = my_doc.to_dict()
-    target_data = target_doc.to_dict()
-
-    # --- [Step 2] Couple ID 생성 (정렬하여 유일성 보장) ---
+    # --- [Step 2] ID 생성 (Couple 및 Damago) ---
     # 예: code_A와 code_B가 있으면 항상 알파벳 순서로 "codeA_codeB" 형태가 됨
     codes = sorted([my_code, target_code])
     couple_doc_id = f"{codes[0]}_{codes[1]}"
     couple_ref = db.collection("couples").document(couple_doc_id)
+    
+    # 다마고치 ID는 자동 생성
+    damago_ref = db.collection("damagos").document()
 
     # --- [Transaction] 데이터 일관성 보장 ---
-    # 커플 문서 생성과 각 유저의 couple_id 업데이트가 동시에 성공하거나 실패해야 함
+    # 커플 문서 생성과 각 유저의 coupleID 업데이트가 동시에 성공하거나 실패해야 함
 
     @google.cloud.firestore.transactional
-    def run_transaction(transaction, couple_ref, my_ref, target_ref, my_fcm, target_fcm):
+    def run_transaction(transaction, couple_ref, damago_ref, my_ref, target_ref, my_udid, target_udid):
         snapshot = couple_ref.get(transaction=transaction)
 
         # --- [Step 2-1] 이미 커플 문서가 존재하면 반환 ---
         if snapshot.exists:
             return "ok"
 
-        # --- [Step 3] Couples 컬렉션에 문서 만들기 ---
-        # 누가 client_a인지 헷갈리지 않게, 요청자(my)와 대상(target)을 명확히 저장하거나
-        # ID 생성 순서대로 저장할 수 있습니다. 여기서는 요청대로 저장합니다.
-        transaction.set(couple_ref, {
-            "user_a": {
-                "id": my_ref.id,
-                "fcm": my_fcm
-            },
-            "user_b": {
-                "id": target_ref.id,
-                "fcm": target_fcm
-            }
+        # --- [Step 3] Damago (펫) 생성 ---
+        transaction.set(damago_ref, {
+            "id": damago_ref.id,
+            "coupleID": couple_ref.id,
+            "petName": "이름 없는 펫",
+            "characterName": "Teddy",
+            "isHungry": False,
+            "statusMessage": "반가워요! 우리 잘 지내봐요.",
+            "lastFedAt": None,
+            "lastUpdatedAt": firestore.SERVER_TIMESTAMP
         })
 
-        # --- [Step 4] 나와 상대 User Document 업데이트 ---
-        transaction.update(my_ref, {"couple_id": couple_ref.id})
-        transaction.update(target_ref, {"couple_id": couple_ref.id})
+        # --- [Step 4] Couples 컬렉션 생성 (damagoID 포함) ---
+        transaction.set(couple_ref, {
+            "id": couple_ref.id,
+            "user1UDID": my_udid,
+            "user2UDID": target_udid,
+            "damagoID": damago_ref.id,
+            "anniversaryDate": None,
+            "createdAt": firestore.SERVER_TIMESTAMP
+        })
+
+        # --- [Step 5] 나와 상대 User Document 업데이트 ---
+        # 비정규화: partnerUDID와 damagoID를 직접 업데이트하여 이후 조회 성능 최적화
+        transaction.update(my_ref, {
+            "coupleID": couple_ref.id,
+            "damagoID": damago_ref.id,
+            "partnerUDID": target_udid,
+            "updatedAt": firestore.SERVER_TIMESTAMP
+        })
+        transaction.update(target_ref, {
+            "coupleID": couple_ref.id,
+            "damagoID": damago_ref.id,
+            "partnerUDID": my_udid,
+            "updatedAt": firestore.SERVER_TIMESTAMP
+        })
 
         return "ok"
 
@@ -152,15 +191,16 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
         result_message = run_transaction(
             db.transaction(),
             couple_ref,
+            damago_ref,
             my_doc.reference,
             target_doc.reference,
-            my_data.get("fcmToken"),
-            target_data.get("fcmToken")
+            my_doc.get("udid"),
+            target_doc.get("udid")
         )
     except Exception as e:
         return https_fn.Response(f"Transaction failed: {str(e)}", status=500)
 
-    # --- [Step 5] 반환 ---
+    # --- [Step 6] 반환 ---
     return https_fn.Response(result_message)
 
 @https_fn.on_request()
@@ -175,6 +215,7 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     db = firestore.client()
 
     # --- [Step 1] 내 정보 조회 ---
+    # partnerUDID를 사용하여 couples 조회 단계를 생략 (성능 최적화)
     my_user_ref = db.collection("users").document(my_udid)
     my_user_doc = my_user_ref.get()
 
@@ -182,37 +223,30 @@ def poke(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response("User not found", status=404)
 
     my_user_data = my_user_doc.to_dict()
-    couple_id = my_user_data.get("couple_id")
+    partner_udid = my_user_data.get("partnerUDID")
 
-    if not couple_id:
+    if not partner_udid:
         return https_fn.Response("User is not in a couple", status=400)
 
     # --- [Step 2] 상대방 정보 조회 ---
-    couple_ref = db.collection("couples").document(couple_id)
-    couple_doc = couple_ref.get()
+    target_user_doc = db.collection("users").document(partner_udid).get()
 
-    if not couple_doc.exists:
-        return https_fn.Response("Couple not found", status=404)
+    if not target_user_doc.exists:
+        return https_fn.Response("Opponent not found", status=404)
 
-    couple_data = couple_doc.to_dict()
-    user_a = couple_data.get("user_a")
-    user_b = couple_data.get("user_b")
-
-    target_fcm_token = None
-    if user_a and user_a.get("id") != my_udid:
-        target_fcm_token = user_a.get("fcm")
-    elif user_b and user_b.get("id") != my_udid:
-        target_fcm_token = user_b.get("fcm")
+    target_user_data = target_user_doc.to_dict()
+    target_fcm_token = target_user_data.get("fcmToken")
 
     if not target_fcm_token:
         return https_fn.Response("Opponent's FCM token not found", status=404)
 
     # --- [Step 3] 푸시 알림 보내기 ---
     try:
+        nickname = my_user_data.get('nickname') or '상대방'
         message = messaging.Message(
             notification=messaging.Notification(
                 title="콕!",
-                body="상대방이 당신을 콕 찔렀어요!",
+                body=f"{nickname}님이 당신을 콕 찔렀어요!",
             ),
             token=target_fcm_token
         )
@@ -223,3 +257,156 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     except Exception as e:
         print("Error sending message:", e)
         return https_fn.Response(f"Error sending push notification: {str(e)}", status=500)
+
+@https_fn.on_request()
+def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
+    # --- [Parameters] ---
+    data = req.get_json(silent=True) or req.args
+    udid = data.get("udid")
+    # iOS: Activity.pushToken (Hex String)
+    la_update_token = data.get("laUpdateToken")
+    # iOS: ActivityAuthorizationInfo().pushToStartToken (Hex String)
+    la_start_token = data.get("laStartToken")
+
+    if not udid:
+        return https_fn.Response("Missing udid", status=400)
+
+    db = firestore.client()
+    user_ref = db.collection("users").document(udid)
+
+    # --- [Step 1] Live Activity 토큰 업데이트 ---
+    update_data = {"updatedAt": firestore.SERVER_TIMESTAMP}
+    if la_update_token: update_data["laUpdateToken"] = la_update_token
+    if la_start_token: update_data["laStartToken"] = la_start_token
+
+    user_ref.update(update_data)
+
+    # --- [Step 2] 결과 반환 ---
+    return https_fn.Response("Live Activity Token Saved")
+
+@https_fn.on_request()
+def update_live_activity(req: https_fn.Request) -> https_fn.Response:
+    # --- [Parameters] ---
+    data = req.get_json(silent=True) or req.args
+    target_udid = data.get("targetUDID")
+    content_state = data.get("contentState") 
+
+    if not target_udid or not content_state:
+        return https_fn.Response("Missing targetUDID or contentState", status=400)
+
+    db = firestore.client()
+    
+    # --- [Step 1] 대상 유저 조회 ---
+    user_doc = db.collection("users").document(target_udid).get()
+    
+    if not user_doc.exists:
+        return https_fn.Response("User not found", status=404)
+
+    user_data = user_doc.to_dict()
+    fcm_token = user_data.get("fcmToken")
+    la_token = user_data.get("laUpdateToken")
+    use_la = user_data.get("useLiveActivity", True)
+
+    if not fcm_token or not la_token or not use_la:
+        return https_fn.Response("Live Activity not active or disabled", status=200)
+
+    # --- [Step 2] APNs Payload 구성 및 전송 ---
+    try:
+        # APNs Payload: Aps 객체 생성 및 Custom Data 설정
+        aps = messaging.Aps(
+            alert=messaging.ApsAlert(
+                title="다마고 상태 변경",
+                body="다마고치가 반응했어요!"
+            ),
+            custom_data={
+                "event": "update",
+                "timestamp": int(time.time()),
+                "content-state": content_state
+            }
+        )
+        
+        message = messaging.Message(
+            token=fcm_token, # FCM 등록 토큰 (Device Target)
+            apns=messaging.APNSConfig(
+                live_activity_token=la_token, # LA 업데이트 토큰 (APNs Target)
+                headers={
+                    "apns-push-type": "liveactivity",
+                    "apns-topic": f"{BUNDLE_ID}.push-type.liveactivity",
+                    "apns-priority": "10"
+                },
+                payload=messaging.APNSPayload(aps=aps)
+            )
+        )
+        response = messaging.send(message)
+        print(f"Live Activity update sent to {target_udid}: {response}")
+        return https_fn.Response(f"Live Activity Updated")
+
+    except Exception as e:
+        print(f"Error updating Live Activity: {e}")
+        return https_fn.Response(f"Error: {str(e)}", status=500)
+
+@https_fn.on_request()
+def start_live_activity(req: https_fn.Request) -> https_fn.Response:
+    # --- [Parameters] ---
+    data = req.get_json(silent=True) or req.args
+    target_udid = data.get("targetUDID")
+    attributes = data.get("attributes")
+    content_state = data.get("contentState")
+
+    if not target_udid or not attributes or not content_state:
+        return https_fn.Response("Missing parameters", status=400)
+
+    db = firestore.client()
+    
+    # --- [Step 1] 대상 유저 조회 ---
+    user_doc = db.collection("users").document(target_udid).get()
+    if not user_doc.exists:
+        return https_fn.Response("User not found", status=404)
+
+    user_data = user_doc.to_dict()
+    fcm_token = user_data.get("fcmToken")
+    la_start_token = user_data.get("laStartToken")
+    use_la = user_data.get("useLiveActivity", True)
+
+    if not fcm_token or not la_start_token or not use_la:
+        return https_fn.Response("Start Token not found or Live Activity disabled", status=400)
+
+    # --- [Step 2] APNs Payload 구성 및 전송 (Push-to-Start) ---
+    try:
+        # APNs Payload: Aps 객체 생성 및 Custom Data 설정
+        aps = messaging.Aps(
+            alert=messaging.ApsAlert(
+                title="다마고가 찾아왔어요!",
+                body="새로운 활동이 시작되었습니다."
+            ),
+            custom_data={
+                "event": "start",
+                "timestamp": int(time.time()),
+                "content-state": content_state,
+                "attributes": attributes,
+                "attributes-type": "DamagoAttributes"
+            }
+        )
+        
+        # [Debug] Payload 확인
+        print(f"[Start LA] Payload Custom Data: {aps.custom_data}")
+        
+        message = messaging.Message(
+            token=fcm_token, # FCM 등록 토큰
+            apns=messaging.APNSConfig(
+                live_activity_token=la_start_token, # LA 시작 토큰 (Push-To-Start Token)
+                headers={
+                    "apns-push-type": "liveactivity",
+                    "apns-topic": f"{BUNDLE_ID}.push-type.liveactivity",
+                    "apns-priority": "10"
+                },
+                payload=messaging.APNSPayload(aps=aps)
+            )
+        )
+        response = messaging.send(message)
+        print(f"Live Activity start request sent to {target_udid}: {response}")
+        return https_fn.Response("Live Activity Started Remotely")
+
+    except Exception as e:
+        print(f"Error starting Live Activity: {e}")
+        return https_fn.Response(f"Error: {str(e)}", status=500)
