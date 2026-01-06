@@ -50,6 +50,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		29D793FE2EF3B6EB00EE359A /* Exceptions for "Damago" folder in "DamagoWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AuthKey_7S996WK64N.p8,
+				"GoogleService-Info.plist",
+			);
+			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
+		};
 		4B1E30432EF16EDD00EB96A1 /* Exceptions for "DamagoWidget" folder in "DamagoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -94,6 +102,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				4B5FE2E62EF130B7005E31DA /* Exceptions for "Damago" folder in "Damago" target */,
+				29D793FE2EF3B6EB00EE359A /* Exceptions for "Damago" folder in "DamagoWidgetExtension" target */,
 			);
 			path = Damago;
 			sourceTree = "<group>";
