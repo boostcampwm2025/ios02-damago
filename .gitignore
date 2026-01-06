@@ -126,3 +126,5 @@ xcuserdata
 
 # Firebase
 *GoogleService-Info.plist
+
+*.p8
