@@ -107,7 +107,7 @@ extension ViewController {
 
     private func sendNotification() {
         Task {
-            guard let url = URL(string: "https://poke-wrjwddcv2q-uc.a.run.app") else { return }
+            guard let url = URL(string: "\(BaseURL.string)/poke") else { return }
 
             var request = URLRequest(url: url)
             let body = ["udid": udid]

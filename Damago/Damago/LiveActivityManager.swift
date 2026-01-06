@@ -121,13 +121,47 @@ final class LiveActivityManager {
     }
 
     private func sendStartTokenToServer(token: String) {
-        print("💥 서버로 전송할 시작용 Push Token: \(token)")
-        // TODO: 서버와 통신하여 이 토큰을 저장하는 네트워크 코드 구현
+        SharedLogger.liveActivityManger.info("💥 서버로 전송할 시작용 Push Token: \(token)")
+        requestSaveToken(token: token, key: "laStartToken")
     }
 
     private func sendUpdateTokenToServer(token: String) {
-        print("🤝 서버로 전송할 업데이트용 Push Token: \(token)")
-        // TODO: 서버와 통신하여 이 토큰을 저장하는 네트워크 코드 구현
+        SharedLogger.liveActivityManger.info("🤝 서버로 전송할 업데이트용 Push Token: \(token)")
+        requestSaveToken(token: token, key: "laUpdateToken")
+    }
+    
+    private func requestSaveToken(token: String, key: String) {
+        guard let url = URL(string: "\(BaseURL.string)/save_live_activity_token"),
+              let udid = UIDevice.current.identifierForVendor?.uuidString else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: String] = [
+            "udid": udid,
+            key: token
+        ]
+        
+        do {
+            request.httpBody = try JSONEncoder().encode(body)
+        } catch {
+            SharedLogger.liveActivityManger.error("토큰 변환에 실패했습니다: \(error)")
+            return
+        }
+        
+        Task {
+            do {
+                let (_, response) = try await URLSession.shared.data(for: request)
+                if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+                    SharedLogger.liveActivityManger.error("서버 응답에 문제가 있었습니다: \(httpResponse.statusCode) for key: \(key)")
+                } else {
+                    SharedLogger.liveActivityManger.info("토큰 저장에 성공했습니다: \(key)")
+                }
+            } catch {
+                SharedLogger.liveActivityManger.error("토큰 저장에 실패했습니다: \(error)")
+            }
+        }
     }
     
     private func monitorPushToken(_ activity: Activity<DamagoAttributes>) {
