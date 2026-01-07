@@ -47,11 +47,25 @@ extension DamagoAttributes {
 
 extension DamagoAttributes.ContentState {
     fileprivate static var base: DamagoAttributes.ContentState {
-        .init(characterName: "Teddy", isHungry: false, statusMessage: "우리가 함께 키우는 작은 행복 🍀")
+        .init(
+            petType: "Teddy",
+            isHungry: false,
+            statusMessage: "우리가 함께 키우는 작은 행복 🍀",
+            level: 20,
+            currentExp: 30,
+            maxExp: 100
+        )
     }
 
     fileprivate static var hungry: DamagoAttributes.ContentState {
-        .init(characterName: "Teddy", isHungry: true, statusMessage: "우리가 함께 키우는 작은 행복 🍀")
+        .init(
+            petType: "Teddy",
+            isHungry: true,
+            statusMessage: "우리가 함께 키우는 작은 행복 🍀",
+            level: 20,
+            currentExp: 30,
+            maxExp: 100
+        )
     }
 }
 

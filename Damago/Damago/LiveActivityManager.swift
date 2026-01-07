@@ -31,9 +31,12 @@ final class LiveActivityManager {
             }
 
             let latestContentState = DamagoAttributes.ContentState(
-                characterName: activityData.characterName,
+                petType: activityData.petType,
                 isHungry: activityData.isHungry,
-                statusMessage: activityData.statusMessage
+                statusMessage: activityData.statusMessage,
+                level: activityData.level,
+                currentExp: activityData.currentExp,
+                maxExp: activityData.maxExp
             )
             let attributes = DamagoAttributes(
                 petName: activityData.petName,
@@ -56,15 +59,51 @@ final class LiveActivityManager {
     }
 
     private func fetchActivityData(completion: @escaping (ActivityData?) -> Void) {
-        // TODO: 서버의 데이터로부터 가져오도록 수정
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            let mockData = ActivityData(
-                petName: "곰곰이",
-                characterName: "Teddy",
-                isHungry: false,
-                statusMessage: "우리가 함께 키우는 작은 행복 🍀"
-            )
-            completion(mockData)
+        guard let udid = UIDevice.current.identifierForVendor?.uuidString else {
+            completion(nil)
+            return
+        }
+        
+        Task {
+            guard let url = URL(string: "\(BaseURL.string)/get_user_info") else { return }
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try? JSONEncoder().encode(["udid": udid])
+            
+            do {
+                let (data, response) = try await URLSession.shared.data(for: request)
+                guard let httpResponse = response as? HTTPURLResponse,
+                      (200..<300).contains(httpResponse.statusCode) else {
+                    SharedLogger.liveActivityManger.error("정보 조회 실패")
+                    completion(nil)
+                    return
+                }
+                
+                let userInfo = try JSONDecoder().decode(UserInfoResponse.self, from: data)
+                
+                guard let status = userInfo.petStatus else {
+                    SharedLogger.liveActivityManger.error("활성화된 펫 정보 없음")
+                    completion(nil)
+                    return
+                }
+                
+                let activityData = ActivityData(
+                    petName: status.petName,
+                    petType: status.petType,
+                    isHungry: status.isHungry,
+                    statusMessage: status.statusMessage,
+                    level: status.level,
+                    currentExp: status.currentExp,
+                    maxExp: status.maxExp
+                )
+                
+                completion(activityData)
+                
+            } catch {
+                SharedLogger.liveActivityManger.error("네트워크 에러: \(error)")
+                completion(nil)
+            }
         }
     }
     
