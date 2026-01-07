@@ -95,8 +95,3 @@ extension CodeConnectionViewModel {
         }
     }
 }
-
-enum NetworkError: Error {
-    case invalidStatusCode(Int, String)
-    case invalidResponse
-}
