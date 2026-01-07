@@ -2,8 +2,16 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // [Rule] 모든 문서에 대해
     match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 12, 21);
+      // 1. 읽기(Read/List): 모든 사용자에게 허용 (개발 단계 편의성)
+      // -> 프로덕션 배포 전에는 'request.auth != null' 등으로 강화 필요
+      allow read: if true;
+      
+      // 2. 쓰기(Create/Update/Delete): 모두 거부 (Deny)
+      // -> 데이터 수정은 오직 Admin SDK(Cloud Functions)를 통해서만 가능
+      allow write: if false;
     }
   }
 }

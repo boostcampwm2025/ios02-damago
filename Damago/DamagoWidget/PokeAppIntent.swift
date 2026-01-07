@@ -27,7 +27,7 @@ struct PokeAppIntent: AppIntent {
     init() {}
 
     func perform() async throws -> some IntentResult {
-        guard let url = URL(string: "https://poke-wrjwddcv2q-uc.a.run.app") else {
+        guard let url = URL(string: "\(BaseURL.string)/poke") else {
             return .result()
         }
 
