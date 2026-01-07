@@ -91,7 +91,8 @@ final class TabBarViewController: UITabBarController {
         case .collection:
             return UIViewController()
         case .home:
-            return UIViewController()
+            // 프로토타입 뷰
+            return ViewController()
         case .interaction:
             return UIViewController()
         case .game:
