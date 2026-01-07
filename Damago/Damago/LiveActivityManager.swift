@@ -10,13 +10,6 @@ import ActivityKit
 import OSLog
 import UIKit
 
-struct ActivityData {
-    let petName: String
-    let characterName: String
-    var isHungry: Bool
-    var statusMessage: String
-}
-
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
 
@@ -31,9 +24,12 @@ final class LiveActivityManager {
             }
 
             let latestContentState = DamagoAttributes.ContentState(
-                characterName: activityData.characterName,
+                petType: activityData.petType,
                 isHungry: activityData.isHungry,
-                statusMessage: activityData.statusMessage
+                statusMessage: activityData.statusMessage,
+                level: activityData.level,
+                currentExp: activityData.currentExp,
+                maxExp: activityData.maxExp
             )
             let attributes = DamagoAttributes(
                 petName: activityData.petName,
@@ -56,15 +52,51 @@ final class LiveActivityManager {
     }
 
     private func fetchActivityData(completion: @escaping (ActivityData?) -> Void) {
-        // TODO: 서버의 데이터로부터 가져오도록 수정
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            let mockData = ActivityData(
-                petName: "곰곰이",
-                characterName: "Teddy",
-                isHungry: false,
-                statusMessage: "우리가 함께 키우는 작은 행복 🍀"
-            )
-            completion(mockData)
+        guard let udid = UIDevice.current.identifierForVendor?.uuidString else {
+            completion(nil)
+            return
+        }
+        
+        Task {
+            guard let url = URL(string: "\(BaseURL.string)/get_user_info") else { return }
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try? JSONEncoder().encode(["udid": udid])
+            
+            do {
+                let (data, response) = try await URLSession.shared.data(for: request)
+                guard let httpResponse = response as? HTTPURLResponse,
+                      (200..<300).contains(httpResponse.statusCode) else {
+                    SharedLogger.liveActivityManger.error("정보 조회 실패")
+                    completion(nil)
+                    return
+                }
+                
+                let userInfo = try JSONDecoder().decode(UserInfoResponse.self, from: data)
+                
+                guard let status = userInfo.petStatus else {
+                    SharedLogger.liveActivityManger.error("활성화된 펫 정보 없음")
+                    completion(nil)
+                    return
+                }
+                
+                let activityData = ActivityData(
+                    petName: status.petName,
+                    petType: status.petType,
+                    isHungry: status.isHungry,
+                    statusMessage: status.statusMessage,
+                    level: status.level,
+                    currentExp: status.currentExp,
+                    maxExp: status.maxExp
+                )
+                
+                completion(activityData)
+                
+            } catch {
+                SharedLogger.liveActivityManger.error("네트워크 에러: \(error)")
+                completion(nil)
+            }
         }
     }
     
@@ -121,13 +153,47 @@ final class LiveActivityManager {
     }
 
     private func sendStartTokenToServer(token: String) {
-        print("💥 서버로 전송할 시작용 Push Token: \(token)")
-        // TODO: 서버와 통신하여 이 토큰을 저장하는 네트워크 코드 구현
+        SharedLogger.liveActivityManger.info("💥 서버로 전송할 시작용 Push Token: \(token)")
+        requestSaveToken(token: token, key: "laStartToken")
     }
 
     private func sendUpdateTokenToServer(token: String) {
-        print("🤝 서버로 전송할 업데이트용 Push Token: \(token)")
-        // TODO: 서버와 통신하여 이 토큰을 저장하는 네트워크 코드 구현
+        SharedLogger.liveActivityManger.info("🤝 서버로 전송할 업데이트용 Push Token: \(token)")
+        requestSaveToken(token: token, key: "laUpdateToken")
+    }
+    
+    private func requestSaveToken(token: String, key: String) {
+        guard let url = URL(string: "\(BaseURL.string)/save_live_activity_token"),
+              let udid = UIDevice.current.identifierForVendor?.uuidString else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: String] = [
+            "udid": udid,
+            key: token
+        ]
+        
+        do {
+            request.httpBody = try JSONEncoder().encode(body)
+        } catch {
+            SharedLogger.liveActivityManger.error("토큰 변환에 실패했습니다: \(error)")
+            return
+        }
+        
+        Task {
+            do {
+                let (_, response) = try await URLSession.shared.data(for: request)
+                if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+                    SharedLogger.liveActivityManger.error("서버 응답에 문제가 있었습니다: \(httpResponse.statusCode) for key: \(key)")
+                } else {
+                    SharedLogger.liveActivityManger.info("토큰 저장에 성공했습니다: \(key)")
+                }
+            } catch {
+                SharedLogger.liveActivityManger.error("토큰 저장에 실패했습니다: \(error)")
+            }
+        }
     }
     
     private func monitorPushToken(_ activity: Activity<DamagoAttributes>) {

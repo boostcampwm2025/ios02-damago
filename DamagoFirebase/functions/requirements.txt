@@ -1,4 +1,4 @@
 firebase_functions~=0.1.0
 nanoid
-firebase-admin
+firebase-admin>=6.5.0
 google-cloud-firestore

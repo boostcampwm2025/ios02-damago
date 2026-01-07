@@ -12,4 +12,5 @@ enum SharedLogger {
 
     static let apns = Logger(subsystem: subSystem, category: "apnsLogger")
     static let liveActivityManger = Logger(subsystem: subSystem, category: "liveActivityMangerLogger")
+    static let viewController = Logger(subsystem: subSystem, category: "viewControllerLogger")
 }
