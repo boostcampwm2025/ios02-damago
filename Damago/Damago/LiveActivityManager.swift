@@ -10,13 +10,6 @@ import ActivityKit
 import OSLog
 import UIKit
 
-struct ActivityData {
-    let petName: String
-    let characterName: String
-    var isHungry: Bool
-    var statusMessage: String
-}
-
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
 
