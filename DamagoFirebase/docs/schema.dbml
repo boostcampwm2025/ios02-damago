@@ -4,7 +4,7 @@ Table users {
   
   // 관계 조회 비용(Read)을 줄이기 위해 파트너, 다마고, 기념일 정보를 직접 참조합니다.
   partnerUDID varchar [ref: - users.udid, note: "연결된 파트너의 UDID"]
-  damagoID varchar [ref: > damagos.id, note: "공유 중인 다마고 문서 ID"]
+  damagoID varchar [ref: > damagos.id, note: "현재 키우고 있는(Active) 다마고 문서 ID"]
   coupleID varchar [ref: > couples.id, note: "커플 관계 ID"]
   anniversaryDate timestamp [note: "커플 기념일"]
 
@@ -30,28 +30,36 @@ Table couples {
   id varchar [pk, note: "커플 고유 ID (Firestore Auto-ID)"]
   user1UDID varchar [ref: > users.udid, note: "사용자 1"]
   user2UDID varchar [ref: > users.udid, note: "사용자 2"]
-  damagoID varchar [ref: > damagos.id, note: "커플이 소유한 다마고 ID"]
+  damagoID varchar [ref: > damagos.id, note: "현재 키우고 있는(Active) 다마고 ID"]
   
   anniversaryDate timestamp [note: "기념일 원본 데이터"]
   createdAt timestamp [default: `now()`]
   
-  Note: "두 사용자의 관계 및 기념일 원본을 저장합니다."
+  Note: "두 사용자의 관계 및 기념일 원본, 현재 활성화된 다마고 정보를 저장합니다."
 }
 
 Table damagos {
   id varchar [pk, note: "다마고 고유 ID (Firestore Auto-ID)"]
-  coupleID varchar [ref: > couples.id, unique, note: "소유주 커플 ID"]
+  coupleID varchar [ref: > couples.id, note: "소유주 커플 ID"]
   
   // --- 고정 속성 (Static Attributes) ---
-  petName varchar [note: "펫 이름"]
-  
-  // --- 동적 상태 (Dynamic ContentState) ---
-  characterName varchar [note: "캐릭터 종류"]
-  isHungry boolean [default: false, note: "배고픔 상태"]
-  statusMessage text [note: "상태 메시지"]
+  petName varchar [note: "펫 애칭/이름"]
 
+  // --- 동적 상태 (Dynamic State) ---
+  petType varchar [note: "펫 종류 (예: teddy, cloudy...)"]
+  isHungry boolean [default: false, note: "배고픔 상태"]
+  statusMessage text [note: "상태 메시지 (Live Activity 표시용)"]
+
+  // --- 성장 정보 (Growth Info) ---
+  level integer [default: 1, note: "현재 레벨"]
+  currentExp integer [default: 0, note: "현재 경험치"]
+  maxExp integer [note: "다음 레벨업까지 필요한 경험치"]
+
+  // --- 타임스탬프 & 이력 ---
   lastFedAt timestamp [note: "마지막으로 밥을 먹은 시각"]
   lastUpdatedAt timestamp [note: "상태 최종 업데이트 시각"]
+  createdAt timestamp [default: `now()`, note: "생성(입양) 시각"]
+  endedAt timestamp [note: "졸업 또는 교체 시각 (NULL이면 현재 육성 중)"]
   
-  Note: "커플이 공유하는 다마고의 상태 정보입니다. 서버가 이 데이터를 수정하면 연결된 유저들에게 알림이 전송됩니다."
+  Note: "커플이 키우는 다마고들의 이력과 상태 정보입니다. Users/Couples의 damagoID가 현재 활성화된 펫을 가리킵니다."
 }
