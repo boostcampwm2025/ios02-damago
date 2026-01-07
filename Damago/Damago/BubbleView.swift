@@ -43,7 +43,7 @@ final class BubbleView: UIView {
         didSet { borderLayer.strokeColor = borderColor.cgColor }
     }
 
-    var bubbleBackgroundColor: UIColor = .white {
+    var bubbleBackgroundColor: UIColor = .clear {
         didSet { borderLayer.fillColor = bubbleBackgroundColor.cgColor }
     }
 
