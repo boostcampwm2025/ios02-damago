@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		29AA91C12EF18BBF0069F1F4 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 29AA91C02EF18BBF0069F1F4 /* Gifu */; };
 		4B1E302D2EF16EDC00EB96A1 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B1E302C2EF16EDC00EB96A1 /* WidgetKit.framework */; };
 		4B1E302F2EF16EDC00EB96A1 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B1E302E2EF16EDC00EB96A1 /* SwiftUI.framework */; };
 		4B1E303E2EF16EDD00EB96A1 /* DamagoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -123,7 +122,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				29AA91C12EF18BBF0069F1F4 /* Gifu in Frameworks */,
 				DF2969742EF1564B0096DB9E /* FirebaseCore in Frameworks */,
 				DF2969722EF1564B0096DB9E /* FirebaseAuth in Frameworks */,
 				DF29697A2EF1564B0096DB9E /* FirebaseMessaging in Frameworks */,
@@ -211,7 +209,6 @@
 			);
 			name = Damago;
 			packageProductDependencies = (
-				29AA91C02EF18BBF0069F1F4 /* Gifu */,
 				DF2969712EF1564B0096DB9E /* FirebaseAuth */,
 				DF2969732EF1564B0096DB9E /* FirebaseCore */,
 				DF2969752EF1564B0096DB9E /* FirebaseFirestore */,
@@ -251,7 +248,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */,
-				29AA91BF2EF18BBF0069F1F4 /* XCRemoteSwiftPackageReference "Gifu" */,
 				DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -608,14 +604,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		29AA91BF2EF18BBF0069F1F4 /* XCRemoteSwiftPackageReference "Gifu" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/kaishin/Gifu.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.0.1;
-			};
-		};
 		4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SimplyDanny/SwiftLintPlugins";
@@ -635,11 +623,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		29AA91C02EF18BBF0069F1F4 /* Gifu */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 29AA91BF2EF18BBF0069F1F4 /* XCRemoteSwiftPackageReference "Gifu" */;
-			productName = Gifu;
-		};
 		4B0596522EF196EC00730D84 /* SwiftLintBuildToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
