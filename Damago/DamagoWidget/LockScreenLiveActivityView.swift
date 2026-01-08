@@ -32,12 +32,24 @@ private extension LockScreenLiveActivityView {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 80, height: 80)
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text("다마고")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundStyle(.orange)
-
+                Text("소화 중")
+                    .foregroundStyle(.white)
+                ProgressView(
+                    timerInterval: context.state.lastFedAt...context.state.lastFedAt.addingTimeInterval(
+                        DamagoAttributes.feedCooldown),
+                    label: { EmptyView() },
+                    currentValueLabel: { EmptyView() }
+                )
+                .progressViewStyle(.linear)
+                .tint(.orange)
+                .scaleEffect(y: 2)
+                .padding(.trailing, 16)
+                .padding(.bottom, 8)
                 /// 추후 동적으로 문구 변경
                 /// 예시: "우리의 사랑이 이만큼 자랐어요! 🌱",
                 /// "[애칭]님의 사랑으로 배부르는 중 💕",
@@ -46,6 +58,7 @@ private extension LockScreenLiveActivityView {
                     .font(.body)
                     .foregroundColor(.white)
             }
+            .padding(.vertical, 8)
         }
     }
 }
