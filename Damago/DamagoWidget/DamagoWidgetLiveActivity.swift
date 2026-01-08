@@ -73,7 +73,7 @@ struct DamagoWidgetLiveActivity: Widget {
 
     private func expandedBottomView(context: ActivityViewContext<DamagoAttributes>) -> some View {
         HStack {
-            Text("소화 중")
+            Text("포만감")
             linearProgressView(
                 startAt: context.state.lastFedAt,
                 timeInterval: DamagoAttributes.feedCooldown
@@ -234,7 +234,7 @@ extension DamagoAttributes.ContentState {
             level: 20,
             currentExp: 30,
             maxExp: 100,
-            lastFedAt: Date().addingTimeInterval(DamagoAttributes.feedCooldown)
+            lastFedAt: Date().addingTimeInterval(-1 * DamagoAttributes.feedCooldown)
         )
     }
 }
