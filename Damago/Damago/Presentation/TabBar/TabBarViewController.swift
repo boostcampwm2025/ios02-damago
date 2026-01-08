@@ -13,9 +13,9 @@ enum TabItem: String, CaseIterable {
     case interaction = "상호작용"
     case game = "미니게임"
     case setting = "설정"
-    
+
     var title: String { rawValue }
-    
+
     var image: UIImage? {
         switch self {
         case .home:
@@ -30,7 +30,7 @@ enum TabItem: String, CaseIterable {
             return UIImage(systemName: "gearshape")
         }
     }
-    
+
     var tag: Int {
         switch self {
         case .home:
@@ -47,27 +47,26 @@ enum TabItem: String, CaseIterable {
     }
 }
 
-@MainActor
 final class TabBarViewController: UITabBarController {
     private var tabItems: [TabItem] = TabItem.allCases
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViewControllers()
         setupTabBar()
     }
-    
+
     private func setupTabBar() {
         tabBar.tintColor = .damagoPrimary
         tabBar.unselectedItemTintColor = .textTertiary
     }
-    
+
     /// 각 탭 아이템에 대한 ViewController를 생성하고 탭바에 설정
     private func setupViewControllers() {
         let viewControllers = tabItems.map { tabItem -> UIViewController in
-            let viewController = getViewController(for: tabItem)
-            let navigationController = UINavigationController(rootViewController: viewController)
-            
+            var viewController = getViewController(for: tabItem)
+            if tabItem != .home { viewController = UINavigationController(rootViewController: viewController) }
+
             // 탭바 아이템 설정
             let tabBarItem = UITabBarItem(
                 title: nil,
@@ -75,24 +74,25 @@ final class TabBarViewController: UITabBarController {
                 selectedImage: tabItem.image?.withRenderingMode(.alwaysTemplate)
             )
             tabBarItem.tag = tabItem.tag
-            
+
             // NavigationController에 탭바 아이템 할당
-            navigationController.tabBarItem = tabBarItem
-            return navigationController
+            viewController.tabBarItem = tabBarItem
+            return viewController
         }
-        
+
         // 생성된 ViewController들을 탭바에 설정
         setViewControllers(viewControllers, animated: false)
         selectedIndex = 0
     }
-    
+
     private func getViewController(for tabItem: TabItem) -> UIViewController {
         switch tabItem {
         case .collection:
             return UIViewController()
         case .home:
-            // 프로토타입 뷰
-            return ViewController()
+            let vm = HomeViewModel()
+            let vc = HomeViewController(viewModel: vm)
+            return vc
         case .interaction:
             return UIViewController()
         case .game:

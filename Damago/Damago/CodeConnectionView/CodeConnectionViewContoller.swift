@@ -30,9 +30,11 @@ final class CodeConnectionViewController: UIViewController {
         viewModel.onConnected = { [weak self] isSuccessed in
             guard let self else { return }
             if isSuccessed {
-                let homeViewController = ViewController()
-                self.navigationController?
-                    .setViewControllers([homeViewController], animated: true)
+                let tabVC = TabBarViewController()
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let window = windowScene.windows.first {
+                    window.replaceRootViewController(with: tabVC)
+                }
             } else {
                 codeConnectionView.errorMessageLabel.text = "커플 연결에 실패했습니다."
             }
