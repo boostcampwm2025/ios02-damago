@@ -5,6 +5,8 @@
 //  Created by 김재영 on 1/7/26.
 //
 
+import Foundation
+
 struct DamagoStatusResponse: Codable {
     let petName: String
     let petType: String
@@ -13,4 +15,5 @@ struct DamagoStatusResponse: Codable {
     let maxExp: Int
     let isHungry: Bool
     let statusMessage: String
+    let lastFedAt: Date
 }

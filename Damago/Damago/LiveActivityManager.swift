@@ -29,7 +29,8 @@ final class LiveActivityManager {
                 statusMessage: activityData.statusMessage,
                 level: activityData.level,
                 currentExp: activityData.currentExp,
-                maxExp: activityData.maxExp
+                maxExp: activityData.maxExp,
+                lastFedAt: activityData.lastFedAt
             )
             let attributes = DamagoAttributes(
                 petName: activityData.petName,
@@ -88,7 +89,8 @@ final class LiveActivityManager {
                     statusMessage: status.statusMessage,
                     level: status.level,
                     currentExp: status.currentExp,
-                    maxExp: status.maxExp
+                    maxExp: status.maxExp,
+                    lastFedAt: status.lastFedAt
                 )
                 
                 completion(activityData)

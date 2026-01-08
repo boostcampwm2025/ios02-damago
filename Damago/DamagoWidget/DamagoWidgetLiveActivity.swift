@@ -206,7 +206,8 @@ extension DamagoAttributes.ContentState {
             statusMessage: "우리가 함께 키우는 작은 행복 🍀",
             level: 20,
             currentExp: 30,
-            maxExp: 100
+            maxExp: 100,
+            lastFedAt: Date()
         )
     }
 
@@ -217,7 +218,8 @@ extension DamagoAttributes.ContentState {
             statusMessage: "우리가 함께 키우는 작은 행복 🍀",
             level: 20,
             currentExp: 30,
-            maxExp: 100
+            maxExp: 100,
+            lastFedAt: Date().addingTimeInterval(DamagoAttributes.feedCooldown)
         )
     }
 }
