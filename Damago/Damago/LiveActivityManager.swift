@@ -12,6 +12,8 @@ import UIKit
 
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
+    
+    private init() {}
 
     private var monitoredActivityIDs: Set<String> = []
 
