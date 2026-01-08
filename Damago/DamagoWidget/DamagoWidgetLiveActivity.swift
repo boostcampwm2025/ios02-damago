@@ -27,6 +27,10 @@ struct DamagoWidgetLiveActivity: Widget {
         blue: 182.0 / 255.0
     ) // #F271B6
 
+    private let charactrerSize: CGFloat = 80
+    private let largeIconSize: CGFloat = 26
+    private let smallIconSize: CGFloat = 20
+
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: DamagoAttributes.self) { context in
             LockScreenLiveActivityView(context: context)
@@ -57,7 +61,10 @@ struct DamagoWidgetLiveActivity: Widget {
 
     private func expandedCenterView(context: ActivityViewContext<DamagoAttributes>) -> some View {
         HStack(spacing: 24) {
-            DynamicIslandIconImage(for: context.state.largeImageName, size: 80)
+            DynamicIslandIconImage(
+                for: context.state.largeImageName,
+                size: charactrerSize
+            )
                 .clipShape(Rectangle())
 
             actionButtonsView(udid: context.attributes.udid)
@@ -72,7 +79,7 @@ struct DamagoWidgetLiveActivity: Widget {
                 timeInterval: DamagoAttributes.feedCooldown
             )
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, .spacingXL)
     }
 
     private func compactLeadingView(context: ActivityViewContext<DamagoAttributes>) -> some View {
@@ -81,14 +88,20 @@ struct DamagoWidgetLiveActivity: Widget {
                 startAt: context.state.lastFedAt,
                 timeInterval: TimeInterval(DamagoAttributes.feedCooldown)
             )
-            .frame(width: 26, height: 26)
-            DynamicIslandIconImage(for: context.state.iconImageName, size: 20)
+            .frame(width: largeIconSize, height: largeIconSize)
+            DynamicIslandIconImage(
+                for: context.state.iconImageName,
+                size: smallIconSize
+            )
                 .clipShape(Rectangle())
         }
     }
 
     private func compactTrailingView(context: ActivityViewContext<DamagoAttributes>) -> some View {
-        DynamicIslandIconImage(for: context.state.statusImageName, size: 26)
+        DynamicIslandIconImage(
+            for: context.state.statusImageName,
+            size: largeIconSize
+        )
             .clipShape(Circle())
     }
 
@@ -98,8 +111,11 @@ struct DamagoWidgetLiveActivity: Widget {
                 startAt: context.state.lastFedAt,
                 timeInterval: TimeInterval(DamagoAttributes.feedCooldown)
             )
-            .frame(width: 26, height: 26)
-            DynamicIslandIconImage(for: context.state.iconImageName, size: 20)
+            .frame(width: largeIconSize, height: largeIconSize)
+            DynamicIslandIconImage(
+                for: context.state.iconImageName,
+                size: smallIconSize
+            )
                 .clipShape(Rectangle())
         }
     }
@@ -107,7 +123,7 @@ struct DamagoWidgetLiveActivity: Widget {
     // MARK: ButtonView
 
     private func actionButtonsView(udid: String) -> some View {
-        VStack(spacing: 10) {
+        VStack(spacing: .spacingS) {
             feedButton(udid: udid)
             pokeButton(udid: udid)
         }
@@ -115,7 +131,7 @@ struct DamagoWidgetLiveActivity: Widget {
 
     private func feedButton(udid: String) -> some View {
         Button(intent: FeedAppIntent(udid: udid)) {
-            HStack(spacing: 8) {
+            HStack(spacing: .spacingS) {
                 Image(systemName: "fork.knife")
                     .foregroundStyle(feedButtonIconColor)
                 Text("밥 주기")
@@ -127,7 +143,7 @@ struct DamagoWidgetLiveActivity: Widget {
 
     private func pokeButton(udid: String) -> some View {
         Button(intent: PokeAppIntent(udid: udid)) {
-            HStack(spacing: 8) {
+            HStack(spacing: .spacingS) {
                 Image(systemName: "heart.fill")
                     .foregroundStyle(.white)
                 Text("콕 찌르기")
@@ -141,13 +157,12 @@ struct DamagoWidgetLiveActivity: Widget {
 
     private func circularProgressView(
         startAt: Date,
-        timeInterval: TimeInterval,
-        text: String? = nil
+        timeInterval: TimeInterval
     ) -> some View {
         ProgressView(
             timerInterval: startAt...startAt.addingTimeInterval(timeInterval),
             label: { EmptyView() },
-            currentValueLabel: { Text(text ?? "").font(.system(size: 14))}
+            currentValueLabel: { EmptyView() }
         )
         .progressViewStyle(.circular)
         .tint(.orange)
@@ -173,9 +188,9 @@ private struct CapsuleActionButtonModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .buttonStyle(.plain)
-            .font(.system(size: 16, weight: .semibold))
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
+            .font(.system(size: .spacingM, weight: .semibold))
+            .padding(.vertical, .spacingS)
+            .padding(.horizontal, .spacingS + .spacingXS)
             .containerRelativeFrame(.horizontal, count: 5, span: 2, spacing: 0)
             .background(backgroundColor)
             .clipShape(Capsule())
