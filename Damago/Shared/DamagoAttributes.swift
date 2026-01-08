@@ -6,8 +6,11 @@
 //
 
 import ActivityKit
+import Foundation
 
 struct DamagoAttributes: ActivityAttributes {
+    static let feedCooldown: TimeInterval = 60 * 5
+
     // MARK: - Dynamic State
     public struct ContentState: Codable, Hashable {
         var petType: String
@@ -53,6 +56,8 @@ struct DamagoAttributes: ActivityAttributes {
         var statusImageName: String {
             isHungry ? "NeedFood" : "BaseHeart"
         }
+
+        var lastFedAt: Date
     }
 
     // MARK: - Static Data
