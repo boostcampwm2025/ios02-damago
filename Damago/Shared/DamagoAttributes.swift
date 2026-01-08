@@ -6,6 +6,7 @@
 //
 
 import ActivityKit
+import Foundation
 
 struct DamagoAttributes: ActivityAttributes {
     // MARK: - Dynamic State
@@ -17,6 +18,10 @@ struct DamagoAttributes: ActivityAttributes {
         var level: Int
         var currentExp: Int
         var maxExp: Int
+        var lastFedAt: String?
+        var lastFedAtDate: Date? {
+            Date.fromISO8601(lastFedAt)
+        }
 
         var largeImageName: String {
             let stateName: String = isHungry ? "hungry" : "base"
