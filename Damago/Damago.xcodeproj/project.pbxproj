@@ -61,6 +61,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				DamagoAttributes.swift,
+				"Date+.swift",
 				"Font+.swift",
 				"Spacing+.swift",
 			);

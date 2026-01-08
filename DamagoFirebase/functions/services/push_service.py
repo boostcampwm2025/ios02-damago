@@ -95,12 +95,24 @@ def update_live_activity(req: https_fn.Request) -> https_fn.Response:
     if not target_udid or not content_state:
         return https_fn.Response("Missing targetUDID or contentState", status=400)
 
+    success = update_live_activity_internal(target_udid, content_state)
+    
+    if success:
+        return https_fn.Response(f"Live Activity Updated")
+    else:
+        return https_fn.Response("Live Activity update skipped or failed", status=200)
+
+def update_live_activity_internal(target_udid: str, content_state: dict) -> bool:
+    """
+    내부 호출용 Live Activity 업데이트 함수
+    """
     db = get_db()
     
     user_doc = db.collection("users").document(target_udid).get()
     
     if not user_doc.exists:
-        return https_fn.Response("User not found", status=404)
+        print(f"User {target_udid} not found")
+        return False
 
     user_data = user_doc.to_dict()
     fcm_token = user_data.get("fcmToken")
@@ -108,7 +120,8 @@ def update_live_activity(req: https_fn.Request) -> https_fn.Response:
     use_la = user_data.get("useLiveActivity", True)
 
     if not fcm_token or not la_token or not use_la:
-        return https_fn.Response("Live Activity not active or disabled", status=200)
+        print(f"Live Activity not active for {target_udid}")
+        return False
 
     try:
         aps = messaging.Aps(
@@ -137,11 +150,11 @@ def update_live_activity(req: https_fn.Request) -> https_fn.Response:
         )
         response = messaging.send(message)
         print(f"Live Activity update sent to {target_udid}: {response}")
-        return https_fn.Response(f"Live Activity Updated")
+        return True
 
     except Exception as e:
         print(f"Error updating Live Activity: {e}")
-        return https_fn.Response(f"Error: {str(e)}", status=500)
+        return False
 
 def start_live_activity(req: https_fn.Request) -> https_fn.Response:
     """

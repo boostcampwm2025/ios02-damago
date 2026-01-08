@@ -27,7 +27,7 @@ struct LockScreenLiveActivityView: View {
 
 private extension LockScreenLiveActivityView {
     var content: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: .spacingM) {
             Image(context.state.largeImageName)
                 .resizable()
                 .scaledToFit()
@@ -37,19 +37,21 @@ private extension LockScreenLiveActivityView {
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundStyle(.orange)
-                Text("소화 중")
+                Text("포만감")
                     .foregroundStyle(.white)
-                ProgressView(
-                    timerInterval: context.state.lastFedAt...context.state.lastFedAt.addingTimeInterval(
-                        DamagoAttributes.feedCooldown),
-                    label: { EmptyView() },
-                    currentValueLabel: { EmptyView() }
-                )
-                .progressViewStyle(.linear)
-                .tint(.orange)
-                .scaleEffect(y: 2)
-                .padding(.trailing, 16)
-                .padding(.bottom, 8)
+                if let lastFedAt = context.state.lastFedAtDate {
+                    ProgressView(
+                        timerInterval: lastFedAt...lastFedAt.addingTimeInterval(
+                            DamagoAttributes.feedCooldown),
+                        label: { EmptyView() },
+                        currentValueLabel: { EmptyView() }
+                    )
+                    .progressViewStyle(.linear)
+                    .tint(.orange)
+                    .scaleEffect(y: 2)
+                    .padding(.trailing, .spacingM)
+                    .padding(.bottom, .spacingS)
+                }
                 /// 추후 동적으로 문구 변경
                 /// 예시: "우리의 사랑이 이만큼 자랐어요! 🌱",
                 /// "[애칭]님의 사랑으로 배부르는 중 💕",
@@ -58,7 +60,7 @@ private extension LockScreenLiveActivityView {
                     .font(.body)
                     .foregroundColor(.white)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, .spacingS)
         }
     }
 }

@@ -15,5 +15,5 @@ struct ActivityData {
     var level: Int
     var currentExp: Int
     var maxExp: Int
-    var lastFedAt: Date
+    var lastFedAt: String?
 }

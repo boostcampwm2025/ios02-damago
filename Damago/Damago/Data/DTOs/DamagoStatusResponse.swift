@@ -15,5 +15,5 @@ struct DamagoStatusResponse: Codable {
     let maxExp: Int
     let isHungry: Bool
     let statusMessage: String
-    let lastFedAt: Date
+    let lastFedAt: String?
 }

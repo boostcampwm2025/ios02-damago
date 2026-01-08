@@ -44,5 +44,9 @@ def feed(req: https_fn.Request) -> https_fn.Response:
     return pet_service.feed(req)
 
 @https_fn.on_request()
+def make_hungry(req: https_fn.Request) -> https_fn.Response:
+    return pet_service.make_hungry(req)
+
+@https_fn.on_request()
 def get_user_info(req: https_fn.Request) -> https_fn.Response:
     return user_service.get_user_info(req)

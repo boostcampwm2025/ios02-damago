@@ -60,7 +60,7 @@ struct DamagoWidgetLiveActivity: Widget {
     }
 
     private func expandedCenterView(context: ActivityViewContext<DamagoAttributes>) -> some View {
-        HStack(spacing: 24) {
+        HStack(spacing: .spacingL) {
             DynamicIslandIconImage(
                 for: context.state.largeImageName,
                 size: charactrerSize
@@ -75,7 +75,7 @@ struct DamagoWidgetLiveActivity: Widget {
         HStack {
             Text("포만감")
             linearProgressView(
-                startAt: context.state.lastFedAt,
+                startAt: context.state.lastFedAtDate,
                 timeInterval: DamagoAttributes.feedCooldown
             )
         }
@@ -85,7 +85,7 @@ struct DamagoWidgetLiveActivity: Widget {
     private func compactLeadingView(context: ActivityViewContext<DamagoAttributes>) -> some View {
         ZStack {
             circularProgressView(
-                startAt: context.state.lastFedAt,
+                startAt: context.state.lastFedAtDate,
                 timeInterval: TimeInterval(DamagoAttributes.feedCooldown)
             )
             .frame(width: largeIconSize, height: largeIconSize)
@@ -108,7 +108,7 @@ struct DamagoWidgetLiveActivity: Widget {
     private func minimalView(context: ActivityViewContext<DamagoAttributes>) -> some View {
         ZStack {
             circularProgressView(
-                startAt: context.state.lastFedAt,
+                startAt: context.state.lastFedAtDate,
                 timeInterval: TimeInterval(DamagoAttributes.feedCooldown)
             )
             .frame(width: largeIconSize, height: largeIconSize)
@@ -156,27 +156,35 @@ struct DamagoWidgetLiveActivity: Widget {
     // MARK: ProgressView
 
     private func circularProgressView(
-        startAt: Date,
+        startAt: Date?,
         timeInterval: TimeInterval
     ) -> some View {
-        ProgressView(
-            timerInterval: startAt...startAt.addingTimeInterval(timeInterval),
-            label: { EmptyView() },
-            currentValueLabel: { EmptyView() }
-        )
-        .progressViewStyle(.circular)
-        .tint(.orange)
+        Group {
+            if let startAt {
+                ProgressView(
+                    timerInterval: startAt...startAt.addingTimeInterval(timeInterval),
+                    label: { EmptyView() },
+                    currentValueLabel: { EmptyView() }
+                )
+                .progressViewStyle(.circular)
+                .tint(.orange)
+            }
+        }
     }
 
-    private func linearProgressView(startAt: Date, timeInterval: TimeInterval) -> some View {
-        ProgressView(
-            timerInterval: startAt...startAt.addingTimeInterval(timeInterval),
-            label: { EmptyView() },
-            currentValueLabel: { EmptyView() }
-        )
-        .tint(.orange)
-        .progressViewStyle(.linear)
-        .scaleEffect(y: 2)
+    private func linearProgressView(startAt: Date?, timeInterval: TimeInterval) -> some View {
+        Group {
+            if let startAt {
+                ProgressView(
+                    timerInterval: startAt...startAt.addingTimeInterval(timeInterval),
+                    label: { EmptyView() },
+                    currentValueLabel: { EmptyView() }
+                )
+                .tint(.orange)
+                .progressViewStyle(.linear)
+                .scaleEffect(y: 2)
+            }
+        }
     }
 }
 
@@ -222,7 +230,7 @@ extension DamagoAttributes.ContentState {
             level: 20,
             currentExp: 30,
             maxExp: 100,
-            lastFedAt: Date()
+            lastFedAt: "2026-01-08T12:00:00Z"
         )
     }
 
@@ -234,7 +242,7 @@ extension DamagoAttributes.ContentState {
             level: 20,
             currentExp: 30,
             maxExp: 100,
-            lastFedAt: Date().addingTimeInterval(-1 * DamagoAttributes.feedCooldown)
+            lastFedAt: "2026-01-08T08:00:00Z"
         )
     }
 }
