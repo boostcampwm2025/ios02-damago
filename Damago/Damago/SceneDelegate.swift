@@ -24,10 +24,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             viewModel: codeConnectionViewModel
         )
 
-        let navigationViewController = UINavigationController(
-            rootViewController: codeConnectionViewController
-        )
-        window.rootViewController = navigationViewController
+        window.rootViewController = codeConnectionViewController
         self.window = window
         window.makeKeyAndVisible()
     }
