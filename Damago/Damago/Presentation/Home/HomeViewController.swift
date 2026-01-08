@@ -34,7 +34,7 @@ final class HomeViewController: UIViewController {
         let output = viewModel.transform(
             HomeViewModel.Input(
                 viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
-                feedDidComplete: mainView.feedButton.tapPublisher,
+                feedButtonDidTap: mainView.feedButton.tapPublisher,
                 pokeButtonDidTap: mainView.pokeButton.tapPublisher
             )
         )

@@ -8,10 +8,10 @@
 import Combine
 import Foundation
 
-final class HomeViewModel: ViewModelProtocol {
+final class HomeViewModel: ViewModel {
     struct Input {
         let viewDidLoad: AnyPublisher<Void, Never>
-        let feedDidComplete: AnyPublisher<Void, Never>
+        let feedButtonDidTap: AnyPublisher<Void, Never>
         let pokeButtonDidTap: AnyPublisher<Void, Never>
     }
 
@@ -34,7 +34,7 @@ final class HomeViewModel: ViewModelProtocol {
             .sink { }
             .store(in: &cancellables)
 
-        input.feedDidComplete
+        input.feedButtonDidTap
             .receive(on: DispatchQueue.main)
             .sink { }
             .store(in: &cancellables)
