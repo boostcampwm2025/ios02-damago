@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import os
 
 @MainActor
 final class ViewController: UIViewController {
@@ -62,30 +63,16 @@ final class ViewController: UIViewController {
             interactrionButton.topAnchor.constraint(equalTo: pokeButton.bottomAnchor, constant: 16),
             interactrionButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
+            feedButton.topAnchor.constraint(equalTo: interactrionButton.bottomAnchor, constant: 20),
+            feedButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
             spriteAnimationView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             spriteAnimationView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             spriteAnimationView.widthAnchor.constraint(equalToConstant: 300),
             spriteAnimationView.heightAnchor.constraint(equalToConstant: 300)
         ])
-
-            feedButton.topAnchor.constraint(equalTo: pokeButton.bottomAnchor, constant: 20),
-            feedButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            gifImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            gifImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            gifImageView.widthAnchor.constraint(equalToConstant: 200),
-            gifImageView.heightAnchor.constraint(equalToConstant: 200)
-        ])
-        
-        setupTapGesture()
-        gifImageView.animate(withGIFNamed: "dog")
         
         fetchUserInfo()
-    }
-    
-    private func setupTapGesture() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleGifTapAction(_:)))
-        gifImageView.addGestureRecognizer(tapGesture)
     }
     
     override func viewDidLayoutSubviews() {
