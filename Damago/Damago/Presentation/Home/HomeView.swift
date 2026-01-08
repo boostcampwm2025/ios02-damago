@@ -80,6 +80,12 @@ final class HomeView: UIView {
         return imageView
     }()
 
+    let expBar: ExperienceBar = {
+        let expBar = ExperienceBar()
+        expBar.translatesAutoresizingMaskIntoConstraints = false
+        return expBar
+    }()
+
     let feedButton: DamagoCTAButton = {
         let button = DamagoCTAButton()
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -124,7 +130,7 @@ final class HomeView: UIView {
     private func setupHierarchy() {
         cardContentContainer.addSubview(characterView)
         cardShadowContainer.addSubview(cardContentContainer)
-        [capsuleLabel, dDayLabel, nameLabel, cardShadowContainer, feedButton, pokeButton]
+        [capsuleLabel, dDayLabel, nameLabel, cardShadowContainer, feedButton, pokeButton, expBar]
             .forEach { addSubview($0) }
     }
 
@@ -155,6 +161,10 @@ final class HomeView: UIView {
             characterView.leadingAnchor.constraint(equalTo: cardContentContainer.leadingAnchor, constant: .spacingM),
             characterView.trailingAnchor.constraint(equalTo: cardContentContainer.trailingAnchor, constant: -.spacingM),
             characterView.bottomAnchor.constraint(equalTo: cardContentContainer.bottomAnchor, constant: -.spacingM),
+
+            expBar.topAnchor.constraint(equalTo: characterView.bottomAnchor, constant: .spacingL),
+            expBar.leadingAnchor.constraint(equalTo: cardContentContainer.leadingAnchor, constant: .spacingM),
+            expBar.trailingAnchor.constraint(equalTo: cardContentContainer.trailingAnchor, constant: -.spacingM),
 
             feedButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
             feedButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),

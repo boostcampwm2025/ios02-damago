@@ -69,5 +69,10 @@ final class HomeViewController: UIViewController {
             .mapForUI { $0.isPokeButtonEnabled }
             .sink { [weak self] in self?.mainView.pokeButton.isEnabled = $0 }
             .store(in: &cancellables)
+
+        output
+            .mapForUI { ExperienceBar.State(level: $0.level, currentExp: $0.currentExp, maxExp: $0.maxExp) }
+            .sink { [weak self] in self?.mainView.expBar.update(with: $0) }
+            .store(in: &cancellables)
     }
 }

@@ -20,6 +20,9 @@ final class HomeViewModel: ViewModel {
         var foodAmount = 5
         var dDay = 365
         var petName = "모찌"
+        var level = 17
+        var currentExp = 26
+        var maxExp = 100
 
         var isFeedButtonEnabled: Bool { foodAmount > 0 }
         var isPokeButtonEnabled: Bool { true }
