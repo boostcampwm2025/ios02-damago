@@ -17,3 +17,9 @@ XP_TABLE = [
 
 MAX_LEVEL = 30
 FEED_EXP = 10  # 1회 밥주기 경험치
+
+# Cloud Tasks 설정
+PROJECT_ID = "damago-a43da" 
+LOCATION = "us-central1"
+QUEUE_NAME = "make-hungry-queue"
+HUNGER_DELAY_SECONDS = 4 * 60 * 60 # 4시간

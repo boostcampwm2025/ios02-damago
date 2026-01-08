@@ -34,11 +34,15 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
     pet_status = None
     
     # --- [Pet Aggregation] ---
-    # damagoID가 있으면 펫 정보도 함께 조회하여 클라이언트의 요청 수를 줄임
+    # damagoID가 있으면 펫 정보도 함께 조회 (Aggregation)
     if damago_id:
         pet_doc = db.collection("damagos").document(damago_id).get()
         if pet_doc.exists:
             pet_data = pet_doc.to_dict()
+            
+            last_fed_at = pet_data.get("lastFedAt")
+            last_fed_at_str = last_fed_at.isoformat() if last_fed_at else None
+            
             pet_status = {
                 "petName": pet_data.get("petName", "이름 없는 펫"),
                 "petType": pet_data.get("petType", "Teddy"),
@@ -47,6 +51,7 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
                 "maxExp": pet_data.get("maxExp", XP_TABLE[0]),
                 "isHungry": pet_data.get("isHungry", False),
                 "statusMessage": pet_data.get("statusMessage", "행복해요!"),
+                "lastFedAt": last_fed_at_str
             }
 
     response_data = {
