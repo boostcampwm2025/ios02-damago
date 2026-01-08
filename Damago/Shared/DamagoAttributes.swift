@@ -6,22 +6,55 @@
 //
 
 import ActivityKit
+import Foundation
 
 struct DamagoAttributes: ActivityAttributes {
+    static let feedCooldown: TimeInterval = 10
+
     // MARK: - Dynamic State
     public struct ContentState: Codable, Hashable {
-        var characterName: String
+        var petType: String
         var isHungry: Bool
         var statusMessage: String
 
+        var level: Int
+        var currentExp: Int
+        var maxExp: Int
+        var lastFedAt: String?
+        var lastFedAtDate: Date? {
+            Date.fromISO8601(lastFedAt)
+        }
+
         var largeImageName: String {
-            let stateName = isHungry ? "hungry" : "base"
-            return "\(characterName)/\(stateName)"
+            let stateName: String = isHungry ? "hungry" : "base"
+            // Level 1~10: 알 (Egg) - 공통 이미지
+            if level <= 10 {
+                return "Egg"// \(stateName)"
+            }
+            // Level 30: 성체 + 왕관 (Adult + Crown)
+            else if level >= 30 {
+                return "\(petType)/\(stateName)"// _crown"
+            }
+            // Level 11~29: 성체 (Adult)
+            else {
+                return "\(petType)/\(stateName)"
+            }
         }
 
         var iconImageName: String {
-            let stateName = isHungry ? "iconHungry" : "iconBase"
-            return "\(characterName)/\(stateName)"
+            let stateName: String = isHungry ? "iconHungry" : "iconBase"
+            // Level 1~10: 알 (Egg)
+            if level <= 10 {
+                return "Egg"// \(stateName)"
+            }
+            // Level 30: 성체 + 왕관
+            else if level >= 30 {
+                return "\(petType)/\(stateName)"// _crown"
+            }
+            // Level 11~29: 성체
+            else {
+                return "\(petType)/\(stateName)"
+            }
         }
 
         var statusImageName: String {

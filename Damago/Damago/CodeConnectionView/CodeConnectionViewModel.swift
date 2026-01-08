@@ -46,7 +46,7 @@ extension CodeConnectionViewModel {
     }
 
     private func requestGenerateCode(fcmToken: String) async throws -> String? {
-        guard let url = URL(string: "https://generate-code-wrjwddcv2q-uc.a.run.app"),
+        guard let url = URL(string: "\(BaseURL.string)/generate_code"),
               let udid = udid
         else { return nil }
 
@@ -75,10 +75,10 @@ extension CodeConnectionViewModel {
 
 extension CodeConnectionViewModel {
     private func requestConnectCouple(targetCode: String) async throws {
-        guard let url = URL(string: "https://connect-couple-wrjwddcv2q-uc.a.run.app") else { return }
+        guard let url = URL(string: "\(BaseURL.string)/connect_couple") else { return }
 
         var request = URLRequest(url: url)
-        let body = ["my_code": code, "target_code": targetCode]
+        let body = ["myCode": code, "targetCode": targetCode]
 
         request.httpMethod = "POST"
         request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
@@ -94,9 +94,4 @@ extension CodeConnectionViewModel {
             )
         }
     }
-}
-
-enum NetworkError: Error {
-    case invalidStatusCode(Int, String)
-    case invalidResponse
 }

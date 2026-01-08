@@ -8,8 +8,8 @@
 import UIKit
 
 enum TabItem: String, CaseIterable {
-    case collection = "컬렉션"
     case home = "홈"
+    case collection = "컬렉션"
     case interaction = "상호작용"
     case game = "미니게임"
     case setting = "설정"
@@ -18,10 +18,10 @@ enum TabItem: String, CaseIterable {
     
     var image: UIImage? {
         switch self {
-        case .collection:
-            return UIImage(systemName: "square.grid.2x2")
         case .home:
             return UIImage(systemName: "house")
+        case .collection:
+            return UIImage(systemName: "square.grid.2x2")
         case .interaction:
             return UIImage(systemName: "heart")
         case .game:
@@ -33,9 +33,9 @@ enum TabItem: String, CaseIterable {
     
     var tag: Int {
         switch self {
-        case .collection:
-            return 0
         case .home:
+            return 0
+        case .collection:
             return 1
         case .interaction:
             return 2

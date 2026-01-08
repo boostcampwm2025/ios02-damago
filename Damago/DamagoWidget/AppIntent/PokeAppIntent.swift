@@ -8,11 +8,6 @@
 import AppIntents
 import Foundation
 
-enum NetworkError: Error {
-    case invalidResponse
-    case invalidStatusCode(Int, String)
-}
-
 struct PokeAppIntent: AppIntent {
     static var title: LocalizedStringResource = "콕 찌르기"
     static var description: IntentDescription = "상대방을 콕 찔러 알림을 보냅니다."
@@ -27,7 +22,7 @@ struct PokeAppIntent: AppIntent {
     init() {}
 
     func perform() async throws -> some IntentResult {
-        guard let url = URL(string: "https://poke-wrjwddcv2q-uc.a.run.app") else {
+        guard let url = URL(string: "\(BaseURL.string)/poke") else {
             return .result()
         }
 

@@ -68,6 +68,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				DamagoAttributes.swift,
+				"Date+.swift",
+				"Font+.swift",
+				"Spacing+.swift",
 			);
 			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
 		};
@@ -77,6 +80,13 @@
 				Info.plist,
 			);
 			target = 4B5FE2D32EF130B6005E31DA /* Damago */;
+		};
+		4B6B9B0F2F0E3333002C751C /* Exceptions for "Damago" folder in "DamagoWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Data/Network/BaseURL.swift,
+			);
+			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
