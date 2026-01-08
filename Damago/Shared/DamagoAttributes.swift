@@ -9,6 +9,8 @@ import ActivityKit
 import Foundation
 
 struct DamagoAttributes: ActivityAttributes {
+    static let feedCooldown: TimeInterval = 10
+
     // MARK: - Dynamic State
     public struct ContentState: Codable, Hashable {
         var petType: String
