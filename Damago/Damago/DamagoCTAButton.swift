@@ -13,6 +13,7 @@ final class DamagoCTAButton: UIButton {
         let foregroundColor: UIColor
         let image: UIImage?
         let title: String
+        let subtitle: String?
     }
 
     private var activeConfig: Configuration?
@@ -32,7 +33,7 @@ final class DamagoCTAButton: UIButton {
         var config = UIButton.Configuration.filled()
         config.imagePlacement = .leading
         config.imagePadding = .spacingS
-
+        config.titleAlignment = .center
         config.background.cornerRadius = .mediumButton
         config.cornerStyle = .fixed
         self.configuration = config
@@ -63,6 +64,13 @@ final class DamagoCTAButton: UIButton {
         titleContainer.font = .title3
         titleContainer.foregroundColor = style.foregroundColor
         updatedConfig?.attributedTitle = AttributedString(style.title, attributes: titleContainer)
+
+        if let subtitleText = style.subtitle {
+            var subtitleContainer = AttributeContainer()
+            subtitleContainer.font = .body3
+            subtitleContainer.foregroundColor = style.foregroundColor.withAlphaComponent(0.6)
+            updatedConfig?.attributedSubtitle = AttributedString(subtitleText, attributes: subtitleContainer)
+        }
 
         updatedConfig?.image = style.image
 

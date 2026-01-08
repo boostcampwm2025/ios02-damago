@@ -47,32 +47,27 @@ final class HomeViewController: UIViewController {
     func bind(_ output: HomeViewModel.Output) {
         output
             .mapForUI { $0.dDay }
-            .sink { [weak self] dDay in self?.mainView.updateDDay(days: dDay) }
+            .sink { [weak self] in self?.mainView.updateDDay(days: $0) }
             .store(in: &cancellables)
 
         output
             .mapForUI { $0.coinAmount }
-            .sink { [weak self] amount in self?.mainView.updateCoin(amount: amount) }
+            .sink { [weak self] in self?.mainView.updateCoin(amount: $0) }
             .store(in: &cancellables)
 
         output
-            .mapForUI { $0.foodAmount }
-            .sink { [weak self] amount in self?.mainView.foodBadge.text = "\(amount)" }
+            .mapForUI { HomeView.FeedButtonState(foodAmount: $0.foodAmount, isEnabled: $0.isFeedButtonEnabled) }
+            .sink { [weak self] in self?.mainView.updateFeedButton(state: $0) }
             .store(in: &cancellables)
 
         output
             .mapForUI { $0.petName }
-            .sink { [weak self] name in self?.mainView.nameLabel.text = name }
-            .store(in: &cancellables)
-
-        output
-            .mapForUI { $0.isFeedButtonEnabled }
-            .sink { [weak self] isEnabled in self?.mainView.feedButton.isEnabled = isEnabled }
+            .sink { [weak self] in self?.mainView.nameLabel.text = $0 }
             .store(in: &cancellables)
 
         output
             .mapForUI { $0.isPokeButtonEnabled }
-            .sink { [weak self] isEnabled in self?.mainView.pokeButton.isEnabled = isEnabled }
+            .sink { [weak self] in self?.mainView.pokeButton.isEnabled = $0 }
             .store(in: &cancellables)
     }
 }

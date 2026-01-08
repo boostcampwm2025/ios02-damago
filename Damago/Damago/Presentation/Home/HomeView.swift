@@ -80,44 +80,27 @@ final class HomeView: UIView {
         return imageView
     }()
 
-    let feedButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        let symbolConfig = UIImage.SymbolConfiguration(font: .title3)
-        config.image = UIImage(systemName: "carrot.fill", withConfiguration: symbolConfig)
-
-        config.baseForegroundColor = .damagoPrimary
-        let button = UIButton(configuration: config)
+    let feedButton: DamagoCTAButton = {
+        let button = DamagoCTAButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
 
-    let foodBadge: CircleTextBadge = {
-        let badge = CircleTextBadge(padding: 6)
-        badge.font = .caption
-        badge.textColor = .textPrimary
-        badge.backgroundColor = .white
-        badge.translatesAutoresizingMaskIntoConstraints = false
-        return badge
-    }()
+    let pokeButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(systemName: "hand.rays.fill")
+        config.imagePlacement = .top
+        config.imagePadding = .spacingS
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(font: .title3)
 
-    let pokeButton: DamagoCTAButton = {
-        let button = DamagoCTAButton()
-        let activeConfig = DamagoCTAButton.Configuration(
-            backgroundColor: .damagoPrimary,
-            foregroundColor: .white,
-            image: UIImage(systemName: "hand.rays.fill"),
-            title: "콕 찌르기"
-        )
-        let disabledConfig = DamagoCTAButton.Configuration(
-            backgroundColor: .textTertiary,
-            foregroundColor: .white,
-            image: nil,
-            title: "아직 찌를 수 없습니다"
-        )
-        button.configure(
-            active: activeConfig,
-            disabled: disabledConfig
-        )
+        var titleContainer = AttributeContainer()
+        titleContainer.font = .caption
+        titleContainer.foregroundColor = .textSecondary
+        config.attributedTitle = AttributedString("콕 찌르기", attributes: titleContainer)
+
+        config.baseForegroundColor = .damagoPrimary
+
+        let button = UIButton(configuration: config)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -141,7 +124,7 @@ final class HomeView: UIView {
     private func setupHierarchy() {
         cardContentContainer.addSubview(characterView)
         cardShadowContainer.addSubview(cardContentContainer)
-        [capsuleLabel, dDayLabel, nameLabel, cardShadowContainer, feedButton, foodBadge, pokeButton]
+        [capsuleLabel, dDayLabel, nameLabel, cardShadowContainer, feedButton, pokeButton]
             .forEach { addSubview($0) }
     }
 
@@ -150,11 +133,8 @@ final class HomeView: UIView {
             capsuleLabel.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
             capsuleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
 
-            feedButton.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
-            feedButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
-
-            foodBadge.leadingAnchor.constraint(equalTo: feedButton.trailingAnchor, constant: -.spacingM),
-            foodBadge.bottomAnchor.constraint(equalTo: feedButton.topAnchor, constant: .spacingM),
+            pokeButton.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
+            pokeButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
 
             dDayLabel.topAnchor.constraint(equalTo: capsuleLabel.bottomAnchor, constant: .spacingXL),
             dDayLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
@@ -176,15 +156,20 @@ final class HomeView: UIView {
             characterView.trailingAnchor.constraint(equalTo: cardContentContainer.trailingAnchor, constant: -.spacingM),
             characterView.bottomAnchor.constraint(equalTo: cardContentContainer.bottomAnchor, constant: -.spacingM),
 
-            pokeButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
-            pokeButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
-            pokeButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingXL)
+            feedButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
+            feedButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
+            feedButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingXL)
         ])
     }
 
 }
 
 extension HomeView {
+    struct FeedButtonState: Equatable {
+        let foodAmount: Int
+        let isEnabled: Bool
+    }
+
     func updateCoin(amount: Int) {
         let completeText = NSMutableAttributedString()
         completeText.append(coinAttachmentString)
@@ -193,7 +178,7 @@ extension HomeView {
             .font: UIFont.body3,
             .foregroundColor: UIColor.textPrimary
         ]
-        let labelText = NSAttributedString(string: " 코인: \(amount)", attributes: textAttributes)
+        let labelText = NSAttributedString(string: " \(amount)", attributes: textAttributes)
 
         completeText.append(labelText)
 
@@ -213,5 +198,26 @@ extension HomeView {
         completeText.append(labelText)
 
         self.dDayLabel.attributedText = completeText
+    }
+
+    func updateFeedButton(state: FeedButtonState) {
+        let activeConfig = DamagoCTAButton.Configuration(
+            backgroundColor: .damagoPrimary,
+            foregroundColor: .white,
+            image: UIImage(systemName: "carrot.fill"),
+            title: "먹이 주기",
+            subtitle: "\(state.foodAmount)개 남음"
+        )
+
+        let disabledConfig = DamagoCTAButton.Configuration(
+            backgroundColor: .textTertiary,
+            foregroundColor: .white,
+            image: UIImage(systemName: "carrot"),
+            title: "남은 먹이가 없어요",
+            subtitle: "서로에 대해 알아가며 먹이를 얻어 보세요"
+        )
+
+        feedButton.configure(active: activeConfig, disabled: disabledConfig)
+        feedButton.isEnabled = state.isEnabled
     }
 }
