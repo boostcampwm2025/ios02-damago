@@ -74,15 +74,6 @@ final class ViewController: UIViewController {
         
         fetchUserInfo()
     }
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        
-        if !hasStartedAnimation {
-            hasStartedAnimation = true
-            spriteAnimationView.animate(damagoName: "PuppyBark")
-        }
-    }
 }
 
 extension ViewController {

@@ -34,6 +34,10 @@ final class SpriteAnimationView: UIView {
         skView = SKView(frame: .zero)
         super.init(frame: frame)
         setupSKView()
+        
+        if let defaultFrameNames {
+            animate(withFrameNames: defaultFrameNames)
+        }
     }
     
     convenience init(defaultDamagoName: String, frameCount: Int = 6) {
