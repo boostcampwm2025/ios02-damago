@@ -90,7 +90,8 @@ final class TabBarViewController: UITabBarController {
         case .collection:
             return UIViewController()
         case .home:
-            let vm = HomeViewModel()
+            let udid = UIDevice.current.identifierForVendor?.uuidString
+            let vm = HomeViewModel(udid: udid)
             let vc = HomeViewController(viewModel: vm)
             return vc
         case .interaction:
