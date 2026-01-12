@@ -86,8 +86,8 @@ final class HomeView: UIView {
         return expBar
     }()
 
-    let feedButton: DamagoCTAButton = {
-        let button = DamagoCTAButton()
+    let feedButton: CTAButton = {
+        let button = CTAButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -211,7 +211,7 @@ extension HomeView {
     }
 
     func updateFeedButton(state: FeedButtonState) {
-        let activeConfig = DamagoCTAButton.Configuration(
+        let activeConfig = CTAButton.Configuration(
             backgroundColor: .damagoPrimary,
             foregroundColor: .white,
             image: UIImage(systemName: "carrot.fill"),
@@ -219,7 +219,7 @@ extension HomeView {
             subtitle: "\(state.foodAmount)개 남음"
         )
 
-        let disabledConfig = DamagoCTAButton.Configuration(
+        let disabledConfig = CTAButton.Configuration(
             backgroundColor: .textTertiary,
             foregroundColor: .white,
             image: UIImage(systemName: "carrot"),

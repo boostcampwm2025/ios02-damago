@@ -1,5 +1,5 @@
 //
-//  DamagoCTAButton.swift
+//  CTAButton.swift
 //  Damago
 //
 //  Created by 박현수 on 1/8/26.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class DamagoCTAButton: UIButton {
+final class CTAButton: UIButton {
     struct Configuration {
         let backgroundColor: UIColor
         let foregroundColor: UIColor
