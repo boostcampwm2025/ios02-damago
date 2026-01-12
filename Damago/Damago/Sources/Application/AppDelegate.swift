@@ -49,6 +49,11 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // 라이브 액티비티 원격 실행을 위한 토큰 감시
         LiveActivityManager.shared.startMonitoring()
+
+        // 의존성 등록
+        let assembler = AppAssembler()
+        assembler.assemble(AppDIContainer.shared)
+        
         return true
     }
 
