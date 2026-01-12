@@ -72,12 +72,11 @@ final class HomeView: UIView {
         return view
     }()
 
-    let characterView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "dog")
-        imageView.contentMode = .scaleAspectFit
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
+    let characterView: SpriteAnimationView = {
+        let view = SpriteAnimationView(spriteSheetName: "BunnyIdle-Sheet")
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.animationDuration = 1.0
+        return view
     }()
 
     let expBar: ExperienceBar = {
