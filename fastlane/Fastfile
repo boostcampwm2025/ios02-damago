@@ -22,7 +22,9 @@ platform :ios do
         scheme: "Damago",
         configuration: config,
         destination: "generic/platform=iOS Simulator", # 특정 시뮬레이터가 아닌 일반적인 시뮬레이터 사용
-        clean: true
+        clean: true,
+        # CI 환경에서 SwiftLint 등 빌드 툴 플러그인 신뢰 문제 해결
+        xcargs: "-skipPackagePluginValidation"
       )
     end
   end
