@@ -8,4 +8,3 @@
 protocol Assembly {
     func assemble(_ container: DIContainer)
 }
-g
