@@ -1,0 +1,35 @@
+name: Damago iOS CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build:
+    runs-on: macos-26 
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    # Ruby 환경 설정 (Fastlane 구동용)
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3'
+        bundler-cache: true
+
+    # Xcode 버전 선택
+    - name: Select Xcode 26.1
+      run: sudo xcode-select -s /Applications/Xcode_26.1.app/Contents/Developer
+
+    # .gitignore로 누락된 파일 생성
+    # 실제 CI 동작을 위해 GitHub Secrets 설정
+    - name: Create GoogleService-Info.plist
+      run: |
+        mkdir -p ./Damago/Resources
+        echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}" | base64 --decode > ./Damago/Resources/GoogleService-Info.plist
+
+    - name: Run Fastlane Tests
+      run: bundle exec fastlane test
