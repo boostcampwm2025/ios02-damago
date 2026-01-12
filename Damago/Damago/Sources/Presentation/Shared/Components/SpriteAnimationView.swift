@@ -33,15 +33,6 @@ final class SpriteAnimationView: UIView {
         setupSKView()
     }
     
-    /// columns를 직접 지정하는 초기화
-    init(frame: CGRect = .zero, spriteSheetName: String, columns: Int) {
-        self.spriteSheetName = spriteSheetName
-        self.spriteSheetColumns = columns
-        skView = SKView(frame: .zero)
-        super.init(frame: frame)
-        setupSKView()
-    }
-    
     required init?(coder: NSCoder) {
         spriteSheetName = ""
         spriteSheetColumns = 4
