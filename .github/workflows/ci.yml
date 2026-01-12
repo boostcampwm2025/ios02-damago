@@ -8,7 +8,8 @@ on:
 
 jobs:
   build:
-    runs-on: macos-26 
+    runs-on: macos-26
+    timeout-minutes: 30 # 빌드가 30분을 넘어가면 강제 종료
     
     steps:
     - uses: actions/checkout@v4
@@ -32,4 +33,8 @@ jobs:
         echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}" | base64 --decode > ./Damago/Resources/GoogleService-Info.plist
 
     - name: Run Fastlane Tests
+      # CI 환경에서도 Xcode 설정을 읽어오는 시간을 충분히 확보
+      env:
+        FASTLANE_XCODE_LIST_TIMEOUT: 120
+        FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 120
       run: bundle exec fastlane test
