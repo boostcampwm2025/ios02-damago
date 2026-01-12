@@ -104,7 +104,7 @@ extension SpriteAnimationView {
     /// columns를 지정하여 애니메이션 재생
     func animate(spriteSheetName: String, columns: Int, repeatCount: Int? = nil) {
         guard bounds.width > 0 && bounds.height > 0 else { return }
-        guard let textures = loadTexturesFromSheet(sheetName: spriteSheetName, columns: columns), !textures.isEmpty else { return }
+        guard let textures = loadTextures(sheetName: spriteSheetName, columns: columns), !textures.isEmpty else { return }
         
         let scene = createScene()
         let spriteNode = createSpriteNode(with: textures[0], in: scene)
@@ -113,7 +113,7 @@ extension SpriteAnimationView {
         // 다른 시트로 변경하고 repeatCount가 지정된 경우 기본 애니메이션으로 복귀
         if spriteSheetName != self.spriteSheetName,
            repeatCount != nil,
-           let defaultTextures = loadTexturesFromSheet(sheetName: self.spriteSheetName, columns: self.spriteSheetColumns),
+           let defaultTextures = loadTextures(sheetName: self.spriteSheetName, columns: self.spriteSheetColumns),
            !defaultTextures.isEmpty {
             let defaultAction = createAnimationAction(with: defaultTextures, repeatCount: nil)
             spriteNode.run(SKAction.sequence([animationAction, defaultAction]))
@@ -147,7 +147,7 @@ private extension SpriteAnimationView {
     }
     
     /// 스프라이트 시트에서 텍스처를 로드 (가로 1열 가정)
-    func loadTexturesFromSheet(sheetName: String, columns: Int) -> [SKTexture]? {
+    func loadTextures(sheetName: String, columns: Int) -> [SKTexture]? {
         let sheet: SKTexture?
         if let image = UIImage(named: sheetName) {
             sheet = SKTexture(image: image)
