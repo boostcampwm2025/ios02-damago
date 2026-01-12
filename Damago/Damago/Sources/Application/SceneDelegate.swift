@@ -7,6 +7,7 @@
 
 import UIKit
 import ActivityKit
+import DamagoNetwork
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -16,10 +17,14 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         willConnectTo session: UISceneSession,
         options connectionOptions: UIScene.ConnectionOptions
     ) {
+        let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+        let pushRepository = AppDIContainer.shared.resolve(PushRepositoryProtocol.self)
+        LiveActivityManager.shared.configure(userRepository: userRepository, pushRepository: pushRepository)
+        
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
         let window = UIWindow(windowScene: windowScene)
-        let codeConnectionViewModel = CodeConnectionViewModel()
+        let codeConnectionViewModel = CodeConnectionViewModel(userRepository: userRepository)
         let codeConnectionViewController = CodeConnectionViewController(
             viewModel: codeConnectionViewModel
         )

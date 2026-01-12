@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import DamagoNetwork
 
 enum TabItem: String, CaseIterable {
     case home = "홈"
@@ -91,7 +92,10 @@ final class TabBarViewController: UITabBarController {
             return UIViewController()
         case .home:
             let udid = UIDevice.current.identifierForVendor?.uuidString
-            let vm = HomeViewModel(udid: udid)
+            let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+            let petRepository = AppDIContainer.shared.resolve(PetRepositoryProtocol.self)
+            
+            let vm = HomeViewModel(udid: udid, userRepository: userRepository, petRepository: petRepository)
             let vc = HomeViewController(viewModel: vm)
             return vc
         case .interaction:
