@@ -1,5 +1,5 @@
 //
-//  AppAssembly.swift
+//  AppAssembler.swift
 //  Damago
 //
 //  Created by 박현수 on 1/12/26.
