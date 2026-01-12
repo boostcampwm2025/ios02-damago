@@ -95,7 +95,8 @@ extension SpriteAnimationView {
     /// columns를 지정하여 애니메이션 재생
     func animate(spriteSheetName: String, columns: Int, repeatCount: Int? = nil) {
         guard bounds.width > 0 && bounds.height > 0 else { return }
-        guard let textures = loadTextures(sheetName: spriteSheetName, columns: columns), !textures.isEmpty else { return }
+        guard let textures = loadTextures(sheetName: spriteSheetName, columns: columns),
+              !textures.isEmpty else { return }
         
         let scene = createScene()
         let spriteNode = createSpriteNode(with: textures[0], in: scene)
