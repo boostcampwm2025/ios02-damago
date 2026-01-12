@@ -213,8 +213,6 @@ private extension View {
 
 // MARK: - 프리뷰
 
-#if DEBUG
-
 extension DamagoAttributes {
     fileprivate static var preview: DamagoAttributes {
         DamagoAttributes(petName: "Base Pet", udid: "preview-udid")
@@ -246,7 +244,6 @@ extension DamagoAttributes.ContentState {
         )
     }
 }
-#endif
 
 #Preview("Notification", as: .content, using: DamagoAttributes.preview) {
     DamagoWidgetLiveActivity()
