@@ -8,7 +8,8 @@
 final class AppAssembler {
     private let assemblies: [Assembly] = [
         ServiceAssembly(),
-        RepositoryAssembly()
+        RepositoryAssembly(),
+        UseCaseAssembly()
     ]
 
     func assemble(_ container: any DIContainer) {

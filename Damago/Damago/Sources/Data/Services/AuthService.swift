@@ -23,8 +23,8 @@ enum AuthError: LocalizedError {
 }
 
 protocol AuthService {
-    func request(with hashedNonce: String) async throws -> AppleCredential
-    func signIn(credential: AppleCredential, nonce: String) async throws
+    func request(hashedNonce: String) async throws -> AppleCredential
+    func signIn(credential: AppleCredential, rawNonce: String) async throws
 }
 
 final class AuthServiceImpl: NSObject, AuthService {
@@ -37,8 +37,8 @@ final class AuthServiceImpl: NSObject, AuthService {
         self.windowProvider = windowProvider
     }
 
-    func request(with hashedNonce: String) async throws -> AppleCredential {
-        return try await withCheckedThrowingContinuation { continuation in
+    func request(hashedNonce: String) async throws -> AppleCredential {
+        try await withCheckedThrowingContinuation { continuation in
             self.requestContinuation = continuation
             let appleIDProvider = ASAuthorizationAppleIDProvider()
             let request = appleIDProvider.createRequest()
@@ -51,10 +51,10 @@ final class AuthServiceImpl: NSObject, AuthService {
         }
     }
 
-    func signIn(credential: AppleCredential, nonce: String) async throws {
+    func signIn(credential: AppleCredential, rawNonce: String) async throws {
         let credential = OAuthProvider.appleCredential(
             withIDToken: credential.idToken,
-            rawNonce: nonce,
+            rawNonce: rawNonce,
             fullName: credential.fullName
         )
 
@@ -95,6 +95,6 @@ extension AuthServiceImpl: ASAuthorizationControllerDelegate {
 
 extension AuthServiceImpl: ASAuthorizationControllerPresentationContextProviding {
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        return windowProvider.provide()
+        windowProvider.provide()
     }
 }

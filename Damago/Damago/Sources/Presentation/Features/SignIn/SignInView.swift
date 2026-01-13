@@ -32,6 +32,7 @@ final class SignInView: UIView {
     }
 
     private func setupUI() {
+        backgroundColor = .background
         setupHierarchy()
         setupConstraints()
     }

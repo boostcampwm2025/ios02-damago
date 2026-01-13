@@ -30,7 +30,7 @@ protocol CryptoService {
 
 extension CryptoService {
     func randomNonceString() throws -> String {
-        return try randomNonceString(length: 32)
+        try randomNonceString(length: 32)
     }
 }
 

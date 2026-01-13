@@ -35,8 +35,8 @@ final class UserRepository: UserRepositoryProtocol {
         let rawNonce = try cryptoService.randomNonceString()
         let hashedNonce = cryptoService.sha256(rawNonce)
 
-        let requestResult = try await authService.request(with: hashedNonce)
-        try await authService.signIn(credential: requestResult, nonce: hashedNonce)
+        let requestResult = try await authService.request(hashedNonce: hashedNonce)
+        try await authService.signIn(credential: requestResult, rawNonce: rawNonce)
     }
 }
 

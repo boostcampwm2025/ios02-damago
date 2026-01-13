@@ -10,6 +10,11 @@ import SwiftUI
 
 @main
 struct DamagoWidgetBundle: WidgetBundle {
+    init() {
+        let assembler = WidgetAssembler()
+        assembler.assemble(WidgetDIContainer.shared)
+    }
+
     var body: some Widget {
         DamagoWidgetLiveActivity()
     }

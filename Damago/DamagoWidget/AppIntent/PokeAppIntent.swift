@@ -23,7 +23,7 @@ struct PokeAppIntent: AppIntent {
     init() {}
 
     func perform() async throws -> some IntentResult {
-        let networkProvider = NetworkProvider()
+        let networkProvider = WidgetDIContainer.shared.resolve(NetworkProvider.self)
         try await networkProvider.requestSuccess(PushAPI.poke(udid: udid))
         return .result()
     }
