@@ -13,5 +13,6 @@ struct UserInfo {
     let partnerUDID: String?
     let nickname: String?
     let petStatus: PetStatus?
+    let totalCoin: Int
     let lastFedAt: Date?
 }
