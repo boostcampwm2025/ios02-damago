@@ -37,7 +37,11 @@ final class CryptoServiceImpl: CryptoService {
         let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
         guard errorCode == errSecSuccess else { throw CryptoError.nonceGenerationDidFail(erorCode: errorCode) }
 
-        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        let charset =
+            (48...57).map { Character(UnicodeScalar($0)) } +  // 0-9
+            (65...90).map { Character(UnicodeScalar($0)) } +  // A-Z
+            (97...122).map { Character(UnicodeScalar($0)) } + // a-z
+            [".", "-", "_"]
         let nonce = randomBytes.map { byte in charset[Int(byte) % charset.count] }
 
         let nonceString = String(nonce)
