@@ -94,8 +94,9 @@ final class TabBarViewController: UITabBarController {
             let udid = UIDevice.current.identifierForVendor?.uuidString
             let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
             let petRepository = AppDIContainer.shared.resolve(PetRepositoryProtocol.self)
+            let pushRepository = AppDIContainer.shared.resolve(PushRepositoryProtocol.self)
             
-            let vm = HomeViewModel(udid: udid, userRepository: userRepository, petRepository: petRepository)
+            let vm = HomeViewModel(udid: udid, userRepository: userRepository, petRepository: petRepository, pushRepository: pushRepository)
             let vc = HomeViewController(viewModel: vm)
             return vc
         case .interaction:

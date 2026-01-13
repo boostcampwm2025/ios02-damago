@@ -36,15 +36,18 @@ final class HomeViewModel: ViewModel {
     
     private let userRepository: UserRepositoryProtocol
     private let petRepository: PetRepositoryProtocol
+    private let pushRepository: PushRepositoryProtocol
     
     init(
         udid: String?,
         userRepository: UserRepositoryProtocol,
-        petRepository: PetRepositoryProtocol
+        petRepository: PetRepositoryProtocol,
+        pushRepository: PushRepositoryProtocol
     ) {
         self.udid = udid
         self.userRepository = userRepository
         self.petRepository = petRepository
+        self.pushRepository = pushRepository
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
@@ -59,7 +62,8 @@ final class HomeViewModel: ViewModel {
             .store(in: &cancellables)
 
         input.pokeButtonDidTap
-            .sink { }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.pokePet() }
             .store(in: &cancellables)
 
         return $state.eraseToAnyPublisher()
@@ -104,6 +108,18 @@ final class HomeViewModel: ViewModel {
                 }
             } catch {
                 print("Error feeding pet: \(error)")
+            }
+        }
+    }
+    
+    private func pokePet() {
+        guard let udid = udid else { return }
+        
+        Task {
+            do {
+                _ = try await pushRepository.poke(udid: udid)
+            } catch {
+                print("Error poking pet: \(error)")
             }
         }
     }
