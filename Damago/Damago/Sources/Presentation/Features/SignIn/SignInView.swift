@@ -15,7 +15,7 @@ final class SignInView: UIView {
         return imageView
     }()
 
-    private let signInButton: ASAuthorizationAppleIDButton = {
+    let signInButton: ASAuthorizationAppleIDButton = {
         let button = ASAuthorizationAppleIDButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -46,7 +46,7 @@ final class SignInView: UIView {
             logoBanner.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingXL),
             logoBanner.centerYAnchor.constraint(equalTo: centerYAnchor),
 
-            signInButton.heightAnchor.constraint(equalToConstant: 44),
+            signInButton.heightAnchor.constraint(equalToConstant: 56),
             signInButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
             signInButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
             signInButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingL)
