@@ -7,7 +7,8 @@
 
 final class AppAssembler {
     private let assemblies: [Assembly] = [
-        DataAssembly()
+        ServiceAssembly(),
+        RepositoryAssembly()
     ]
 
     func assemble(_ container: any DIContainer) {

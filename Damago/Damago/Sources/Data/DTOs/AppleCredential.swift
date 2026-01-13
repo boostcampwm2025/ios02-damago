@@ -9,6 +9,5 @@ import Foundation
 
 struct AppleCredential {
     let idToken: String
-    let nonce: String
     let fullName: PersonNameComponents?
 }

@@ -1,0 +1,28 @@
+//
+//  RepositoryAssembly.swift
+//  Damago
+//
+//  Created by 김재영 on 1/12/26.
+//
+
+import DamagoNetwork
+
+final class RepositoryAssembly: Assembly {
+    func assemble(_ container: any DIContainer) {
+        container.register(UserRepositoryProtocol.self) {
+            UserRepository(
+                networkProvider: container.resolve(NetworkProvider.self),
+                authService: container.resolve(AuthService.self),
+                cryptoService: container.resolve(CryptoService.self)
+            )
+        }
+        
+        container.register(PetRepositoryProtocol.self) {
+            PetRepository(networkProvider: container.resolve(NetworkProvider.self))
+        }
+        
+        container.register(PushRepositoryProtocol.self) {
+            PushRepository(networkProvider: container.resolve(NetworkProvider.self))
+        }
+    }
+}

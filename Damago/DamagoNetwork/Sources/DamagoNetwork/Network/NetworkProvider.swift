@@ -7,7 +7,13 @@
 
 import Foundation
 
-public final class NetworkProvider {
+public protocol NetworkProvider {
+    func request<T: Decodable>(_ endpoint: EndPoint) async throws -> T
+    func requestString(_ endpoint: EndPoint) async throws -> String
+    @discardableResult func requestSuccess(_ endpoint: EndPoint) async throws -> Bool
+}
+
+public final class NetworkProviderImpl: NetworkProvider {
     private let session: URLSession
     
     public init(session: URLSession = .shared) {
