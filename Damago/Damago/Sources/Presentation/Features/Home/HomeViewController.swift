@@ -14,6 +14,7 @@ final class HomeViewController: UIViewController {
 
     private var cancellables = Set<AnyCancellable>()
     private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
+    private let pokeMessageSelectedPublisher = PassthroughSubject<String, Never>()
 
     init(viewModel: HomeViewModel) {
         self.viewModel = viewModel
@@ -35,13 +36,35 @@ final class HomeViewController: UIViewController {
             HomeViewModel.Input(
                 viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
                 feedButtonDidTap: mainView.feedButton.tapPublisher,
-                pokeButtonDidTap: mainView.pokeButton.tapPublisher
+                pokeMessageSelected: pokeMessageSelectedPublisher.eraseToAnyPublisher()
             )
         )
 
         bind(output)
+        setupPokeButtonAction()
 
         viewDidLoadPublisher.send()
+    }
+    
+    // TODO: 구현 위치 수정 고려
+    private func setupPokeButtonAction() {
+        mainView.pokeButton.tapPublisher
+            .sink { [weak self] _ in
+                self?.showPokeMessagePopup()
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func showPokeMessagePopup() {
+        let popupViewController = PokePopupViewController()
+        popupViewController.modalPresentationStyle = .overFullScreen
+        popupViewController.modalTransitionStyle = .crossDissolve
+        
+        popupViewController.onMessageSelected = { [weak self] message in
+            self?.pokeMessageSelectedPublisher.send(message)
+        }
+        
+        present(popupViewController, animated: true)
     }
 
     func bind(_ output: HomeViewModel.Output) {
