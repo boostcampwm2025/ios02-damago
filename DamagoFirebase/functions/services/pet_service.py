@@ -7,7 +7,7 @@ import json
 import datetime
 import os
 from utils.firestore import get_db
-from utils.constants import XP_TABLE, MAX_LEVEL, FEED_EXP, PROJECT_ID, LOCATION, QUEUE_NAME, HUNGER_DELAY_SECONDS
+from utils.constants import get_required_exp, get_level_up_reward, FEED_EXP, PROJECT_ID, LOCATION, QUEUE_NAME, HUNGER_DELAY_SECONDS
 from services.push_service import update_live_activity_internal
 
 def feed(req: https_fn.Request) -> https_fn.Response:
@@ -36,50 +36,52 @@ def feed(req: https_fn.Request) -> https_fn.Response:
         data = snapshot.to_dict()
         current_level = data.get("level", 1)
         current_exp = data.get("currentExp", 0)
+        couple_id = data.get("coupleID")
         
-        # 만렙 & 경험치 풀이면 더 이상 성장 안 함
-        if current_level >= MAX_LEVEL and current_exp >= XP_TABLE[MAX_LEVEL - 1]:
-            return {"message": "Max level reached", "level": current_level, "exp": current_exp}
-
         # --- [Experience Logic] ---
         new_exp = current_exp + FEED_EXP
         new_level = current_level
         
         # 레벨업 계산 (초과 경험치 이월)
-        if new_level < MAX_LEVEL:
-            max_exp_for_current = XP_TABLE[new_level - 1]
-            while new_exp >= max_exp_for_current:
-                new_exp -= max_exp_for_current
-                new_level += 1
-                if new_level >= MAX_LEVEL:
-                    new_level = MAX_LEVEL
-                    if new_exp > XP_TABLE[MAX_LEVEL - 1]:
-                        new_exp = XP_TABLE[MAX_LEVEL - 1]
-                    break
-                max_exp_for_current = XP_TABLE[new_level - 1]
+        # 무한 레벨이므로 while 루프로 연속 레벨업 처리 가능
+        required_exp = get_required_exp(new_level)
+        while new_exp >= required_exp:
+            new_exp -= required_exp
+            new_level += 1
+            required_exp = get_required_exp(new_level)
         
-        # 만렙 경험치 상한 고정
-        if new_level == MAX_LEVEL:
-            limit = XP_TABLE[MAX_LEVEL - 1]
-            if new_exp > limit:
-                new_exp = limit
+        # --- [Reward Logic] ---
+        reward_coin = 0
+        if new_level > current_level:
+            # 상승한 레벨만큼 보상 계산 (e.g. 5->7로 2업 했으면 6, 7레벨 보상 체크)
+            for lv in range(current_level + 1, new_level + 1):
+                reward_coin += get_level_up_reward(lv)
 
         # --- [DB Update] ---
-        transaction.update(doc_ref, {
+        update_data = {
             "level": new_level,
             "currentExp": new_exp,
-            "maxExp": XP_TABLE[new_level - 1] if new_level <= MAX_LEVEL else XP_TABLE[-1],
+            "maxExp": get_required_exp(new_level),
             "isHungry": False,
             "lastFedAt": firestore.SERVER_TIMESTAMP,
             "lastUpdatedAt": firestore.SERVER_TIMESTAMP,
             "statusMessage": "냠냠! 밥이 너무 맛있어요! 🍚"
-        })
+        }
+        transaction.update(doc_ref, update_data)
+
+        # 코인 보상이 있다면 커플 문서 업데이트
+        if reward_coin > 0 and couple_id:
+            couple_ref = db.collection("couples").document(couple_id)
+            transaction.update(couple_ref, {
+                "totalCoin": firestore.Increment(reward_coin)
+            })
 
         return {
             "level": new_level,
             "currentExp": new_exp,
-            "maxExp": XP_TABLE[new_level - 1] if new_level <= MAX_LEVEL else XP_TABLE[-1],
-            "isLevelUp": new_level > current_level
+            "maxExp": get_required_exp(new_level),
+            "isLevelUp": new_level > current_level,
+            "rewardCoin": reward_coin
         }
 
     try:
