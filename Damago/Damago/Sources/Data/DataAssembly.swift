@@ -15,7 +15,7 @@ final class DataAssembly: Assembly {
             UserRepository(networkProvider: networkProvider)
         }
         
-        container.register(PetRepository.self) {
+        container.register(PetRepositoryProtocol.self) {
             PetRepository(networkProvider: networkProvider)
         }
         
