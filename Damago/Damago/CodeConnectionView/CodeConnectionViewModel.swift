@@ -9,6 +9,12 @@ import Foundation
 import UIKit
 
 final class CodeConnectionViewModel {
+    private let userRepository: UserRepositoryProtocol
+    
+    init(userRepository: UserRepositoryProtocol) {
+        self.userRepository = userRepository
+    }
+    
     var code: String = ""
     var onConnected: ((Bool) -> Void)?
 
@@ -22,8 +28,8 @@ final class CodeConnectionViewModel {
 
     func connectCouple(targetCode: String) async throws {
         do {
-            try await requestConnectCouple(targetCode: targetCode)
-            await MainActor.run { [weak self] in self?.onConnected?(true) }
+            let success = try await userRepository.connectCouple(myCode: code, targetCode: targetCode)
+            await MainActor.run { [weak self] in self?.onConnected?(success) }
         } catch {
             await MainActor.run { [weak self] in self?.onConnected?(false) }
         }
@@ -46,52 +52,7 @@ extension CodeConnectionViewModel {
     }
 
     private func requestGenerateCode(fcmToken: String) async throws -> String? {
-        guard let url = URL(string: "\(BaseURL.string)/generate_code"),
-              let udid = udid
-        else { return nil }
-
-        var request = URLRequest(url: url)
-        let body = ["udid": udid, "fcmToken": fcmToken]
-
-        request.httpMethod = "POST"
-        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(body)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else { throw NetworkError.invalidResponse }
-        guard (200..<300).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidStatusCode(
-                httpResponse.statusCode,
-                String(data: data, encoding: .utf8) ?? "invalid data"
-            )
-        }
-
-        return String(data: data, encoding: .utf8)
-    }
-}
-
-// MARK: - 커플 연결
-
-extension CodeConnectionViewModel {
-    private func requestConnectCouple(targetCode: String) async throws {
-        guard let url = URL(string: "\(BaseURL.string)/connect_couple") else { return }
-
-        var request = URLRequest(url: url)
-        let body = ["myCode": code, "targetCode": targetCode]
-
-        request.httpMethod = "POST"
-        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(body)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else { throw NetworkError.invalidResponse }
-        guard (200..<300).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidStatusCode(
-                httpResponse.statusCode,
-                String(data: data, encoding: .utf8) ?? "invalid data"
-            )
-        }
+        guard let udid = udid else { return nil }
+        return try await userRepository.generateCode(udid: udid, fcmToken: fcmToken)
     }
 }

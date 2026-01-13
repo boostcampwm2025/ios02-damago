@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4B0AF0FE2F1518BB00ED58FA /* DamagoNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = 4B0AF0FD2F1518BB00ED58FA /* DamagoNetwork */; };
+		4B0AF1002F1518C000ED58FA /* DamagoNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = 4B0AF0FF2F1518C000ED58FA /* DamagoNetwork */; };
 		4B1E302D2EF16EDC00EB96A1 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B1E302C2EF16EDC00EB96A1 /* WidgetKit.framework */; };
 		4B1E302F2EF16EDC00EB96A1 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B1E302E2EF16EDC00EB96A1 /* SwiftUI.framework */; };
 		4B1E303E2EF16EDD00EB96A1 /* DamagoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -42,6 +44,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4B0AF0FC2F15184E00ED58FA /* DamagoNetwork */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = DamagoNetwork; sourceTree = "<group>"; };
 		4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DamagoWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B1E302C2EF16EDC00EB96A1 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		4B1E302E2EF16EDC00EB96A1 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -53,7 +56,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				"Resources/GoogleService-Info.plist",
-				Sources/Data/Network/BaseURL.swift,
 			);
 			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
 		};
@@ -117,6 +119,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4B1E302F2EF16EDC00EB96A1 /* SwiftUI.framework in Frameworks */,
+				4B0AF1002F1518C000ED58FA /* DamagoNetwork in Frameworks */,
 				4B1E302D2EF16EDC00EB96A1 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -129,6 +132,7 @@
 				DF2969722EF1564B0096DB9E /* FirebaseAuth in Frameworks */,
 				DF29697A2EF1564B0096DB9E /* FirebaseMessaging in Frameworks */,
 				DF2969762EF1564B0096DB9E /* FirebaseFirestore in Frameworks */,
+				4B0AF0FE2F1518BB00ED58FA /* DamagoNetwork in Frameworks */,
 				DF2969782EF1564B0096DB9E /* FirebaseFunctions in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -148,6 +152,7 @@
 		4B5FE2CB2EF130B6005E31DA = {
 			isa = PBXGroup;
 			children = (
+				4B0AF0FC2F15184E00ED58FA /* DamagoNetwork */,
 				4B1E304A2EF1700900EB96A1 /* Shared */,
 				4B5FE2D62EF130B6005E31DA /* Damago */,
 				4B1E30302EF16EDC00EB96A1 /* DamagoWidget */,
@@ -186,6 +191,7 @@
 			);
 			name = DamagoWidgetExtension;
 			packageProductDependencies = (
+				4B0AF0FF2F1518C000ED58FA /* DamagoNetwork */,
 			);
 			productName = DamagoWidgetExtension;
 			productReference = 4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */;
@@ -217,6 +223,7 @@
 				DF2969752EF1564B0096DB9E /* FirebaseFirestore */,
 				DF2969772EF1564B0096DB9E /* FirebaseFunctions */,
 				DF2969792EF1564B0096DB9E /* FirebaseMessaging */,
+				4B0AF0FD2F1518BB00ED58FA /* DamagoNetwork */,
 			);
 			productName = Damago;
 			productReference = 4B5FE2D42EF130B6005E31DA /* Damago.app */;
@@ -630,6 +637,14 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4B5FE4152EF139EC005E31DA /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
 			productName = "plugin:SwiftLintBuildToolPlugin";
+		};
+		4B0AF0FD2F1518BB00ED58FA /* DamagoNetwork */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DamagoNetwork;
+		};
+		4B0AF0FF2F1518C000ED58FA /* DamagoNetwork */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DamagoNetwork;
 		};
 		4B5FE4162EF139F6005E31DA /* SwiftLintBuildToolPlugin */ = {
 			isa = XCSwiftPackageProductDependency;

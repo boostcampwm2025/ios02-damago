@@ -1,13 +1,11 @@
 //
-//  DamagoStatusResponse.swift
+//  PetStatus.swift
 //  Damago
 //
-//  Created by 김재영 on 1/7/26.
+//  Created by 김재영 on 1/13/26.
 //
 
-import Foundation
-
-struct DamagoStatusResponse: Codable {
+struct PetStatus {
     let petName: String
     let petType: String
     let level: Int

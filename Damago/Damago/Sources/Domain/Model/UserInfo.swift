@@ -1,17 +1,17 @@
 //
-//  UserInfoResponse.swift
+//  UserInfo.swift
 //  Damago
 //
-//  Created by 김재영 on 1/7/26.
+//  Created by 김재영 on 1/12/26.
 //
 
 import Foundation
 
-struct UserInfoResponse: Codable {
+struct UserInfo {
     let udid: String
     let damagoID: String?
     let partnerUDID: String?
     let nickname: String?
-    let petStatus: DamagoStatusResponse?
+    let petStatus: PetStatus?
     let lastFedAt: Date?
 }

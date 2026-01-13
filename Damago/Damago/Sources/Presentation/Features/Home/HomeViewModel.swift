@@ -34,8 +34,17 @@ final class HomeViewModel: ViewModel {
     private var damagoID: String?
     private let udid: String?
     
-    init(udid: String?) {
+    private let userRepository: UserRepositoryProtocol
+    private let petRepository: PetRepositoryProtocol
+    
+    init(
+        udid: String?,
+        userRepository: UserRepositoryProtocol,
+        petRepository: PetRepositoryProtocol
+    ) {
         self.udid = udid
+        self.userRepository = userRepository
+        self.petRepository = petRepository
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
@@ -57,25 +66,11 @@ final class HomeViewModel: ViewModel {
     }
     
     private func fetchUserInfo() {
+        guard let udid = udid else { return }
+        
         Task {
-            guard let url = URL(string: "\(BaseURL.string)/get_user_info") else { return }
-            
-            var request = URLRequest(url: url)
-            let body = ["udid": udid]
-            
-            request.httpMethod = "POST"
-            request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try JSONEncoder().encode(body)
-            
             do {
-                let (data, response) = try await URLSession.shared.data(for: request)
-                
-                guard let httpResponse = response as? HTTPURLResponse,
-                      (200..<300).contains(httpResponse.statusCode) else {
-                    return
-                }
-                
-                let userInfo = try JSONDecoder().decode(UserInfoResponse.self, from: data)
+                let userInfo = try await userRepository.getUserInfo(udid: udid)
                 self.damagoID = userInfo.damagoID
                 
                 if let petStatus = userInfo.petStatus {
@@ -91,7 +86,6 @@ final class HomeViewModel: ViewModel {
                                           ?? ISO8601DateFormatter().date(from: lastFedAtString)
                     }
                 }
-
             } catch {
                 print("Error fetching user info: \(error)")
             }
@@ -99,23 +93,14 @@ final class HomeViewModel: ViewModel {
     }
     
     private func feedPet() {
+        guard let damagoID else { return }
+        
         Task {
-            guard let damagoID = damagoID else { return }
-            guard let url = URL(string: "\(BaseURL.string)/feed") else { return }
-
-            var request = URLRequest(url: url)
-            let body = ["damagoID": damagoID]
-
-            request.httpMethod = "POST"
-            request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try JSONEncoder().encode(body)
-
             do {
-                let (_, response) = try await URLSession.shared.data(for: request)
-                
-                guard let httpResponse = response as? HTTPURLResponse else { return }
-                if (200..<300).contains(httpResponse.statusCode) {
+                let success = try await petRepository.feed(damagoID: damagoID)
+                if success {
                     state.lastFedAt = Date()
+                    LiveActivityManager.shared.synchronizeActivity()
                 }
             } catch {
                 print("Error feeding pet: \(error)")

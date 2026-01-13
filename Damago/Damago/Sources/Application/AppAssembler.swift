@@ -6,7 +6,9 @@
 //
 
 final class AppAssembler {
-    private let assemblies: [Assembly] = []
+    private let assemblies: [Assembly] = [
+        DataAssembly()
+    ]
 
     func assemble(_ container: any DIContainer) {
         assemblies.forEach { $0.assemble(container) }

@@ -7,6 +7,7 @@
 
 import AppIntents
 import Foundation
+import DamagoNetwork
 
 struct PokeAppIntent: AppIntent {
     static var title: LocalizedStringResource = "콕 찌르기"
@@ -22,26 +23,8 @@ struct PokeAppIntent: AppIntent {
     init() {}
 
     func perform() async throws -> some IntentResult {
-        guard let url = URL(string: "\(BaseURL.string)/poke") else {
-            return .result()
-        }
-
-        var request = URLRequest(url: url)
-        let body = ["udid": udid]
-
-        request.httpMethod = "POST"
-        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(body)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else { throw NetworkError.invalidResponse }
-        guard (200..<300).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidStatusCode(
-                httpResponse.statusCode,
-                String(data: data, encoding: .utf8) ?? "invalid data"
-            )
-        }
+        let networkProvider = NetworkProvider()
+        try await networkProvider.requestSuccess(PushAPI.poke(udid: udid))
         return .result()
     }
 }
