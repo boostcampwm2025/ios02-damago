@@ -10,20 +10,16 @@ import Foundation
 
 enum CryptoError: LocalizedError {
     case nonceGenerationDidFail(erorCode: Int32)
-    case nonceNotExtists
 
     var errorDescription: String? {
         switch self {
         case let .nonceGenerationDidFail(erorCode):
             "nonce 생성(SecRandomCopyBytes)에 실패했습니다. OSStatus: \(erorCode)"
-        case .nonceNotExtists:
-            "로그인 콜백을 받았지만, nonce가 존재하지 않습니다."
         }
     }
 }
 
 protocol CryptoService {
-    var currentNonceString: String? { get }
     func randomNonceString(length: Int) throws -> String
     func sha256(_ input: String) -> String
 }
@@ -35,8 +31,6 @@ extension CryptoService {
 }
 
 final class CryptoServiceImpl: CryptoService {
-    var currentNonceString: String?
-
     func randomNonceString(length: Int) throws -> String {
         precondition(length > 0)
         var randomBytes = [UInt8](repeating: 0, count: length)
@@ -47,7 +41,6 @@ final class CryptoServiceImpl: CryptoService {
         let nonce = randomBytes.map { byte in charset[Int(byte) % charset.count] }
 
         let nonceString = String(nonce)
-        self.currentNonceString = nonceString
         return nonceString
     }
 
