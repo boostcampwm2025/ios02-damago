@@ -3,6 +3,7 @@ from firebase_admin import firestore
 from nanoid import generate
 import google.cloud.firestore
 from utils.firestore import get_db
+from utils.middleware import get_uid_from_request
 
 def generate_code(req: https_fn.Request) -> https_fn.Response:
     """
@@ -10,18 +11,24 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
     이미 가입된 유저라면 기존 코드를 반환합니다.
     
     Args:
-        req: { "udid": "...", "fcmToken": "..." }
+        req: { "fcmToken": "..." } (Header: Authorization 필수)
     """
+    try:
+        # 미들웨어를 통해 UID 추출
+        uid = get_uid_from_request(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+
     data = req.get_json(silent=True) or req.args
-    udid = data.get("udid")
     fcm_token = data.get("fcmToken")
 
-    if not udid or not fcm_token:
-        return https_fn.Response("Missing udid or fcmToken", status=400)
+    if not fcm_token:
+        return https_fn.Response("Missing fcmToken", status=400)
 
     db = get_db()
     users_ref = db.collection("users")
-    doc_ref = users_ref.document(udid)
+    # 문서 ID를 UDID 대신 UID로 사용
+    doc_ref = users_ref.document(uid)
 
     # --- [Step 1] 기존 유저 확인 ---
     doc_snapshot = doc_ref.get()
@@ -37,7 +44,7 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
                 "fcmToken": fcm_token,
                 "updatedAt": firestore.SERVER_TIMESTAMP
             })
-            print(f"Updated FCM token for user {udid}")
+            print(f"Updated FCM token for user {uid}")
 
         return https_fn.Response(f"{existing_code}")
 
@@ -58,9 +65,9 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
 
     # --- [Step 3] 유저 생성 ---
     doc_ref.set({
-        "udid": udid,
+        "uid": uid,  # udid -> uid 변경
         "code": unique_code,
-        "partnerUDID": None,
+        "partnerUID": None, # partnerUDID -> partnerUID 변경
         "damagoID": None,
         "coupleID": None,
         "anniversaryDate": None,
@@ -78,33 +85,45 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
 
 def connect_couple(req: https_fn.Request) -> https_fn.Response:
     """
-    두 유저(myCode, targetCode)를 커플로 연결하고, 첫 번째 펫(Damago)을 생성합니다.
+    두 유저(Token User, targetCode)를 커플로 연결하고, 첫 번째 펫(Damago)을 생성합니다.
     트랜잭션을 사용하여 데이터 일관성을 보장합니다.
     
     Args:
-        req: { "myCode": "...", "targetCode": "..." }
+        req: { "targetCode": "..." } (Header: Authorization 필수)
     """
+    try:
+        my_uid = get_uid_from_request(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+
     data = req.get_json(silent=True) or req.args
-    my_code = data.get("myCode")
     target_code = data.get("targetCode")
 
-    if not my_code or not target_code:
-        return https_fn.Response("Missing 'myCode' or 'targetCode'", status=400)
-
-    if my_code == target_code:
-        return https_fn.Response("Cannot connect to yourself", status=400)
+    if not target_code:
+        return https_fn.Response("Missing 'targetCode'", status=400)
 
     db = get_db()
     users_ref = db.collection("users")
 
     # --- [Step 1] 유저 조회 ---
-    my_snapshot = users_ref.where("code", "==", my_code).limit(1).get()
+    # 내 정보는 UID로 조회
+    my_doc_ref = users_ref.document(my_uid)
+    my_doc = my_doc_ref.get()
+
+    if not my_doc.exists:
+        return https_fn.Response("User not found (Token Invalid)", status=404)
+    
+    my_code = my_doc.to_dict().get("code")
+
+    if my_code == target_code:
+        return https_fn.Response("Cannot connect to yourself", status=400)
+
+    # 상대방 정보는 코드로 조회
     target_snapshot = users_ref.where("code", "==", target_code).limit(1).get()
 
-    if not my_snapshot or not target_snapshot:
-        return https_fn.Response("User not found (Invalid Code)", status=404)
+    if not target_snapshot:
+        return https_fn.Response("Target user not found (Invalid Code)", status=404)
 
-    my_doc = my_snapshot[0]
     target_doc = target_snapshot[0]
 
     # --- [Step 2] ID 생성 ---
@@ -117,7 +136,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
 
     # --- [Step 3] 트랜잭션 실행 ---
     @google.cloud.firestore.transactional
-    def run_transaction(transaction, couple_ref, damago_ref, my_ref, target_ref, my_udid, target_udid):
+    def run_transaction(transaction, couple_ref, damago_ref, my_ref, target_ref, my_uid, target_uid):
         snapshot = couple_ref.get(transaction=transaction)
 
         if snapshot.exists:
@@ -140,27 +159,28 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             "endedAt": None
         })
 
-        # 커플 생성
+        # 커플 생성 (UDID -> UID)
         transaction.set(couple_ref, {
             "id": couple_ref.id,
-            "user1UDID": my_udid,
-            "user2UDID": target_udid,
+            "user1UID": my_uid,
+            "user2UID": target_uid,
             "damagoID": damago_ref.id,
             "anniversaryDate": None,
-            "createdAt": firestore.SERVER_TIMESTAMP
+            "createdAt": firestore.SERVER_TIMESTAMP,
+            "totalCoin": 0
         })
 
-        # 유저 정보 업데이트 (상호 참조)
+        # 유저 정보 업데이트 (상호 참조, UDID -> UID)
         transaction.update(my_ref, {
             "coupleID": couple_ref.id,
             "damagoID": damago_ref.id,
-            "partnerUDID": target_udid,
+            "partnerUID": target_uid,
             "updatedAt": firestore.SERVER_TIMESTAMP
         })
         transaction.update(target_ref, {
             "coupleID": couple_ref.id,
             "damagoID": damago_ref.id,
-            "partnerUDID": my_udid,
+            "partnerUID": my_uid,
             "updatedAt": firestore.SERVER_TIMESTAMP
         })
 
@@ -173,8 +193,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             damago_ref,
             my_doc.reference,
             target_doc.reference,
-            my_doc.get("udid"),
-            target_doc.get("udid")
+            my_uid,
+            target_doc.id # target_doc의 ID는 UID임
         )
     except Exception as e:
         return https_fn.Response(f"Transaction failed: {str(e)}", status=500)
