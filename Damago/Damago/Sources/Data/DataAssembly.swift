@@ -22,5 +22,9 @@ final class DataAssembly: Assembly {
         container.register(PushRepositoryProtocol.self) {
             PushRepository(networkProvider: networkProvider)
         }
+        
+        container.register(PokeShortcutRepositoryProtocol.self) {
+            PokeShortcutRepository()
+        }
     }
 }
