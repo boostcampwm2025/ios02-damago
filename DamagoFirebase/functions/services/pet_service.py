@@ -7,7 +7,7 @@ import json
 import datetime
 import os
 from utils.firestore import get_db
-from utils.constants import get_required_exp, get_level_up_reward, FEED_EXP, PROJECT_ID, LOCATION, QUEUE_NAME, HUNGER_DELAY_SECONDS
+from utils.constants import get_required_exp, get_level_up_reward, FEED_EXP, IS_EMULATOR, PROJECT_ID, LOCATION, QUEUE_NAME, HUNGER_DELAY_SECONDS
 from services.push_service import update_live_activity_internal
 
 def feed(req: https_fn.Request) -> https_fn.Response:
@@ -112,6 +112,8 @@ def feed(req: https_fn.Request) -> https_fn.Response:
                 target_url = f"http://127.0.0.1:5001/{PROJECT_ID}/{LOCATION}/make_hungry"
             else:
                 target_url = f"https://{LOCATION}-{PROJECT_ID}.cloudfunctions.net/make_hungry"
+                
+            service_acount_email = f"{PROJECT_ID}@appspot.gserviceaccount.com"
 
             task = {
                 "http_request": {
@@ -122,6 +124,11 @@ def feed(req: https_fn.Request) -> https_fn.Response:
                 },
                 "schedule_time": timestamp,
             }
+            
+            if not IS_EMULATOR:
+                task["http_request"]["oidc_token"] = {
+                    "service_account_email": service_acount_email
+                }
 
             client.create_task(request={"parent": parent, "task": task})
             print(f"Cloud Task scheduled for damago {damago_id} at {d}")
