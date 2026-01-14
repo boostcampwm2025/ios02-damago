@@ -309,7 +309,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "RESOURCE_PATH=\"${PROJECT_DIR}/Damago/Resources\"\nPLIST_FILE=\"${RESOURCE_PATH}/GoogleService-Info.plist\"\n\n# 기본값: Release (Prod)\nENVIRONMENT_PLIST=\"${RESOURCE_PATH}/GoogleService-Info-Prod.plist\"\n\nif [ \"${CONFIGURATION}\" == \"Debug\" ]; then\n    echo \"Debug build: Using Dev GoogleService-Info.plist\"\n    ENVIRONMENT_PLIST=\"${RESOURCE_PATH}/GoogleService-Info-Dev.plist\"\nelse\n    echo \"Release build: Using Prod GoogleService-Info.plist\"\nfi\n\n# 소스 파일 존재 확인 및 복사\nif [ -f \"$ENVIRONMENT_PLIST\" ]; then\n    cp \"${ENVIRONMENT_PLIST}\" \"${PLIST_FILE}\"\n    echo \"Successfully copied ${ENVIRONMENT_PLIST} to ${PLIST_FILE}\"\nelse\n    echo \"Error: Source file ${ENVIRONMENT_PLIST} not found!\"\n    # 파일이 없어도 빌드가 실패하지 않게 하려면 exit 1을 제거하세요.\n    exit 1\nfi\n";
+			shellScript = "RESOURCE_PATH=\"${PROJECT_DIR}/Damago/Resources\"\n\nSOURCE_PLIST=\"${RESOURCE_PATH}/GoogleService-Info-Prod.plist\"\nif [ \"${CONFIGURATION}\" == \"Debug\" ]; then\n  SOURCE_PLIST=\"${RESOURCE_PATH}/GoogleService-Info-Dev.plist\"\nfi\n\nDESTINATION=\"${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\n\nif [ -f \"$SOURCE_PLIST\" ]; then\n  echo \"Copying ${SOURCE_PLIST} to ${DESTINATION}\"\n  cp \"${SOURCE_PLIST}\" \"${DESTINATION}\"\nelse\n  echo \"Error: Source file ${SOURCE_PLIST} not found!\"\n  exit 1\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
