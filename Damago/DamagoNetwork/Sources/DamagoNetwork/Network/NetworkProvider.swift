@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol NetworkProvider {
+public protocol NetworkProvider: Sendable {
     func request<T: Decodable>(_ endpoint: EndPoint) async throws -> T
     func requestString(_ endpoint: EndPoint) async throws -> String
     @discardableResult func requestSuccess(_ endpoint: EndPoint) async throws -> Bool

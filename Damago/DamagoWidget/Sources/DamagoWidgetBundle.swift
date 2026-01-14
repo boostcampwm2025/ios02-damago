@@ -5,6 +5,8 @@
 //  Created by 김재영 on 12/16/25.
 //
 
+import AppIntents
+import DamagoNetwork
 import FirebaseAuth
 import FirebaseCore
 import OSLog
@@ -22,8 +24,8 @@ struct DamagoWidgetBundle: WidgetBundle {
             SharedLogger.firebase.error("키체인 그룹 에러: \(error.localizedDescription)")
         }
 
-        let assembler = WidgetAssembler()
-        assembler.assemble(WidgetDIContainer.shared)
+        AppDependencyManager.shared.add(dependency: NetworkProviderImpl() as NetworkProvider)
+        AppDependencyManager.shared.add(dependency: TokenProviderImpl() as TokenProvider)
     }
 
     var body: some Widget {

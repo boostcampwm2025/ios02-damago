@@ -19,7 +19,7 @@ enum TokenProvidingError: LocalizedError {
     }
 }
 
-protocol TokenProvider {
+protocol TokenProvider: Sendable {
     func provide() async throws -> String
 }
 
