@@ -24,5 +24,9 @@ final class RepositoryAssembly: Assembly {
         container.register(PushRepositoryProtocol.self) {
             PushRepository(networkProvider: container.resolve(NetworkProvider.self))
         }
+        
+        container.register(PokeShortcutRepositoryProtocol.self) {
+            PokeShortcutRepository()
+        }
     }
 }

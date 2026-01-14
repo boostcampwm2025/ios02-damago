@@ -9,7 +9,7 @@ import Foundation
 
 public enum PushAPI {
     case saveLiveActivityToken(udid: String, laStartToken: String?, laUpdateToken: String?)
-    case poke(udid: String)
+    case poke(udid: String, message: String)
 }
 
 extension PushAPI: EndPoint {
@@ -43,8 +43,8 @@ extension PushAPI: EndPoint {
                 "laUpdateToken": laUpdateToken
             ]
 
-        case .poke(let udid):
-            parameters = ["udid": udid]
+        case .poke(let udid, let message):
+            parameters = ["udid": udid, "message": message]
         }
         
         let validParameters = parameters.compactMapValues { $0 }

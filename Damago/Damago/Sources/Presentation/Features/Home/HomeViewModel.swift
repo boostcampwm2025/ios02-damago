@@ -12,7 +12,7 @@ final class HomeViewModel: ViewModel {
     struct Input {
         let viewDidLoad: AnyPublisher<Void, Never>
         let feedButtonDidTap: AnyPublisher<Void, Never>
-        let pokeButtonDidTap: AnyPublisher<Void, Never>
+        let pokeMessageSelected: AnyPublisher<String, Never>
     }
 
     struct State {
@@ -61,9 +61,11 @@ final class HomeViewModel: ViewModel {
             .sink { [weak self] in self?.feedPet() }
             .store(in: &cancellables)
 
-        input.pokeButtonDidTap
+        input.pokeMessageSelected
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] in self?.pokePet() }
+            .sink { [weak self] message in
+                self?.pokePet(with: message)
+            }
             .store(in: &cancellables)
 
         return $state.eraseToAnyPublisher()
@@ -113,12 +115,13 @@ final class HomeViewModel: ViewModel {
         }
     }
     
-    private func pokePet() {
+    private func pokePet(with message: String) {
         guard let udid = udid else { return }
         
         Task {
             do {
-                _ = try await pushRepository.poke(udid: udid)
+                _ = try await pushRepository.poke(udid: udid, message: message)
+                print("Poke sent with message: \(message)")
             } catch {
                 print("Error poking pet: \(error)")
             }
