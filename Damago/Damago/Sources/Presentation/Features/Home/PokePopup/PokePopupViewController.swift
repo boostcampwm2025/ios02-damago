@@ -30,7 +30,10 @@ final class PokePopupViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        setupViewModelCallbacks()
+    }
+    
+    private func setupViewModelCallbacks() {
         viewModel.onMessageSelected = { [weak self] message in
             self?.dismiss(animated: true) {
                 self?.onMessageSelected?(message)
