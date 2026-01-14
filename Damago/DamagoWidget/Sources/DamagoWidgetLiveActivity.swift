@@ -151,8 +151,8 @@ struct DamagoWidgetLiveActivity: Widget {
         }
     }
 
-    private func feedButton() -> some View {
-        Button(intent: FeedAppIntent()) {
+    private func feedButton(udid: String) -> some View {
+        Button(intent: FeedAppIntent(udid: udid)) {
             HStack(spacing: .spacingS) {
                 Image(systemName: "fork.knife")
                     .foregroundStyle(feedButtonIconColor)
@@ -311,7 +311,7 @@ private extension View {
 
 extension DamagoAttributes {
     fileprivate static var preview: DamagoAttributes {
-        DamagoAttributes(petName: "Base Pet")
+        DamagoAttributes(petName: "Base Pet", udid: "preview-udid")
     }
 }
 
