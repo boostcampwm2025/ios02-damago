@@ -18,6 +18,7 @@ final class PokePopupView: UIView {
     private var shortcutEditViews: [Int: (summaryField: UITextField, messageField: UITextField)] = [:]
     private var customTextFieldHeightConstraint: NSLayoutConstraint?
     private var exampleButtonsViewHeightConstraint: NSLayoutConstraint?
+    private var containerViewCenterYConstraint: NSLayoutConstraint?
     private var isEditingMode = false
     
     private let containerView: UIView = {
@@ -134,6 +135,10 @@ final class PokePopupView: UIView {
         setupConstraints()
         setupKeyboardDismiss()
     }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
 }
 
 // MARK: - Setup & Layout
@@ -152,9 +157,12 @@ extension PokePopupView {
     }
     
     private func setupConstraints() {
+        let centerYConstraint = containerView.centerYAnchor.constraint(equalTo: centerYAnchor)
+        containerViewCenterYConstraint = centerYConstraint
+        
         NSLayoutConstraint.activate([
             containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            centerYConstraint,
             containerView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingS),
             containerView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingS),
             
@@ -289,6 +297,26 @@ extension PokePopupView {
             let editView = createEditView(for: shortcut, at: index)
             exampleButtonsView.addArrangedSubview(editView)
         }
+        
+        // 에디트 모드의 텍스트 필드들도 키보드 조정에 포함
+        updateKeyboardAdjustment()
+    }
+    
+    private func updateKeyboardAdjustment() {
+        guard let constraint = containerViewCenterYConstraint else { return }
+        
+        // 모든 텍스트 필드 수집
+        var allTextFields = [customTextField]
+        for (_, views) in shortcutEditViews {
+            allTextFields.append(views.summaryField)
+            allTextFields.append(views.messageField)
+        }
+        
+        // 기존 observer 제거 후 재등록
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+        adjustViewForKeyboard(constraint: constraint, textFields: allTextFields)
     }
     
     private func updateEditFieldsText(with shortcuts: [PokeShortcut]) {
@@ -403,6 +431,8 @@ extension PokePopupView {
         textField.leftViewMode = .always
         textField.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 8, height: 0))
         textField.rightViewMode = .always
+        textField.delegate = self
+        textField.returnKeyType = .done
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }
@@ -424,14 +454,19 @@ extension PokePopupView {
         customTextField.returnKeyType = .done
         
         // 화면 탭 시 키보드 내리기
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        tapGesture.cancelsTouchesInView = false
-        addGestureRecognizer(tapGesture)
-    }
-    
-    @objc
-    private func dismissKeyboard() {
-        endEditing(true)
+        setupKeyboardDismissOnTap()
+        
+        // 키보드가 올라올 때 뷰 조정
+        guard let constraint = containerViewCenterYConstraint else { return }
+        
+        // 모든 텍스트 필드 수집
+        var allTextFields = [customTextField]
+        for (_, views) in shortcutEditViews {
+            allTextFields.append(views.summaryField)
+            allTextFields.append(views.messageField)
+        }
+        
+        adjustViewForKeyboard(constraint: constraint, textFields: allTextFields)
     }
 }
 
