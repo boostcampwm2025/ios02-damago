@@ -234,7 +234,7 @@ extension PokePopupView {
                 isEditingMode = true
             }
             
-            exampleButtonsViewHeightConstraint?.constant = 350
+            exampleButtonsViewHeightConstraint?.constant = 450
             
             // Edit 모드의 텍스트 필드들 업데이트 (편집 중이 아닐 때만)
             updateEditFieldsText(with: state.shortcuts)
@@ -401,7 +401,6 @@ extension PokePopupView {
         // 대신 별도로 저장
         summaryField.tag = index * 1000 + 0 // summary
         messageField.tag = index * 1000 + 1 // message
-        
         
         shortcutEditViews[index] = (summaryField, messageField)
         
