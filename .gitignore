@@ -125,6 +125,6 @@ xcuserdata
 # End of https://www.toptal.com/developers/gitignore/api/xcode,macos,swift,swiftpackagemanager
 
 # Firebase
-*GoogleService-Info.plist
+*GoogleService-Info*.plist
 
 *.p8

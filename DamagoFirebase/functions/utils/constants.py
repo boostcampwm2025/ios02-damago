@@ -3,8 +3,11 @@ import os
 # 앱의 번들 ID (APNS Topic 설정용)
 BUNDLE_ID = os.environ.get("BUNDLE_ID", "kr.codesquad.boostcamp10.Damago")
 
+# 환경 변수 및 에뮬레이터 확인
+IS_EMULATOR = bool(os.environ.get("FUNCTIONS_EMULATOR"))
+PROJECT_ID = os.environ.get("GCLOUD_PROJECT", "damago-dev")
+
 # Cloud Tasks 설정
-PROJECT_ID = "damago-a43da" 
 LOCATION = "us-central1"
 QUEUE_NAME = "make-hungry-queue"
 HUNGER_DELAY_SECONDS = 4 * 60 * 60 # 4시간
