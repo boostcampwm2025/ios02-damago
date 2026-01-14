@@ -21,7 +21,7 @@ extension UITextField {
     /// nil이면 길이 제한이 없습니다.
     var maxLength: Int? {
         get {
-            return objc_getAssociatedObject(self, &maxLengthKey) as? Int
+            objc_getAssociatedObject(self, &maxLengthKey) as? Int
         }
         set {
             objc_setAssociatedObject(

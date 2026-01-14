@@ -80,6 +80,8 @@
 		4B5FE2E62EF130B7005E31DA /* Exceptions for "Damago" folder in "Damago" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Resources/GoogleService-Info-Dev.plist",
+				"Resources/GoogleService-Info-Prod.plist",
 				Resources/Info.plist,
 			);
 			target = 4B5FE2D32EF130B6005E31DA /* Damago */;
