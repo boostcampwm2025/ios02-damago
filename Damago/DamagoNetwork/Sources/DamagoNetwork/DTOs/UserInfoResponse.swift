@@ -13,5 +13,6 @@ public struct UserInfoResponse: Codable {
     public let partnerUDID: String?
     public let nickname: String?
     public let petStatus: DamagoStatusResponse?
+    public let totalCoin: Int?
     public let lastFedAt: Date?
 }

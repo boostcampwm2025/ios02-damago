@@ -16,7 +16,7 @@ final class HomeViewModel: ViewModel {
     }
 
     struct State {
-        var coinAmount = 1000
+        var coinAmount = 0
         var foodAmount = 5
         var dDay = 365
         var petName = "모찌"
@@ -76,6 +76,7 @@ final class HomeViewModel: ViewModel {
             do {
                 let userInfo = try await userRepository.getUserInfo(udid: udid)
                 self.damagoID = userInfo.damagoID
+                state.coinAmount = userInfo.totalCoin
                 
                 if let petStatus = userInfo.petStatus {
                     state.level = petStatus.level

@@ -14,4 +14,6 @@ public struct DamagoStatusResponse: Codable {
     public let isHungry: Bool
     public let statusMessage: String
     public let lastFedAt: String?
+    public let totalPlayTime: Int
+    public let lastActiveAt: String?
 }

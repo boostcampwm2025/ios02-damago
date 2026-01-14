@@ -49,6 +49,7 @@ private extension UserInfoResponse {
             partnerUDID: partnerUDID,
             nickname: nickname,
             petStatus: petStatus?.toDomain(),
+            totalCoin: totalCoin ?? 0,
             lastFedAt: lastFedAt
         )
     }
@@ -64,7 +65,9 @@ private extension DamagoStatusResponse {
             maxExp: maxExp,
             isHungry: isHungry,
             statusMessage: statusMessage,
-            lastFedAt: lastFedAt
+            lastFedAt: lastFedAt,
+            totalPlayTime: totalPlayTime,
+            lastActiveAt: lastActiveAt
         )
     }
 }

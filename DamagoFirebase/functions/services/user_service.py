@@ -1,6 +1,6 @@
 from firebase_functions import https_fn
 from utils.firestore import get_db
-from utils.constants import XP_TABLE
+from utils.constants import get_required_exp
 import json
 
 def get_user_info(req: https_fn.Request) -> https_fn.Response:
@@ -12,7 +12,7 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
         req (https_fn.Request): { "udid": "..." }
         
     Returns:
-        JSON Response: { "udid": ..., "damagoID": ..., "petStatus": { ... } }
+        JSON Response: { "udid": ..., "damagoID": ..., "petStatus": { ... }, "totalCoin": ... }
     """
     # --- [Parameters] ---
     data = req.get_json(silent=True) or req.args
@@ -32,8 +32,9 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
     
     # 펫 정보 초기화
     pet_status = None
+    total_coin = 0
     
-    # --- [Pet Aggregation] ---
+    # --- [Pet & Coin Aggregation] ---
     # damagoID가 있으면 펫 정보도 함께 조회 (Aggregation)
     if damago_id:
         pet_doc = db.collection("damagos").document(damago_id).get()
@@ -43,15 +44,27 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
             last_fed_at = pet_data.get("lastFedAt")
             last_fed_at_str = last_fed_at.isoformat() if last_fed_at else None
             
+            last_active_at = pet_data.get("lastActiveAt")
+            last_active_at_str = last_active_at.isoformat() if last_active_at else None
+            
+            # 커플 정보에서 코인 조회
+            couple_id = pet_data.get("coupleID")
+            if couple_id:
+                couple_doc = db.collection("couples").document(couple_id).get()
+                if couple_doc.exists:
+                    total_coin = couple_doc.to_dict().get("totalCoin", 0)
+
             pet_status = {
                 "petName": pet_data.get("petName", "이름 없는 펫"),
                 "petType": pet_data.get("petType", "Teddy"),
                 "level": pet_data.get("level", 1),
                 "currentExp": pet_data.get("currentExp", 0),
-                "maxExp": pet_data.get("maxExp", XP_TABLE[0]),
+                "maxExp": pet_data.get("maxExp", 20),
                 "isHungry": pet_data.get("isHungry", False),
                 "statusMessage": pet_data.get("statusMessage", "행복해요!"),
-                "lastFedAt": last_fed_at_str
+                "lastFedAt": last_fed_at_str,
+                "totalPlayTime": pet_data.get("totalPlayTime", 0),
+                "lastActiveAt": last_active_at_str
             }
 
     response_data = {
@@ -59,7 +72,8 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
         "damagoID": damago_id,
         "partnerUDID": user_data.get("partnerUDID"),
         "nickname": user_data.get("nickname"),
-        "petStatus": pet_status  # 합쳐진 펫 정보
+        "petStatus": pet_status,  # 합쳐진 펫 정보
+        "totalCoin": total_coin
     }
 
     return https_fn.Response(

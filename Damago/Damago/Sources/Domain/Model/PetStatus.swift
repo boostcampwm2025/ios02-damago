@@ -14,4 +14,6 @@ struct PetStatus {
     let isHungry: Bool
     let statusMessage: String
     let lastFedAt: String?
+    let totalPlayTime: Int
+    let lastActiveAt: String?
 }
