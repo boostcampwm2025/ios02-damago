@@ -15,8 +15,9 @@
 		DF2969722EF1564B0096DB9E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969712EF1564B0096DB9E /* FirebaseAuth */; };
 		DF2969742EF1564B0096DB9E /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969732EF1564B0096DB9E /* FirebaseCore */; };
 		DF2969762EF1564B0096DB9E /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969752EF1564B0096DB9E /* FirebaseFirestore */; };
-		DF2969782EF1564B0096DB9E /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969772EF1564B0096DB9E /* FirebaseFunctions */; };
 		DF29697A2EF1564B0096DB9E /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = DF2969792EF1564B0096DB9E /* FirebaseMessaging */; };
+		DFE8A4F32F17D3AF0008E70B /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = DFE8A4F22F17D3AF0008E70B /* FirebaseAuth */; };
+		DFE8A4F52F17D3AF0008E70B /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFE8A4F42F17D3AF0008E70B /* FirebaseCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,13 +58,15 @@
 			membershipExceptions = (
 				Sources/Core/Assembly.swift,
 				Sources/Core/DIContainer.swift,
+				Sources/Core/SharedLogger.swift,
+				Sources/Data/Services/TokenProvider.swift,
 			);
 			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
 		};
 		4B1E30432EF16EDD00EB96A1 /* Exceptions for "DamagoWidget" folder in "DamagoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Resources/Info.plist,
 			);
 			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
 		};
@@ -122,8 +125,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				4B1E302F2EF16EDC00EB96A1 /* SwiftUI.framework in Frameworks */,
+				DFE8A4F52F17D3AF0008E70B /* FirebaseCore in Frameworks */,
 				4B0AF1002F1518C000ED58FA /* DamagoNetwork in Frameworks */,
 				4B1E302D2EF16EDC00EB96A1 /* WidgetKit.framework in Frameworks */,
+				DFE8A4F32F17D3AF0008E70B /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -136,7 +141,6 @@
 				DF29697A2EF1564B0096DB9E /* FirebaseMessaging in Frameworks */,
 				DF2969762EF1564B0096DB9E /* FirebaseFirestore in Frameworks */,
 				4B0AF0FE2F1518BB00ED58FA /* DamagoNetwork in Frameworks */,
-				DF2969782EF1564B0096DB9E /* FirebaseFunctions in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -195,6 +199,8 @@
 			name = DamagoWidgetExtension;
 			packageProductDependencies = (
 				4B0AF0FF2F1518C000ED58FA /* DamagoNetwork */,
+				DFE8A4F22F17D3AF0008E70B /* FirebaseAuth */,
+				DFE8A4F42F17D3AF0008E70B /* FirebaseCore */,
 			);
 			productName = DamagoWidgetExtension;
 			productReference = 4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */;
@@ -225,7 +231,6 @@
 				DF2969712EF1564B0096DB9E /* FirebaseAuth */,
 				DF2969732EF1564B0096DB9E /* FirebaseCore */,
 				DF2969752EF1564B0096DB9E /* FirebaseFirestore */,
-				DF2969772EF1564B0096DB9E /* FirebaseFunctions */,
 				DF2969792EF1564B0096DB9E /* FirebaseMessaging */,
 				4B0AF0FD2F1518BB00ED58FA /* DamagoNetwork */,
 			);
@@ -295,6 +300,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		4BA8C5C02F174976005BF767 /* Setup Google Service */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -352,11 +358,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = DamagoWidget/Resources/DamagoWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B3PWYBKFUK;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = DamagoWidget/Info.plist;
+				INFOPLIST_FILE = DamagoWidget/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DamagoWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -383,11 +390,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = DamagoWidget/Resources/DamagoWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B3PWYBKFUK;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = DamagoWidget/Info.plist;
+				INFOPLIST_FILE = DamagoWidget/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DamagoWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -693,15 +701,20 @@
 			package = DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
 		};
-		DF2969772EF1564B0096DB9E /* FirebaseFunctions */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFunctions;
-		};
 		DF2969792EF1564B0096DB9E /* FirebaseMessaging */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseMessaging;
+		};
+		DFE8A4F22F17D3AF0008E70B /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		DFE8A4F42F17D3AF0008E70B /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DF2969702EF1564B0096DB9E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

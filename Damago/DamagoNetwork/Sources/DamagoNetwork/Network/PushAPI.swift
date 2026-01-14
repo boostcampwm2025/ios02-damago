@@ -8,8 +8,8 @@
 import Foundation
 
 public enum PushAPI {
-    case saveLiveActivityToken(udid: String, laStartToken: String?, laUpdateToken: String?)
-    case poke(udid: String, message: String)
+    case saveLiveActivityToken(accessToken: String, laStartToken: String?, laUpdateToken: String?)
+    case poke(accessToken: String, message: String)
 }
 
 extension PushAPI: EndPoint {
@@ -29,22 +29,26 @@ extension PushAPI: EndPoint {
     }
     
     public var headers: [String: String]? {
-        ["Content-Type": "application/json; charset=utf-8"]
+        var headers = ["Content-Type": "application/json; charset=utf-8"]
+        switch self {
+        case let .saveLiveActivityToken(token, _, _), let .poke(token, _):
+            headers["Authorization"] = "Bearer \(token)"
+        }
+        return headers
     }
     
     public var body: Data? {
         let parameters: [String: Any?]
         
         switch self {
-        case .saveLiveActivityToken(let udid, let laStartToken, let laUpdateToken):
+        case let .saveLiveActivityToken(_,  laStartToken, laUpdateToken):
             parameters = [
-                "udid": udid,
                 "laStartToken": laStartToken,
                 "laUpdateToken": laUpdateToken
             ]
 
-        case .poke(let udid, let message):
-            parameters = ["udid": udid, "message": message]
+        case let .poke(_, message):
+            parameters = ["message": message]
         }
         
         let validParameters = parameters.compactMapValues { $0 }

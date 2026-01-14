@@ -8,9 +8,9 @@
 import Foundation
 
 struct UserInfo {
-    let udid: String
+    let uid: String
     let damagoID: String?
-    let partnerUDID: String?
+    let partnerUID: String?
     let nickname: String?
     let petStatus: PetStatus?
     let totalCoin: Int

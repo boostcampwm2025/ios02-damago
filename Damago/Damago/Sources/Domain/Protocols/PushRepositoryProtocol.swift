@@ -6,6 +6,6 @@
 //
 
 protocol PushRepositoryProtocol {
-    func poke(udid: String, message: String) async throws -> Bool
-    func saveLiveActivityToken(udid: String, startToken: String?, updateToken: String?) async throws -> Bool
+    func poke(message: String) async throws -> Bool
+    func saveLiveActivityToken(startToken: String?, updateToken: String?) async throws -> Bool
 }

@@ -11,23 +11,38 @@ final class UserRepository: UserRepositoryProtocol {
     private let networkProvider: NetworkProvider
     private let authService: AuthService
     private let cryptoService: CryptoService
+    private let tokenProvider: TokenProvider
 
-    init(networkProvider: NetworkProvider, authService: AuthService, cryptoService: CryptoService) {
+    init(
+        networkProvider: NetworkProvider,
+        authService: AuthService,
+        cryptoService: CryptoService,
+        tokenProvider: TokenProvider
+    ) {
         self.networkProvider = networkProvider
         self.authService = authService
         self.cryptoService = cryptoService
+        self.tokenProvider = tokenProvider
     }
     
-    func generateCode(udid: String, fcmToken: String) async throws -> String {
-        try await networkProvider.requestString(UserAPI.generateCode(udid: udid, fcmToken: fcmToken))
+    func generateCode(fcmToken: String) async throws -> String {
+        let token = try await tokenProvider.provide()
+        return try await networkProvider.requestString(UserAPI.generateCode(accessToken: token, fcmToken: fcmToken))
     }
     
-    func connectCouple(myCode: String, targetCode: String) async throws -> Bool {
-        try await networkProvider.requestSuccess(UserAPI.connectCouple(myCode: myCode, targetCode: targetCode))
+    func connectCouple(targetCode: String) async throws -> Bool {
+        let token = try await tokenProvider.provide()
+        return try await networkProvider.requestSuccess(
+            UserAPI.connectCouple(
+                accessToken: token,
+                targetCode: targetCode
+            )
+        )
     }
     
-    func getUserInfo(udid: String) async throws -> UserInfo {
-        let response: UserInfoResponse = try await networkProvider.request(UserAPI.getUserInfo(udid: udid))
+    func getUserInfo() async throws -> UserInfo {
+        let token = try await tokenProvider.provide()
+        let response: UserInfoResponse = try await networkProvider.request(UserAPI.getUserInfo(accessToken: token))
         return response.toDomain()
     }
 
@@ -44,9 +59,9 @@ final class UserRepository: UserRepositoryProtocol {
 private extension UserInfoResponse {
     func toDomain() -> UserInfo {
         UserInfo(
-            udid: udid,
+            uid: uid,
             damagoID: damagoID,
-            partnerUDID: partnerUDID,
+            partnerUID: partnerUID,
             nickname: nickname,
             petStatus: petStatus?.toDomain(),
             totalCoin: totalCoin ?? 0,

@@ -12,5 +12,8 @@ final class ServiceAssembly: Assembly {
         container.register(NetworkProvider.self) {
             NetworkProviderImpl()
         }
+        container.register(TokenProvider.self) {
+            TokenProviderImpl()
+        }
     }
 }

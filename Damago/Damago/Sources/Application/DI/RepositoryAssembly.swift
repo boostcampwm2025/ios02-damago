@@ -13,16 +13,23 @@ final class RepositoryAssembly: Assembly {
             UserRepository(
                 networkProvider: container.resolve(NetworkProvider.self),
                 authService: container.resolve(AuthService.self),
-                cryptoService: container.resolve(CryptoService.self)
+                cryptoService: container.resolve(CryptoService.self),
+                tokenProvider: container.resolve(TokenProvider.self)
             )
         }
         
         container.register(PetRepositoryProtocol.self) {
-            PetRepository(networkProvider: container.resolve(NetworkProvider.self))
+            PetRepository(
+                networkProvider: container.resolve(NetworkProvider.self),
+                tokenProvider: container.resolve(TokenProvider.self)
+            )
         }
         
         container.register(PushRepositoryProtocol.self) {
-            PushRepository(networkProvider: container.resolve(NetworkProvider.self))
+            PushRepository(
+                networkProvider: container.resolve(NetworkProvider.self),
+                tokenProvider: container.resolve(TokenProvider.self)
+            )
         }
         
         container.register(PokeShortcutRepositoryProtocol.self) {

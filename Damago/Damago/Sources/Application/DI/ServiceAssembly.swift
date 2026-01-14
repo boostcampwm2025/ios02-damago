@@ -21,5 +21,8 @@ final class ServiceAssembly: Assembly {
         container.register(CryptoService.self) {
             CryptoServiceImpl()
         }
+        container.register(TokenProvider.self) {
+            TokenProviderImpl()
+        }
     }
 }

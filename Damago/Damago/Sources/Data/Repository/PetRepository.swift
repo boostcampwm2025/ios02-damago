@@ -9,12 +9,15 @@ import DamagoNetwork
 
 final class PetRepository: PetRepositoryProtocol {
     private let networkProvider: NetworkProvider
-    
-    init(networkProvider: NetworkProvider) {
+    private let tokenProvider: TokenProvider
+
+    init(networkProvider: NetworkProvider, tokenProvider: TokenProvider) {
         self.networkProvider = networkProvider
+        self.tokenProvider = tokenProvider
     }
     
     func feed(damagoID: String) async throws -> Bool {
-        try await networkProvider.requestSuccess(PetAPI.feed(damagoID: damagoID))
+        let token = try await tokenProvider.provide()
+        return try await networkProvider.requestSuccess(PetAPI.feed(accessToken: token, damagoID: damagoID))
     }
 }

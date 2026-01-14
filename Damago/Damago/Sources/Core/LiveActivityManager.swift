@@ -43,8 +43,7 @@ final class LiveActivityManager {
                 lastFedAt: petStatus.lastFedAt
             )
             let attributes = DamagoAttributes(
-                petName: petStatus.petName,
-                udid: UIDevice.current.identifierForVendor?.uuidString ?? "Not Available"
+                petName: petStatus.petName
             )
 
             if let activity = Activity<DamagoAttributes>.activities.first {
@@ -63,15 +62,14 @@ final class LiveActivityManager {
     }
 
     private func fetchActivityData(completion: @escaping (PetStatus?) -> Void) {
-        guard let udid = UIDevice.current.identifierForVendor?.uuidString,
-              let repository = userRepository else {
+        guard let repository = userRepository else {
             completion(nil)
             return
         }
         
         Task {
             do {
-                let userInfo = try await repository.getUserInfo(udid: udid)
+                let userInfo = try await repository.getUserInfo()
                 completion(userInfo.petStatus)
             } catch {
                 SharedLogger.liveActivityManger.error("네트워크 에러: \(error)")
@@ -143,8 +141,7 @@ final class LiveActivityManager {
     }
 
     private func requestSaveToken(token: String, key: String) {
-        guard let udid = UIDevice.current.identifierForVendor?.uuidString,
-              let repository = pushRepository else { return }
+        guard let repository = pushRepository else { return }
         
         Task {
             do {
@@ -152,7 +149,6 @@ final class LiveActivityManager {
                 let laUpdateToken = (key == "laUpdateToken") ? token : nil
                 
                 _ = try await repository.saveLiveActivityToken(
-                    udid: udid,
                     startToken: laStartToken,
                     updateToken: laUpdateToken
                 )

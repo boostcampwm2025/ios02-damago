@@ -13,18 +13,13 @@ struct PokeAppIntent: AppIntent {
     static var title: LocalizedStringResource = "콕 찌르기"
     static var description: IntentDescription = "상대방을 콕 찔러 알림을 보냅니다."
 
-    @Parameter(title: "UDID")
-    var udid: String
-
-    init(udid: String) {
-        self.udid = udid
-    }
-
-    init() {}
+    init() { }
 
     func perform() async throws -> some IntentResult {
         let networkProvider = WidgetDIContainer.shared.resolve(NetworkProvider.self)
-        try await networkProvider.requestSuccess(PushAPI.poke(udid: udid, message: "콕 찌르기"))
+        let tokenProvider = WidgetDIContainer.shared.resolve(TokenProvider.self)
+        let token = try await tokenProvider.provide()
+        try await networkProvider.requestSuccess(PushAPI.poke(accessToken: token, message: "콕 찌르기"))
         return .result()
     }
 }
