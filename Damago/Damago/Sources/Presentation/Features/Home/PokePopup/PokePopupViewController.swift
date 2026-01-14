@@ -5,18 +5,21 @@
 //  Created by loyH on 1/13/26.
 //
 
+import Combine
 import UIKit
 
 final class PokePopupViewController: UIViewController {
-    private let popupView: PokePopupView
+    private let popupView = PokePopupView()
     private let viewModel: PokePopupViewModel
+    
+    private var cancellables = Set<AnyCancellable>()
+    private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
     
     var onMessageSelected: ((String) -> Void)?
     var onCancel: (() -> Void)?
     
     init(shortcutRepository: PokeShortcutRepositoryProtocol) {
         self.viewModel = PokePopupViewModel(shortcutRepository: shortcutRepository)
-        self.popupView = PokePopupView(viewModel: viewModel)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -30,7 +33,33 @@ final class PokePopupViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let output = viewModel.transform(
+            PokePopupViewModel.Input(
+                viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
+                shortcutSelected: popupView.shortcutSelectedSubject.eraseToAnyPublisher(),
+                textChanged: popupView.customTextField.textPublisher,
+                sendButtonTapped: popupView.sendButton.tapPublisher,
+                cancelButtonTapped: popupView.cancelButton.tapPublisher,
+                editButtonTapped: popupView.editButton.tapPublisher,
+                shortcutSummaryChanged: popupView.shortcutSummaryChangedSubject.eraseToAnyPublisher(),
+                shortcutMessageChanged: popupView.shortcutMessageChangedSubject.eraseToAnyPublisher(),
+                saveButtonTapped: popupView.saveButton.tapPublisher
+            )
+        )
+        
+        bind(output)
         setupViewModelCallbacks()
+        
+        viewDidLoadPublisher.send()
+    }
+    
+    private func bind(_ output: PokePopupViewModel.Output) {
+        output
+            .sink { [weak self] state in
+                self?.popupView.updateUI(with: state)
+            }
+            .store(in: &cancellables)
     }
     
     private func setupViewModelCallbacks() {
