@@ -10,18 +10,10 @@ import Combine
 
 final class PokePopupView: UIView {
     weak var textFieldDelegate: UITextFieldDelegate?
-    private let viewModel: PokePopupViewModel
-    private var cancellables = Set<AnyCancellable>()
     
-    private let viewDidLoadSubject = PassthroughSubject<Void, Never>()
-    private let shortcutSelectedSubject = PassthroughSubject<String, Never>()
-    private let textChangedSubject = PassthroughSubject<String, Never>()
-    private let sendButtonTappedSubject = PassthroughSubject<Void, Never>()
-    private let cancelButtonTappedSubject = PassthroughSubject<Void, Never>()
-    private let editButtonTappedSubject = PassthroughSubject<Void, Never>()
-    private let shortcutSummaryChangedSubject = PassthroughSubject<(index: Int, summary: String), Never>()
-    private let shortcutMessageChangedSubject = PassthroughSubject<(index: Int, message: String), Never>()
-    private let saveButtonTappedSubject = PassthroughSubject<Void, Never>()
+    let shortcutSelectedSubject = PassthroughSubject<String, Never>()
+    let shortcutSummaryChangedSubject = PassthroughSubject<(index: Int, summary: String), Never>()
+    let shortcutMessageChangedSubject = PassthroughSubject<(index: Int, message: String), Never>()
     
     private var shortcutEditViews: [Int: (summaryField: UITextField, messageField: UITextField)] = [:]
     private var customTextFieldHeightConstraint: NSLayoutConstraint?
@@ -49,7 +41,7 @@ final class PokePopupView: UIView {
         return label
     }()
     
-    private let editButton: UIButton = {
+    let editButton: UIButton = {
         var config = UIButton.Configuration.plain()
         config.image = UIImage(systemName: "pencil")
         config.baseForegroundColor = .white
@@ -68,7 +60,7 @@ final class PokePopupView: UIView {
         return stackView
     }()
     
-    private let customTextField: UITextField = {
+    let customTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "직접 입력하기"
         textField.font = .body1
@@ -94,15 +86,15 @@ final class PokePopupView: UIView {
         return stackView
     }()
     
-    private let cancelButton: UIButton = {
+    let cancelButton: UIButton = {
         createActionButton(title: "취소")
     }()
     
-    private let sendButton: UIButton = {
+    let sendButton: UIButton = {
         createActionButton(title: "전송")
     }()
     
-    private let saveButton: UIButton = {
+    let saveButton: UIButton = {
         let button = createActionButton(title: "저장")
         button.isHidden = true
         return button
@@ -125,20 +117,14 @@ final class PokePopupView: UIView {
         return button
     }
     
-    init(viewModel: PokePopupViewModel) {
-        self.viewModel = viewModel
-        super.init(frame: .zero)
-        setupUI()
-        setupActions()
-        bindViewModel()
-    }
-    
     override init(frame: CGRect) {
-        fatalError("Use init(viewModel:) instead")
+        super.init(frame: frame)
+        setupUI()
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        super.init(coder: coder)
+        setupUI()
     }
     
     private func setupUI() {
@@ -216,33 +202,9 @@ extension PokePopupView {
     }
 }
 
-// MARK: - ViewModel Binding
+// MARK: - View Update Methods
 extension PokePopupView {
-    private func bindViewModel() {
-        let output = viewModel.transform(
-            PokePopupViewModel.Input(
-                viewDidLoad: viewDidLoadSubject.eraseToAnyPublisher(),
-                shortcutSelected: shortcutSelectedSubject.eraseToAnyPublisher(),
-                textChanged: textChangedSubject.eraseToAnyPublisher(),
-                sendButtonTapped: sendButtonTappedSubject.eraseToAnyPublisher(),
-                cancelButtonTapped: cancelButtonTappedSubject.eraseToAnyPublisher(),
-                editButtonTapped: editButtonTappedSubject.eraseToAnyPublisher(),
-                shortcutSummaryChanged: shortcutSummaryChangedSubject.eraseToAnyPublisher(),
-                shortcutMessageChanged: shortcutMessageChangedSubject.eraseToAnyPublisher(),
-                saveButtonTapped: saveButtonTappedSubject.eraseToAnyPublisher()
-            )
-        )
-        
-        output
-            .sink { [weak self] state in
-                self?.updateUI(with: state)
-            }
-            .store(in: &cancellables)
-        
-        viewDidLoadSubject.send()
-    }
-    
-    private func updateUI(with state: PokePopupViewModel.State) {
+    func updateUI(with state: PokePopupViewModel.State) {
         // 텍스트 필드가 편집 중이 아닐 때만 업데이트 (입력 방해 방지)
         if !customTextField.isFirstResponder && customTextField.text != state.currentText {
             customTextField.text = state.currentText
@@ -451,35 +413,6 @@ extension PokePopupView {
         titleContainer.font = .title3
         config?.attributedTitle = AttributedString(title, attributes: titleContainer)
         cancelButton.configuration = config
-    }
-}
-
-// MARK: - Actions
-extension PokePopupView {
-    private func setupActions() {
-        cancelButton.addAction(UIAction { [weak self] _ in
-            self?.cancelButtonTappedSubject.send(())
-        }, for: .touchUpInside)
-        
-        sendButton.addAction(UIAction { [weak self] _ in
-            self?.sendButtonTappedSubject.send(())
-        }, for: .touchUpInside)
-        
-        saveButton.addAction(UIAction { [weak self] _ in
-            self?.saveButtonTappedSubject.send(())
-        }, for: .touchUpInside)
-        
-        editButton.addAction(UIAction { [weak self] _ in
-            self?.editButtonTappedSubject.send(())
-        }, for: .touchUpInside)
-        
-        // 텍스트 필드 변경 감지
-        customTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-    }
-    
-    @objc
-    private func textFieldDidChange() {
-        textChangedSubject.send(customTextField.text ?? "")
     }
 }
 
