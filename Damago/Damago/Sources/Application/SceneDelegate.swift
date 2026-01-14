@@ -24,11 +24,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
         let window = UIWindow(windowScene: windowScene)
-        let codeConnectionViewModel = CodeConnectionViewModel(userRepository: userRepository)
-        let codeConnectionViewController = CodeConnectionViewController(
-            viewModel: codeConnectionViewModel
-        )
-        window.rootViewController = codeConnectionViewController
+        let signInVM = SignInViewModel(signInUseCase: AppDIContainer.shared.resolve(SignInUseCase.self))
+        let signInVC = SignInViewController(viewModel: signInVM)
+        let navigationController = UINavigationController(rootViewController: signInVC)
+        navigationController.setNavigationBarHidden(true, animated: false)
+        window.rootViewController = navigationController
 
         self.window = window
         window.makeKeyAndVisible()

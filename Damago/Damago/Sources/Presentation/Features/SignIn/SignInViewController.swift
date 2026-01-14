@@ -37,17 +37,22 @@ final class SignInViewController: UIViewController {
         bind(output)
     }
 
-    func bind(_ output: SignInViewModel.Output) {
+    private func bind(_ output: SignInViewModel.Output) {
         output
-            .pulse(\.errorMessage)
-            .sink { [weak self] errorMessage in
+            .pulse(\.route)
+            .sink { [weak self] route in
                 guard let self else { return }
-                presentAlert(message: errorMessage)
+                switch route {
+                case let .alert(errorMessage):
+                    presentAlert(message: errorMessage)
+                case .connection:
+                    navigateToConnection()
+                }
             }
             .store(in: &cancellables)
     }
 
-    func presentAlert(message: String) {
+    private func presentAlert(message: String) {
         let alert = UIAlertController(title: "로그인에 실패했습니다.", message: message, preferredStyle: .alert)
         let action = UIAlertAction(title: "확인", style: .default) { [weak self] _ in
             guard let self else { return }
@@ -55,5 +60,12 @@ final class SignInViewController: UIViewController {
         }
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
+    }
+
+    private func navigateToConnection() {
+        let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+        let codeConnectionVM = CodeConnectionViewModel(userRepository: userRepository)
+        let codeConnectionVC = CodeConnectionViewController(viewModel: codeConnectionVM)
+        navigationController?.pushViewController(codeConnectionVC, animated: true)
     }
 }

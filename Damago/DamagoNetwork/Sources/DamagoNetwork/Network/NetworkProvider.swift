@@ -60,7 +60,8 @@ public final class NetworkProviderImpl: NetworkProvider {
         }
         
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidStatusCode(httpResponse.statusCode, "Server Error")
+            let body = String(data: data, encoding: .utf8) ?? "Unknown Server Error"
+            throw NetworkError.invalidStatusCode(httpResponse.statusCode, body)
         }
         
         return data
