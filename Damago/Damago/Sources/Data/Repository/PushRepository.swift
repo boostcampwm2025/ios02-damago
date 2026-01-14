@@ -14,8 +14,8 @@ final class PushRepository: PushRepositoryProtocol {
         self.networkProvider = networkProvider
     }
     
-    func poke(udid: String) async throws -> Bool {
-        try await networkProvider.requestSuccess(PushAPI.poke(udid: udid))
+    func poke(udid: String, message: String) async throws -> Bool {
+        try await networkProvider.requestSuccess(PushAPI.poke(udid: udid, message: message))
     }
     
     func saveLiveActivityToken(udid: String, startToken: String?, updateToken: String?) async throws -> Bool {

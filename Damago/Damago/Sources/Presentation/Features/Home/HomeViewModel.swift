@@ -120,8 +120,7 @@ final class HomeViewModel: ViewModel {
         
         Task {
             do {
-                // TODO: API에 메시지 파라미터 추가 필요
-                _ = try await pushRepository.poke(udid: udid)
+                _ = try await pushRepository.poke(udid: udid, message: message)
                 print("Poke sent with message: \(message)")
             } catch {
                 print("Error poking pet: \(error)")
