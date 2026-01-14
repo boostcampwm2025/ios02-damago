@@ -21,6 +21,7 @@ struct DamagoAttributes: ActivityAttributes {
         var currentExp: Int
         var maxExp: Int
         var lastFedAt: String?
+        var screen: Screen = .idle
         var lastFedAtDate: Date? {
             Date.fromISO8601(lastFedAt)
         }
@@ -64,4 +65,13 @@ struct DamagoAttributes: ActivityAttributes {
 
     // MARK: - Static Data
     var petName: String
+}
+
+extension DamagoAttributes {
+    public enum Screen:String, Codable, Hashable {
+        case idle
+        case choosePokeMessage
+        case sending
+        case error
+    }
 }
