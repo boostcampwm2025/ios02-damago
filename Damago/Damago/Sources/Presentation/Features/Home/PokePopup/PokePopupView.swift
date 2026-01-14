@@ -6,17 +6,18 @@
 //
 
 import UIKit
+import Combine
 
 final class PokePopupView: UIView {
     weak var textFieldDelegate: UITextFieldDelegate?
-    private let shortcutRepository: PokeShortcutRepositoryProtocol
+    private let viewModel: PokePopupViewModel
+    private var cancellables = Set<AnyCancellable>()
     
-    var onMessageSelected: ((String) -> Void)?
-    var onCancel: (() -> Void)?
-    
-    private var shortcuts: [PokeShortcut] {
-        shortcutRepository.shortcuts
-    }
+    private let viewDidLoadSubject = PassthroughSubject<Void, Never>()
+    private let shortcutSelectedSubject = PassthroughSubject<String, Never>()
+    private let textChangedSubject = PassthroughSubject<String, Never>()
+    private let sendButtonTappedSubject = PassthroughSubject<Void, Never>()
+    private let cancelButtonTappedSubject = PassthroughSubject<Void, Never>()
     
     private let containerView: UIView = {
         let view = UIView()
@@ -106,15 +107,16 @@ final class PokePopupView: UIView {
         return button
     }()
     
-    init(shortcutRepository: PokeShortcutRepositoryProtocol) {
-        self.shortcutRepository = shortcutRepository
+    init(viewModel: PokePopupViewModel) {
+        self.viewModel = viewModel
         super.init(frame: .zero)
         setupUI()
         setupActions()
+        bindViewModel()
     }
     
     override init(frame: CGRect) {
-        fatalError("Use init(shortcutRepository:) instead")
+        fatalError("Use init(viewModel:) instead")
     }
     
     required init?(coder: NSCoder) {
@@ -126,8 +128,36 @@ final class PokePopupView: UIView {
         
         setupHierarchy()
         setupConstraints()
-        setupExampleButtons()
         setupKeyboardDismiss()
+    }
+    
+    private func bindViewModel() {
+        let output = viewModel.transform(
+            PokePopupViewModel.Input(
+                viewDidLoad: viewDidLoadSubject.eraseToAnyPublisher(),
+                shortcutSelected: shortcutSelectedSubject.eraseToAnyPublisher(),
+                textChanged: textChangedSubject.eraseToAnyPublisher(),
+                sendButtonTapped: sendButtonTappedSubject.eraseToAnyPublisher(),
+                cancelButtonTapped: cancelButtonTappedSubject.eraseToAnyPublisher()
+            )
+        )
+        
+        output
+            .sink { [weak self] state in
+                self?.updateUI(with: state)
+            }
+            .store(in: &cancellables)
+        
+        viewDidLoadSubject.send()
+    }
+    
+    private func updateUI(with state: PokePopupViewModel.State) {
+        customTextField.text = state.currentText
+        
+        // shortcuts가 변경되면 버튼 다시 생성
+        if !state.shortcuts.isEmpty {
+            setupExampleButtons(shortcuts: state.shortcuts)
+        }
     }
     
     private func setupKeyboardDismiss() {
@@ -188,7 +218,14 @@ final class PokePopupView: UIView {
         ])
     }
     
-    private func setupExampleButtons() {
+    private func setupExampleButtons(shortcuts: [PokeShortcut]) {
+        // 기존 버튼 제거
+        exampleButtonsView.arrangedSubviews.forEach {
+            exampleButtonsView.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+        
+        // 새 버튼 추가
         shortcuts.forEach { shortcut in
             let button = createExampleButton(message: shortcut.message)
             exampleButtonsView.addArrangedSubview(button)
@@ -209,7 +246,7 @@ final class PokePopupView: UIView {
         
         let button = UIButton(configuration: config)
         button.addAction(UIAction { [weak self] _ in
-            self?.customTextField.text = message
+            self?.shortcutSelectedSubject.send(message)
         }, for: .touchUpInside)
         
         return button
@@ -217,16 +254,20 @@ final class PokePopupView: UIView {
     
     private func setupActions() {
         cancelButton.addAction(UIAction { [weak self] _ in
-            self?.onCancel?()
+            self?.cancelButtonTappedSubject.send(())
         }, for: .touchUpInside)
         
         sendButton.addAction(UIAction { [weak self] _ in
-            guard let self = self else { return }
-            let message = self.customTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            if !message.isEmpty {
-                self.onMessageSelected?(message)
-            }
+            self?.sendButtonTappedSubject.send(())
         }, for: .touchUpInside)
+        
+        // 텍스트 필드 변경 감지
+        customTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+    }
+    
+    @objc
+    private func textFieldDidChange() {
+        textChangedSubject.send(customTextField.text ?? "")
     }
 }
 

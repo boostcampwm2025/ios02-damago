@@ -9,14 +9,14 @@ import UIKit
 
 final class PokePopupViewController: UIViewController {
     private let popupView: PokePopupView
-    private let shortcutRepository: PokeShortcutRepositoryProtocol
+    private let viewModel: PokePopupViewModel
     
     var onMessageSelected: ((String) -> Void)?
     var onCancel: (() -> Void)?
     
     init(shortcutRepository: PokeShortcutRepositoryProtocol) {
-        self.shortcutRepository = shortcutRepository
-        self.popupView = PokePopupView(shortcutRepository: shortcutRepository)
+        self.viewModel = PokePopupViewModel(shortcutRepository: shortcutRepository)
+        self.popupView = PokePopupView(viewModel: viewModel)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -31,13 +31,13 @@ final class PokePopupViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        popupView.onMessageSelected = { [weak self] message in
+        viewModel.onMessageSelected = { [weak self] message in
             self?.dismiss(animated: true) {
                 self?.onMessageSelected?(message)
             }
         }
         
-        popupView.onCancel = { [weak self] in
+        viewModel.onCancel = { [weak self] in
             self?.dismiss(animated: true) {
                 self?.onCancel?()
             }
