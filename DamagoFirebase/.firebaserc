@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "damago-a43da"
+    "dev": "damago-dev-26",
+    "prod": "damago-a43da"
   }
 }
