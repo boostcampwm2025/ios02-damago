@@ -18,8 +18,11 @@ XP_TABLE = [
 MAX_LEVEL = 30
 FEED_EXP = 10  # 1회 밥주기 경험치
 
+# 환경 변수 및 에뮬레이터 확인
+IS_EMULATOR = bool(os.environ.get("FUNCTIONS_EMULATOR"))
+PROJECT_ID = os.environ.get("GCLOUD_PROJECT", "damago-dev")
+
 # Cloud Tasks 설정
-PROJECT_ID = "damago-a43da" 
 LOCATION = "us-central1"
 QUEUE_NAME = "make-hungry-queue"
 HUNGER_DELAY_SECONDS = 4 * 60 * 60 # 4시간

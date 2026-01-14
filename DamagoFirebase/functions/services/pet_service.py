@@ -7,7 +7,7 @@ import json
 import datetime
 import os
 from utils.firestore import get_db
-from utils.constants import XP_TABLE, MAX_LEVEL, FEED_EXP, PROJECT_ID, LOCATION, QUEUE_NAME, HUNGER_DELAY_SECONDS
+from utils.constants import XP_TABLE, MAX_LEVEL, FEED_EXP, PROJECT_ID, LOCATION, QUEUE_NAME, HUNGER_DELAY_SECONDS, IS_EMULATOR
 from services.push_service import update_live_activity_internal
 
 def feed(req: https_fn.Request) -> https_fn.Response:
@@ -105,10 +105,16 @@ def feed(req: https_fn.Request) -> https_fn.Response:
             timestamp = timestamp_pb2.Timestamp()
             timestamp.FromDatetime(d)
 
+            # 에뮬레이터 환경이면 로컬 주소 사용
+            if IS_EMULATOR:
+                target_url = f"http://127.0.0.1:5001/{PROJECT_ID}/{LOCATION}/make_hungry"
+            else:
+                target_url = f"https://{LOCATION}-{PROJECT_ID}.cloudfunctions.net/make_hungry"
+
             task = {
                 "http_request": {
                     "http_method": tasks_v2.HttpMethod.POST,
-                    "url": f"https://{LOCATION}-{PROJECT_ID}.cloudfunctions.net/make_hungry",
+                    "url": target_url,
                     "headers": {"Content-Type": "application/json"},
                     "body": json_payload,
                 },
