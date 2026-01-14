@@ -32,6 +32,7 @@ Table couples {
   user2UDID varchar [ref: > users.udid, note: "사용자 2"]
   damagoID varchar [ref: > damagos.id, note: "현재 키우고 있는(Active) 다마고 ID"]
   
+  totalCoin integer [default: 0, note: "커플이 보유한 재화 (코인)"]
   anniversaryDate timestamp [note: "기념일 원본 데이터"]
   createdAt timestamp [default: `now()`]
   
@@ -59,7 +60,9 @@ Table damagos {
   lastFedAt timestamp [note: "마지막으로 밥을 먹은 시각"]
   lastUpdatedAt timestamp [note: "상태 최종 업데이트 시각"]
   createdAt timestamp [default: `now()`, note: "생성(입양) 시각"]
-  endedAt timestamp [note: "졸업 또는 교체 시각 (NULL이면 현재 육성 중)"]
+  
+  totalPlayTime integer [default: 0, note: "총 누적 육성 시간 (초 단위). 펫 교체 시 갱신"]
+  lastActiveAt timestamp [default: `now()`, note: "마지막으로 활성화/교체된 시각. 정렬용"]
   
   Note: "커플이 키우는 다마고들의 이력과 상태 정보입니다. Users/Couples의 damagoID가 현재 활성화된 펫을 가리킵니다."
 }
