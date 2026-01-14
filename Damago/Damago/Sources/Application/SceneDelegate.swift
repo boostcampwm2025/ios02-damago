@@ -28,8 +28,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let codeConnectionViewController = CodeConnectionViewController(
             viewModel: codeConnectionViewModel
         )
-
         window.rootViewController = codeConnectionViewController
+
         self.window = window
         window.makeKeyAndVisible()
     }

@@ -9,9 +9,13 @@ import DamagoNetwork
 
 final class UserRepository: UserRepositoryProtocol {
     private let networkProvider: NetworkProvider
-    
-    init(networkProvider: NetworkProvider) {
+    private let authService: AuthService
+    private let cryptoService: CryptoService
+
+    init(networkProvider: NetworkProvider, authService: AuthService, cryptoService: CryptoService) {
         self.networkProvider = networkProvider
+        self.authService = authService
+        self.cryptoService = cryptoService
     }
     
     func generateCode(udid: String, fcmToken: String) async throws -> String {
@@ -25,6 +29,14 @@ final class UserRepository: UserRepositoryProtocol {
     func getUserInfo(udid: String) async throws -> UserInfo {
         let response: UserInfoResponse = try await networkProvider.request(UserAPI.getUserInfo(udid: udid))
         return response.toDomain()
+    }
+
+    func signIn() async throws {
+        let rawNonce = try cryptoService.randomNonceString()
+        let hashedNonce = cryptoService.sha256(rawNonce)
+
+        let requestResult = try await authService.request(hashedNonce: hashedNonce)
+        try await authService.signIn(credential: requestResult, rawNonce: rawNonce)
     }
 }
 
