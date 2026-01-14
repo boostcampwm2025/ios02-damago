@@ -56,7 +56,8 @@ final class HomeViewController: UIViewController {
     }
     
     private func showPokeMessagePopup() {
-        let popupViewController = PokePopupViewController()
+        let shortcutRepository = AppDIContainer.shared.resolve(PokeShortcutRepositoryProtocol.self)
+        let popupViewController = PokePopupViewController(shortcutRepository: shortcutRepository)
         popupViewController.modalPresentationStyle = .overFullScreen
         popupViewController.modalTransitionStyle = .crossDissolve
         

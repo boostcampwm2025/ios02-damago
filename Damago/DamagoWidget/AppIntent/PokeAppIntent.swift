@@ -24,7 +24,8 @@ struct PokeAppIntent: AppIntent {
 
     func perform() async throws -> some IntentResult {
         let networkProvider = NetworkProvider()
-        try await networkProvider.requestSuccess(PushAPI.poke(udid: udid))
+        // TODO: 병목현상으로 인한 임시 코드
+        try await networkProvider.requestSuccess(PushAPI.poke(udid: udid, message: "콕 찌르기"))
         return .result()
     }
 }

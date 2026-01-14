@@ -8,10 +8,21 @@
 import UIKit
 
 final class PokePopupViewController: UIViewController {
-    private let popupView = PokePopupView()
+    private let popupView: PokePopupView
+    private let shortcutRepository: PokeShortcutRepositoryProtocol
     
     var onMessageSelected: ((String) -> Void)?
     var onCancel: (() -> Void)?
+    
+    init(shortcutRepository: PokeShortcutRepositoryProtocol) {
+        self.shortcutRepository = shortcutRepository
+        self.popupView = PokePopupView(shortcutRepository: shortcutRepository)
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func loadView() {
         view = popupView

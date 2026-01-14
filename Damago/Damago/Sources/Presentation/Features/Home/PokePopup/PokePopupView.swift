@@ -9,15 +9,14 @@ import UIKit
 
 final class PokePopupView: UIView {
     weak var textFieldDelegate: UITextFieldDelegate?
-    private let exampleMessages = [
-        "안녕!",
-        "밥 먹었어?",
-        "오늘 하루 어땠어?",
-        "사랑해 💕"
-    ]
+    private let shortcutRepository: PokeShortcutRepositoryProtocol
     
     var onMessageSelected: ((String) -> Void)?
     var onCancel: (() -> Void)?
+    
+    private var shortcuts: [PokeShortcut] {
+        shortcutRepository.shortcuts
+    }
     
     private let containerView: UIView = {
         let view = UIView()
@@ -107,16 +106,19 @@ final class PokePopupView: UIView {
         return button
     }()
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    init(shortcutRepository: PokeShortcutRepositoryProtocol) {
+        self.shortcutRepository = shortcutRepository
+        super.init(frame: .zero)
         setupUI()
         setupActions()
     }
     
+    override init(frame: CGRect) {
+        fatalError("Use init(shortcutRepository:) instead")
+    }
+    
     required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupUI()
-        setupActions()
+        fatalError("init(coder:) has not been implemented")
     }
     
     private func setupUI() {
@@ -187,8 +189,8 @@ final class PokePopupView: UIView {
     }
     
     private func setupExampleButtons() {
-        exampleMessages.forEach { message in
-            let button = createExampleButton(message: message)
+        shortcuts.forEach { shortcut in
+            let button = createExampleButton(message: shortcut.message)
             exampleButtonsView.addArrangedSubview(button)
         }
     }
