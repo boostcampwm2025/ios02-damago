@@ -364,14 +364,16 @@ extension PokePopupView {
             placeholder: "요약",
             text: shortcut.summary,
             font: .caption,
-            textColor: .textSecondary
+            textColor: .textSecondary,
+            maxLength: 5
         )
         
         let messageField = createEditTextField(
             placeholder: "메시지",
             text: shortcut.message,
             font: .body1,
-            textColor: .textPrimary
+            textColor: .textPrimary,
+            maxLength: 20
         )
         
         containerView.addSubview(summaryField)
@@ -394,8 +396,12 @@ extension PokePopupView {
         summaryField.addTarget(self, action: #selector(summaryFieldDidChange(_:)), for: .editingChanged)
         messageField.addTarget(self, action: #selector(messageFieldDidChange(_:)), for: .editingChanged)
         
+        // tag 설정: index * 1000 + fieldType (0: summary, 1: message)
+        // maxLength는 createEditTextField에서 설정되므로 여기서는 덮어쓰지 않음
+        // 대신 별도로 저장
         summaryField.tag = index * 1000 + 0 // summary
         messageField.tag = index * 1000 + 1 // message
+        
         
         shortcutEditViews[index] = (summaryField, messageField)
         
@@ -418,7 +424,8 @@ extension PokePopupView {
         placeholder: String,
         text: String,
         font: UIFont,
-        textColor: UIColor
+        textColor: UIColor,
+        maxLength: Int
     ) -> UITextField {
         let textField = UITextField()
         textField.placeholder = placeholder
@@ -433,7 +440,9 @@ extension PokePopupView {
         textField.rightViewMode = .always
         textField.delegate = self
         textField.returnKeyType = .done
+        textField.maxLength = maxLength
         textField.translatesAutoresizingMaskIntoConstraints = false
+        
         return textField
     }
     
@@ -452,6 +461,7 @@ extension PokePopupView {
         // 텍스트 필드 delegate 설정
         customTextField.delegate = self
         customTextField.returnKeyType = .done
+        customTextField.maxLength = 20
         
         // 화면 탭 시 키보드 내리기
         setupKeyboardDismissOnTap()
@@ -474,5 +484,26 @@ extension PokePopupView: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
+    }
+    
+    func textField(
+        _ textField: UITextField,
+        shouldChangeCharactersIn range: NSRange,
+        replacementString string: String
+    ) -> Bool {
+        // maxLength가 설정된 경우
+        guard let maxLength = textField.maxLength else {
+            return true
+        }
+        
+        let currentText = textField.text ?? ""
+        let newLength = currentText.count + string.count - range.length
+        
+        // 백스페이스는 허용
+        if string.isEmpty {
+            return true
+        }
+        
+        return newLength <= maxLength
     }
 }
