@@ -14,7 +14,7 @@ public enum BaseURL {
         if let localIP = ProcessInfo.processInfo.environment["USE_LOCAL_EMULATOR"] {
             return "http://\(localIP):5001/damago-a43da/us-central1"
         }
-        
+
         // DEV
         return "https://us-central1-damago-dev-26.cloudfunctions.net"
         #else

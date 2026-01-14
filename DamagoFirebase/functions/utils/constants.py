@@ -7,6 +7,10 @@ BUNDLE_ID = os.environ.get("BUNDLE_ID", "kr.codesquad.boostcamp10.Damago")
 IS_EMULATOR = bool(os.environ.get("FUNCTIONS_EMULATOR"))
 PROJECT_ID = os.environ.get("GCLOUD_PROJECT", "damago-dev")
 
+# 환경 변수 및 에뮬레이터 확인
+IS_EMULATOR = bool(os.environ.get("FUNCTIONS_EMULATOR"))
+PROJECT_ID = os.environ.get("GCLOUD_PROJECT", "damago-dev")
+
 # Cloud Tasks 설정
 LOCATION = "us-central1"
 QUEUE_NAME = "make-hungry-queue"
