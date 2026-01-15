@@ -103,7 +103,9 @@ final class TabBarViewController: UITabBarController {
             let vc = HomeViewController(viewModel: vm)
             return vc
         case .interaction:
-            return UIViewController()
+            let vm = InteractionViewModel()
+            let vc = InteractionViewController(viewModel: vm)
+            return vc
         case .game:
             return UIViewController()
         case .setting:
