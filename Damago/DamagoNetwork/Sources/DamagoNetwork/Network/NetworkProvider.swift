@@ -15,9 +15,9 @@ public protocol NetworkProvider: Sendable {
 
 public final class NetworkProviderImpl: NetworkProvider {
     private let session: URLSession
-    private let onAuthenticationFailed: (() -> Void)?
-    
-    public init(session: URLSession = .shared, onAuthenticationFailed: (() -> Void)? = nil) {
+    private let onAuthenticationFailed: (@Sendable () -> Void)?
+
+    public init(session: URLSession = .shared, onAuthenticationFailed: (@Sendable () -> Void)? = nil) {
         self.session = session
         self.onAuthenticationFailed = onAuthenticationFailed
     }
