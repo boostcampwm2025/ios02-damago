@@ -178,28 +178,38 @@ struct DamagoWidgetLiveActivity: Widget {
     // MARK: PokeButtonView
 
     private func choosePokeMessageView(context: ActivityViewContext<DamagoAttributes>) -> some View {
-        // TODO: UserDefaults에 저장된 단축어를 표시하도록 변경 요함
-        let items: [(title: String, index: Int)] = [
-            ("❤️", 0),
-            ("안녕", 1),
-            ("사랑해", 2),
-            ("보고싶어", 3),
-            ("밥챙겨먹어", 4)
+        let defaultItems: [(summary: String, message: String)] = [
+            ("❤️", "사랑해"),
+            ("안녕", "안녕!"),
+            ("사랑해", "오늘도 사랑해"),
+            ("보고싶어", "얼른 보고 싶다"),
+            ("밥챙겨먹어", "밥 맛있게 먹어")
         ]
+        var items: [(summary: String, message: String)] {
+            guard let data = AppGroupUserDefaults.sharedDefaults().data(
+                forKey: AppGroupUserDefaults.shortcutsKey
+            ),
+                  let shortcuts = try? JSONDecoder().decode([PokeShortcut].self, from: data) else {
+                return defaultItems
+            }
+            return shortcuts.map { shortcuts in
+                (shortcuts.summary, shortcuts.message)
+            }
+        }
 
         return VStack(alignment: .leading, spacing: .spacingS) {
             LazyVGrid(
                 columns: [GridItem](repeating: GridItem(.flexible(), spacing: .spacingS), count: 3),
                 spacing: .spacingS
             ) {
-                ForEach(items, id: \.index) { item in
+                ForEach(items, id: \.self.summary) { item in
                     Button(
                         intent: PokeWithMessageAppIntent(
                             activityID: context.activityID,
-                            message: item.title
+                            message: item.message
                         )
                     ) {
-                        Text(item.title)
+                        Text(item.summary)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .foregroundStyle(.white)
                     }
