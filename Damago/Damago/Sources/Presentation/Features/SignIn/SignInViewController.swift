@@ -63,9 +63,13 @@ final class SignInViewController: UIViewController {
     }
 
     private func navigateToConnection() {
-        let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
-        let codeConnectionVM = CodeConnectionViewModel(userRepository: userRepository)
-        let codeConnectionVC = CodeConnectionViewController(viewModel: codeConnectionVM)
-        navigationController?.pushViewController(codeConnectionVC, animated: true)
+        let fetchCodeUseCase = AppDIContainer.shared.resolve(FetchCodeUseCase.self)
+        let connectCoupleUseCase = AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
+        let connectionVM = ConnectionViewModel(
+            fetchCodeUseCase: fetchCodeUseCase,
+            connectCoupleUseCase: connectCoupleUseCase
+        )
+        let connectionVC = ConnectionViewController(viewModel: connectionVM)
+        navigationController?.pushViewController(connectionVC, animated: true)
     }
 }

@@ -14,25 +14,35 @@ final class ConnectionViewModel: ViewModel {
         let copyButtonDidTap: AnyPublisher<Void, Never>
         let textfieldValueDidChange: AnyPublisher<String, Never>
         let shareButtonDidTap: AnyPublisher<Void, Never>
+        let connectButtonDidTap: AnyPublisher<Void, Never>
     }
 
     struct State {
         var myCode = ""
         var opponentCode = ""
-        var isLoading = true
         var route: Pulse<Route>?
-        var errorMessage: String?
+        var pasteboardCode: Pulse<String>?
+
+        var isConnectButtonEnabled: Bool { !opponentCode.isEmpty }
     }
 
     enum Route {
+        case alert(message: String)
         case activity(url: URL)
+        case home
     }
 
     @Published private var state = State()
 
     private var cancellables = Set<AnyCancellable>()
 
-    init() { }
+    private let fetchCodeUseCase: FetchCodeUseCase
+    private let connectCoupleUseCase: ConnectCoupleUseCase
+
+    init(fetchCodeUseCase: FetchCodeUseCase, connectCoupleUseCase: ConnectCoupleUseCase) {
+        self.fetchCodeUseCase = fetchCodeUseCase
+        self.connectCoupleUseCase = connectCoupleUseCase
+    }
 
     func transform(_ input: Input) -> Output {
         input.viewDidLoad
@@ -55,7 +65,7 @@ final class ConnectionViewModel: ViewModel {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] code in
                 guard let self else { return }
-                self.state.opponentCode = code ?? ""
+                self.state.opponentCode = code
             }
             .store(in: &cancellables)
 
@@ -63,24 +73,49 @@ final class ConnectionViewModel: ViewModel {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in
                 guard let self else { return }
-                if let url = self.generateURL() { self.state.route = .init(.activity(url: url)) }
-                else { self.state.errorMessage = "공유에 실패했습니다." }
+                if let url = self.generateURL() {
+                    self.state.route = .init(.activity(url: url))
+                } else {
+                    self.state.route = .init(.alert(message: "공유에 실패했습니다."))
+                }
             }
             .store(in: &cancellables)
 
+        input.connectButtonDidTap
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                guard let self else { return }
+                Task { await self.connect() }
+            }
+            .store(in: &cancellables)
 
         return $state.eraseToAnyPublisher()
     }
 
     private func resolveMyCode() async {
+        do {
+            let code = try await fetchCodeUseCase.execute()
+            state.myCode = code
+        } catch {
+            state.route = .init(.alert(message: error.localizedDescription))
+        }
+    }
 
+    private func connect() async {
+        do {
+            try await connectCoupleUseCase.execute(code: state.opponentCode)
+            state.route = .init(.home)
+        } catch {
+            state.route = .init(.alert(message: error.localizedDescription))
+        }
     }
 
     private func copyCodeToPasteboard() {
-
+        guard !state.myCode.isEmpty else { return }
+        state.pasteboardCode = .init(state.myCode)
     }
 
     private func generateURL() -> URL? {
-        return URL(string: "https://example.com")
+        URL(string: "https://example.com")
     }
 }

@@ -10,5 +10,11 @@ final class UseCaseAssembly: Assembly {
         container.register(SignInUseCase.self) {
             SignInUseCaseImpl(repository: container.resolve(UserRepositoryProtocol.self))
         }
+        container.register(FetchCodeUseCase.self) {
+            FetchCodeUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
+        container.register(ConnectCoupleUseCase.self) {
+            ConnectCoupleUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
     }
 }

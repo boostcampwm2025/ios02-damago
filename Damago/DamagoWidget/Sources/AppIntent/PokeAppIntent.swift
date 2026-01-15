@@ -19,7 +19,7 @@ struct PokeAppIntent: AppIntent {
     init() { }
 
     func perform() async throws -> some IntentResult {
-        let token = try await tokenProvider.provide()
+        let token = try await tokenProvider.idToken()
         try await networkProvider.requestSuccess(PushAPI.poke(accessToken: token, message: "콕 찌르기"))
         return .result()
     }

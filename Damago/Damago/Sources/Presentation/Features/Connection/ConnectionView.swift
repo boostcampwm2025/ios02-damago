@@ -68,7 +68,7 @@ final class ConnectionView: UIView {
         return view
     }()
 
-    private let myCodeLabel: UILabel = {
+    let myCodeLabel: UILabel = {
         let label = UILabel()
         label.font = .title2
         label.textColor = .textPrimary
@@ -135,6 +135,12 @@ final class ConnectionView: UIView {
         return textField
     }()
 
+    let connectButton: CTAButton = {
+        let button = CTAButton()
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
     let shareButton: CircularActionButton = {
         let button = CircularActionButton()
         button.configure(
@@ -166,7 +172,7 @@ final class ConnectionView: UIView {
         [
             cardHeaderLabel, cardDivider, myCodeTitleLabel,
             myCodeContainer, centerDividerView, heartImageView,
-            opponentCodeTitleLabel, opponentCodeContainer, shareButton
+            opponentCodeTitleLabel, opponentCodeContainer
         ]
             .forEach(cardContainer.addSubview)
 
@@ -176,7 +182,7 @@ final class ConnectionView: UIView {
         [opponentCodeTextField]
             .forEach(opponentCodeContainer.addSubview)
 
-        [titleLabel, subtitleLabel, cardContainer]
+        [titleLabel, subtitleLabel, cardContainer, shareButton, connectButton]
             .forEach(addSubview)
     }
 
@@ -264,11 +270,38 @@ final class ConnectionView: UIView {
                 cardContainer.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
 
                 shareButton.centerXAnchor.constraint(equalTo: centerXAnchor),
-                shareButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingXL),
+                shareButton.bottomAnchor.constraint(equalTo: connectButton.topAnchor, constant: -.spacingL),
                 shareButton.widthAnchor.constraint(equalToConstant: 64),
-                shareButton.heightAnchor.constraint(equalToConstant: 64)
+                shareButton.heightAnchor.constraint(equalToConstant: 64),
+
+                connectButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
+                connectButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
+                connectButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingXL)
             ]
         )
+    }
+}
+
+extension ConnectionView {
+    func updateConnectButton(isEnabled: Bool) {
+        let activeConfig = CTAButton.Configuration(
+            backgroundColor: .damagoPrimary,
+            foregroundColor: .white,
+            image: nil,
+            title: "연결하기",
+            subtitle: nil
+        )
+
+        let disabledConfig = CTAButton.Configuration(
+            backgroundColor: .textTertiary,
+            foregroundColor: .white,
+            image: nil,
+            title: "연결하기",
+            subtitle: nil
+        )
+
+        connectButton.configure(active: activeConfig, disabled: disabledConfig)
+        connectButton.isEnabled = isEnabled
     }
 }
 

@@ -24,13 +24,18 @@ final class ConnectionViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func loadView() {
+        view = mainView
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         let input = ConnectionViewModel.Input(
             viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
             copyButtonDidTap: mainView.copyButton.tapPublisher,
             textfieldValueDidChange: mainView.opponentCodeTextField.textPublisher,
-            shareButtonDidTap: mainView.shareButton.tapPublisher
+            shareButtonDidTap: mainView.shareButton.tapPublisher,
+            connectButtonDidTap: mainView.connectButton.tapPublisher
         )
         let output = viewModel.transform(input)
         bind(output)
@@ -38,6 +43,73 @@ final class ConnectionViewController: UIViewController {
     }
 
     private func bind(_ output: ConnectionViewModel.Output) {
+        output
+            .mapForUI { $0.myCode }
+            .sink { [weak self] code in
+                guard let self else { return }
+                mainView.myCodeLabel.text = code
+            }
+            .store(in: &cancellables)
 
+        output
+            .mapForUI { $0.opponentCode }
+            .sink { [weak self] code in
+                guard let self else { return }
+                mainView.opponentCodeTextField.text = code
+            }
+            .store(in: &cancellables)
+
+        output
+            .mapForUI { $0.isConnectButtonEnabled }
+            .sink { [weak self] isEnabled in
+                guard let self else { return }
+                mainView.updateConnectButton(isEnabled: isEnabled)
+            }
+            .store(in: &cancellables)
+
+        output
+            .pulse(\.route)
+            .sink { [weak self] route in
+                guard let self else { return }
+                switch route {
+                case let .alert(message):
+                    presentAlert(with: message)
+                case let .activity(url):
+                    presentActivity(with: url)
+                case .home:
+                    replaceRootVC()
+                }
+            }
+            .store(in: &cancellables)
+
+        output
+            .pulse(\.pasteboardCode)
+            .sink { [weak self] code in
+                guard let self else { return }
+                copyCodeToPasteboard(with: code)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func presentAlert(with message: String) {
+        let alert = UIAlertController(title: "에러", message: message, preferredStyle: .alert)
+        let confirmAction = UIAlertAction(title: "확인", style: .default)
+        alert.addAction(confirmAction)
+        present(alert, animated: true)
+    }
+
+    private func presentActivity(with url: URL) {
+        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        present(activityVC, animated: true)
+    }
+
+    private func replaceRootVC() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else { return }
+        window.replaceRootViewController(with: TabBarViewController())
+    }
+
+    private func copyCodeToPasteboard(with code: String) {
+        UIPasteboard.general.string = code
     }
 }
