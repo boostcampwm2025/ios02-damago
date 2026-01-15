@@ -7,6 +7,7 @@
 
 import ActivityKit
 import DamagoNetwork
+import AppIntents
 import FirebaseAuth
 import UIKit
 
@@ -26,6 +27,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
         let pushRepository = AppDIContainer.shared.resolve(PushRepositoryProtocol.self)
         LiveActivityManager.shared.configure(userRepository: userRepository, pushRepository: pushRepository)
+
+        AppDependencyManager.shared.add(dependency: NetworkProviderImpl() as NetworkProvider)
+        AppDependencyManager.shared.add(dependency: TokenProviderImpl() as TokenProvider)
 
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: windowScene)
