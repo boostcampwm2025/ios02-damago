@@ -8,7 +8,7 @@
 import Foundation
 
 final class PokeShortcutRepository: PokeShortcutRepositoryProtocol {
-    private let userDefaults = UserDefaults.standard
+    private let userDefaults = AppGroupUserDefaults.sharedDefaults()
     private let shortcutsKey = "pokeShortcuts"
     
     init() {
@@ -17,7 +17,9 @@ final class PokeShortcutRepository: PokeShortcutRepositoryProtocol {
     
     var shortcuts: [PokeShortcut] {
         get {
-            guard let data = userDefaults.data(forKey: shortcutsKey),
+            guard let data = userDefaults.data(
+                forKey: AppGroupUserDefaults.shortcutsKey
+            ),
                   let shortcuts = try? JSONDecoder().decode([PokeShortcut].self, from: data) else {
                 return defaultShortcuts
             }
@@ -25,7 +27,7 @@ final class PokeShortcutRepository: PokeShortcutRepositoryProtocol {
         }
         set {
             if let data = try? JSONEncoder().encode(newValue) {
-                userDefaults.set(data, forKey: shortcutsKey)
+                userDefaults.set(data, forKey: AppGroupUserDefaults.shortcutsKey)
             }
         }
     }
@@ -41,14 +43,14 @@ final class PokeShortcutRepository: PokeShortcutRepositoryProtocol {
         [
             PokeShortcut(summary: "안녕!", message: "안녕!"),
             PokeShortcut(summary: "밥 먹었어?", message: "밥 먹었어?"),
-            PokeShortcut(summary: "오늘 하루 어땠어?", message: "오늘 하루 어땠어?"),
+            PokeShortcut(summary: "머해?", message: "지금 머하구 있어?"),
             PokeShortcut(summary: "사랑해 💕", message: "사랑해 💕"),
             PokeShortcut(summary: "고마워!", message: "고마워!")
         ]
     }
     
     private func setupDefaultShortcutsIfNeeded() {
-        if userDefaults.data(forKey: shortcutsKey) == nil {
+        if userDefaults.data(forKey: AppGroupUserDefaults.shortcutsKey) == nil {
             shortcuts = defaultShortcuts
         }
     }
