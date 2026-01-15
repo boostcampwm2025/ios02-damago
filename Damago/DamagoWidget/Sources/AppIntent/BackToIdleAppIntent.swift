@@ -19,13 +19,20 @@ struct BackToIdleAppIntent: AppIntent, LiveActivityIntent {
     init() {}
 
     func perform() async throws -> some IntentResult {
-        guard let activity = Activity<DamagoAttributes>.activities.first(where: { $0.id == activityID }) else {
-            return .result()
+
+        @MainActor
+        func setScreen() async {
+            guard let activity = Activity<DamagoAttributes>.activities.first(where: { $0.id == activityID }) else {
+                return
+            }
+
+            var newState = activity.content.state
+            newState.screen = .idle
+            await activity.update(ActivityContent(state: newState, staleDate: nil))
         }
 
-        var newState = activity.content.state
-        newState.screen = .idle
-        await activity.update(ActivityContent(state: newState, staleDate: nil))
+        await setScreen()
+
         return .result()
     }
 }
