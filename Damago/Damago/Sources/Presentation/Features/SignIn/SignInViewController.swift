@@ -45,8 +45,8 @@ final class SignInViewController: UIViewController {
                 switch route {
                 case let .alert(errorMessage):
                     presentAlert(message: errorMessage)
-                case .connection:
-                    navigateToConnection()
+                case let .connection(opponentCode):
+                    navigateToConnection(code: opponentCode)
                 }
             }
             .store(in: &cancellables)
@@ -62,12 +62,13 @@ final class SignInViewController: UIViewController {
         present(alert, animated: true, completion: nil)
     }
 
-    private func navigateToConnection() {
+    private func navigateToConnection(code: String?) {
         let fetchCodeUseCase = AppDIContainer.shared.resolve(FetchCodeUseCase.self)
         let connectCoupleUseCase = AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
         let connectionVM = ConnectionViewModel(
             fetchCodeUseCase: fetchCodeUseCase,
-            connectCoupleUseCase: connectCoupleUseCase
+            connectCoupleUseCase: connectCoupleUseCase,
+            opponentCode: code
         )
         let connectionVC = ConnectionViewController(viewModel: connectionVM)
         navigationController?.pushViewController(connectionVC, animated: true)

@@ -12,6 +12,11 @@ import UIKit
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
+    private var authObserver: NSObjectProtocol?
+
+    deinit {
+        if let authObserver { NotificationCenter.default.removeObserver(authObserver) }
+    }
 
     func scene(
         _ scene: UIScene,
@@ -25,9 +30,47 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: windowScene)
         self.window = window
-        setupRootViewController()
+        
+        if let urlContext = connectionOptions.urlContexts.first {
+            handleURL(urlContext.url)
+        } else {
+            setupRootViewController()
+        }
+        
         observeAuthenticationFailure()
         window.makeKeyAndVisible()
+    }
+    
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        if let url = URLContexts.first?.url { handleURL(url) }
+    }
+    
+    private func handleURL(_ url: URL) {
+        guard url.scheme == "damago", url.host == "connection",
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
+              let code = components.queryItems?.first(where: { $0.name == "code" })?.value
+        else { return }
+
+        if Auth.auth().currentUser != nil {
+            let fetchCodeUseCase = AppDIContainer.shared.resolve(FetchCodeUseCase.self)
+            let connectCoupleUseCase = AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
+            let connectionVM = ConnectionViewModel(
+                fetchCodeUseCase: fetchCodeUseCase,
+                connectCoupleUseCase: connectCoupleUseCase,
+                opponentCode: code
+            )
+            let connectionVC = ConnectionViewController(viewModel: connectionVM)
+            window?.rootViewController = connectionVC
+        } else {
+            let signInVM = SignInViewModel(
+                signInUseCase: AppDIContainer.shared.resolve(SignInUseCase.self),
+                opponentCode: code
+            )
+            let signInVC = SignInViewController(viewModel: signInVM)
+            let navigationController = UINavigationController(rootViewController: signInVC)
+            navigationController.setNavigationBarHidden(true, animated: false)
+            window?.rootViewController = navigationController
+        }
     }
 
     private func setupRootViewController() {
@@ -44,7 +87,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func observeAuthenticationFailure() {
-        NotificationCenter.default.addObserver(
+        authObserver = NotificationCenter.default.addObserver(
             forName: .authenticationDidFail,
             object: nil,
             queue: .main

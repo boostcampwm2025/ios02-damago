@@ -32,16 +32,28 @@ final class ConnectionViewModel: ViewModel {
         case home
     }
 
-    @Published private var state = State()
+    @Published private var state: State
 
     private var cancellables = Set<AnyCancellable>()
 
     private let fetchCodeUseCase: FetchCodeUseCase
     private let connectCoupleUseCase: ConnectCoupleUseCase
 
-    init(fetchCodeUseCase: FetchCodeUseCase, connectCoupleUseCase: ConnectCoupleUseCase) {
+    init(
+        fetchCodeUseCase: FetchCodeUseCase,
+        connectCoupleUseCase: ConnectCoupleUseCase,
+        opponentCode: String? = nil
+    ) {
         self.fetchCodeUseCase = fetchCodeUseCase
         self.connectCoupleUseCase = connectCoupleUseCase
+
+        if let opponentCode {
+            var state = State()
+            state.opponentCode = opponentCode
+            self.state = state
+        } else {
+            state = State()
+        }
     }
 
     func transform(_ input: Input) -> Output {
@@ -116,6 +128,15 @@ final class ConnectionViewModel: ViewModel {
     }
 
     private func generateURL() -> URL? {
-        URL(string: "https://example.com")
+        guard !state.myCode.isEmpty else { return nil }
+
+        var components = URLComponents()
+        components.scheme = "damago"
+        components.host = "connection"
+        components.queryItems = [
+            URLQueryItem(name: "code", value: state.myCode)
+        ]
+
+        return components.url
     }
 }

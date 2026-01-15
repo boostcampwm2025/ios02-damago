@@ -10,7 +10,9 @@ import DamagoNetwork
 final class ServiceAssembly: Assembly {
     func assemble(_ container: any DIContainer) {
         container.register(NetworkProvider.self) {
-            NetworkProviderImpl()
+            NetworkProviderImpl(onAuthenticationFailed: {
+                NotificationCenter.default.post(name: .authenticationDidFail, object: nil)
+            })
         }
         container.register(WindowProvider.self) {
             WindowProviderImpl()
