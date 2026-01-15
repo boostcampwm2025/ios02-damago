@@ -9,6 +9,7 @@ import os
 from utils.firestore import get_db
 from utils.constants import get_required_exp, get_level_up_reward, FEED_EXP, IS_EMULATOR, PROJECT_ID, LOCATION, QUEUE_NAME, HUNGER_DELAY_SECONDS
 from services.push_service import update_live_activity_internal
+from utils.middleware import get_uid_from_request
 
 def feed(req: https_fn.Request) -> https_fn.Response:
     """
@@ -17,6 +18,12 @@ def feed(req: https_fn.Request) -> https_fn.Response:
     이후 Cloud Tasks를 통해 4시간(또는 테스트 모드 시 10초) 뒤 배고픔 상태로 전환되도록 예약합니다.
     """
     # --- [Parameters] ---
+    try:
+        # 미들웨어로 UID 추출
+        uid = get_uid_from_request(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+
     data = req.get_json(silent=True) or req.args
     damago_id = data.get("damagoID")
 
@@ -38,6 +45,25 @@ def feed(req: https_fn.Request) -> https_fn.Response:
         current_exp = data.get("currentExp", 0)
         couple_id = data.get("coupleID")
         
+        # --- [Ownership Validation] ---
+        # 펫의 주인이 맞는지 검증
+        if not couple_id:
+             raise ValueError("This pet has no couple owner")
+
+        couple_ref = db.collection("couples").document(couple_id)
+        couple_snapshot = couple_ref.get(transaction=transaction)
+        
+        if not couple_snapshot.exists:
+             raise ValueError("Couple info not found")
+        
+        couple_data = couple_snapshot.to_dict()
+        # 변경된 필드명 사용 (user1UDID -> user1UID)
+        user1 = couple_data.get("user1UID")
+        user2 = couple_data.get("user2UID")
+
+        if uid != user1 and uid != user2:
+             raise PermissionError("You are not the owner of this pet")
+
         # --- [Experience Logic] ---
         new_exp = current_exp + FEED_EXP
         new_level = current_level
@@ -70,8 +96,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
         transaction.update(doc_ref, update_data)
 
         # 코인 보상이 있다면 커플 문서 업데이트
-        if reward_coin > 0 and couple_id:
-            couple_ref = db.collection("couples").document(couple_id)
+        if reward_coin > 0:
             transaction.update(couple_ref, {
                 "totalCoin": firestore.Increment(reward_coin)
             })
@@ -108,7 +133,9 @@ def feed(req: https_fn.Request) -> https_fn.Response:
             timestamp.FromDatetime(d)
 
             # 에뮬레이터 환경이면 로컬 주소 사용
-            if IS_EMULATOR:
+            is_emulator = os.environ.get("FUNCTIONS_EMULATOR") == "true"
+
+            if is_emulator:
                 target_url = f"http://127.0.0.1:5001/{PROJECT_ID}/{LOCATION}/make_hungry"
             else:
                 target_url = f"https://{LOCATION}-{PROJECT_ID}.cloudfunctions.net/make_hungry"
@@ -141,6 +168,10 @@ def feed(req: https_fn.Request) -> https_fn.Response:
             json.dumps(result), 
             mimetype="application/json"
         )
+    except ValueError as ve:
+         return https_fn.Response(str(ve), status=400)
+    except PermissionError as pe:
+         return https_fn.Response(str(pe), status=403)
     except Exception as e:
         return https_fn.Response(f"Transaction failed: {str(e)}", status=500)
 
@@ -204,7 +235,8 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
         couple_doc = db.collection("couples").document(couple_id).get()
         if couple_doc.exists:
             couple_data = couple_doc.to_dict()
-            users = [couple_data.get("user1UDID"), couple_data.get("user2UDID")]
+            # 변경된 필드명 사용 (user1UDID -> user1UID)
+            users = [couple_data.get("user1UID"), couple_data.get("user2UID")]
             
             last_fed_at = pet_data.get("lastFedAt")
             last_fed_at_str = last_fed_at.isoformat() if last_fed_at else None
@@ -220,8 +252,8 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
                 "lastFedAt": last_fed_at_str
             }
             
-            for udid in users:
-                if udid:
-                    update_live_activity_internal(udid, content_state)
+            for uid in users:
+                if uid:
+                    update_live_activity_internal(uid, content_state)
 
     return https_fn.Response("Made hungry and notified", status=200)

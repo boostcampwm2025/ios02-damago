@@ -32,19 +32,16 @@ final class HomeViewModel: ViewModel {
     @Published private var state = State()
     private var cancellables = Set<AnyCancellable>()
     private var damagoID: String?
-    private let udid: String?
     
     private let userRepository: UserRepositoryProtocol
     private let petRepository: PetRepositoryProtocol
     private let pushRepository: PushRepositoryProtocol
     
     init(
-        udid: String?,
         userRepository: UserRepositoryProtocol,
         petRepository: PetRepositoryProtocol,
         pushRepository: PushRepositoryProtocol
     ) {
-        self.udid = udid
         self.userRepository = userRepository
         self.petRepository = petRepository
         self.pushRepository = pushRepository
@@ -72,11 +69,9 @@ final class HomeViewModel: ViewModel {
     }
     
     private func fetchUserInfo() {
-        guard let udid = udid else { return }
-        
         Task {
             do {
-                let userInfo = try await userRepository.getUserInfo(udid: udid)
+                let userInfo = try await userRepository.getUserInfo()
                 self.damagoID = userInfo.damagoID
                 state.coinAmount = userInfo.totalCoin
                 
@@ -114,13 +109,11 @@ final class HomeViewModel: ViewModel {
             }
         }
     }
-    
+
     private func pokePet(with message: String) {
-        guard let udid = udid else { return }
-        
         Task {
             do {
-                _ = try await pushRepository.poke(udid: udid, message: message)
+                _ = try await pushRepository.poke(message: message)
                 print("Poke sent with message: \(message)")
             } catch {
                 print("Error poking pet: \(error)")

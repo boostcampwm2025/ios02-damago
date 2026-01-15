@@ -5,6 +5,7 @@
 //  Created by 김재영 on 12/16/25.
 //
 
+import FirebaseAuth
 import FirebaseCore
 import FirebaseMessaging
 import OSLog
@@ -22,6 +23,12 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // 1. Firebase SDK 초기화 (가장 먼저 실행되어야 함)
         FirebaseApp.configure()
+
+        do {
+            try Auth.auth().useUserAccessGroup("B3PWYBKFUK.kr.codesquad.boostcamp10.Damago.SharedKeychain")
+        } catch {
+            SharedLogger.firebase.error("키체인 그룹 에러: \(error.localizedDescription)")
+        }
 
         // 2. iOS 기본 알림 센터(UNUserNotificationCenter) delegate 설정
         // -> 앱이 켜져 있을 때 알림을 어떻게 처리할지 결정하기 위함
@@ -53,7 +60,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // 의존성 등록
         let assembler = AppAssembler()
         assembler.assemble(AppDIContainer.shared)
-        
+
         return true
     }
 

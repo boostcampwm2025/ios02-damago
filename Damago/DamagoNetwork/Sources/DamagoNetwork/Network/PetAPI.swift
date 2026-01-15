@@ -8,7 +8,7 @@
 import Foundation
 
 public enum PetAPI {
-    case feed(damagoID: String)
+    case feed(accessToken: String, damagoID: String)
 }
 
 extension PetAPI: EndPoint {
@@ -27,14 +27,19 @@ extension PetAPI: EndPoint {
     }
     
     public var headers: [String: String]? {
-        ["Content-Type": "application/json; charset=utf-8"]
+        var headers = ["Content-Type": "application/json; charset=utf-8"]
+        switch self {
+        case .feed(let token, _):
+            headers["Authorization"] = "Bearer \(token)"
+        }
+        return headers
     }
     
     public var body: Data? {
         let parameters: [String: Any?]
         
         switch self {
-        case .feed(let damagoID):
+        case .feed(_, let damagoID):
             parameters = ["damagoID": damagoID]
         }
         

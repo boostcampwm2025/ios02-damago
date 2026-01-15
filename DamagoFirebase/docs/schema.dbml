@@ -1,9 +1,9 @@
 Table users {
-  udid varchar [pk, note: "기기 고유 식별자"]
+  uid varchar [pk, note: "사용자 식별자"]
   code varchar [unique, note: "커플 연결 시 사용되는 임시 코드"]
   
   // 관계 조회 비용(Read)을 줄이기 위해 파트너, 다마고, 기념일 정보를 직접 참조합니다.
-  partnerUDID varchar [ref: - users.udid, note: "연결된 파트너의 UDID"]
+  partnerUID varchar [ref: - users.uid, note: "연결된 파트너의 UID"]
   damagoID varchar [ref: > damagos.id, note: "현재 키우고 있는(Active) 다마고 문서 ID"]
   coupleID varchar [ref: > couples.id, note: "커플 관계 ID"]
   anniversaryDate timestamp [note: "커플 기념일"]
@@ -28,8 +28,8 @@ Table users {
 
 Table couples {
   id varchar [pk, note: "커플 고유 ID (Firestore Auto-ID)"]
-  user1UDID varchar [ref: > users.udid, note: "사용자 1"]
-  user2UDID varchar [ref: > users.udid, note: "사용자 2"]
+  user1UID varchar [ref: > users.uid, note: "사용자 1 uid"]
+  user2UID varchar [ref: > users.uid, note: "사용자 2 uid"]
   damagoID varchar [ref: > damagos.id, note: "현재 키우고 있는(Active) 다마고 ID"]
   
   totalCoin integer [default: 0, note: "커플이 보유한 재화 (코인)"]

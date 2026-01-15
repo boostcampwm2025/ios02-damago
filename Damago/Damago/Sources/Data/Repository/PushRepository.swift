@@ -9,19 +9,23 @@ import DamagoNetwork
 
 final class PushRepository: PushRepositoryProtocol {
     private let networkProvider: NetworkProvider
-    
-    init(networkProvider: NetworkProvider) {
+    private let tokenProvider: TokenProvider
+
+    init(networkProvider: NetworkProvider, tokenProvider: TokenProvider) {
         self.networkProvider = networkProvider
+        self.tokenProvider = tokenProvider
+    }
+
+    func poke(message: String) async throws -> Bool {
+        let token = try await tokenProvider.provide()
+        return try await networkProvider.requestSuccess(PushAPI.poke(accessToken: token, message: message))
     }
     
-    func poke(udid: String, message: String) async throws -> Bool {
-        try await networkProvider.requestSuccess(PushAPI.poke(udid: udid, message: message))
-    }
-    
-    func saveLiveActivityToken(udid: String, startToken: String?, updateToken: String?) async throws -> Bool {
-        try await networkProvider.requestSuccess(
+    func saveLiveActivityToken(startToken: String?, updateToken: String?) async throws -> Bool {
+        let token = try await tokenProvider.provide()
+        return try await networkProvider.requestSuccess(
             PushAPI.saveLiveActivityToken(
-                udid: udid,
+                accessToken: token,
                 laStartToken: startToken,
                 laUpdateToken: updateToken
             )

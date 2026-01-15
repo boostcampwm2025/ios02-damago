@@ -8,9 +8,9 @@
 import Foundation
 
 public struct UserInfoResponse: Codable {
-    public let udid: String
+    public let uid: String
     public let damagoID: String?
-    public let partnerUDID: String?
+    public let partnerUID: String?
     public let nickname: String?
     public let petStatus: DamagoStatusResponse?
     public let totalCoin: Int?

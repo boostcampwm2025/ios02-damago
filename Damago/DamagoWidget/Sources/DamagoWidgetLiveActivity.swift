@@ -67,7 +67,7 @@ struct DamagoWidgetLiveActivity: Widget {
             )
                 .clipShape(Rectangle())
 
-            actionButtonsView(udid: context.attributes.udid)
+            actionButtonsView()
         }
     }
 
@@ -122,15 +122,15 @@ struct DamagoWidgetLiveActivity: Widget {
 
     // MARK: ButtonView
 
-    private func actionButtonsView(udid: String) -> some View {
+    private func actionButtonsView() -> some View {
         VStack(spacing: .spacingS) {
-            feedButton(udid: udid)
-            pokeButton(udid: udid)
+            feedButton()
+            pokeButton()
         }
     }
 
-    private func feedButton(udid: String) -> some View {
-        Button(intent: FeedAppIntent(udid: udid)) {
+    private func feedButton() -> some View {
+        Button(intent: FeedAppIntent()) {
             HStack(spacing: .spacingS) {
                 Image(systemName: "fork.knife")
                     .foregroundStyle(feedButtonIconColor)
@@ -141,8 +141,8 @@ struct DamagoWidgetLiveActivity: Widget {
         .dynamicIslandActionButton(backgroundColor: feedButtonBackgroundColor)
     }
 
-    private func pokeButton(udid: String) -> some View {
-        Button(intent: PokeAppIntent(udid: udid)) {
+    private func pokeButton() -> some View {
+        Button(intent: PokeAppIntent()) {
             HStack(spacing: .spacingS) {
                 Image(systemName: "heart.fill")
                     .foregroundStyle(.white)
@@ -215,7 +215,7 @@ private extension View {
 
 extension DamagoAttributes {
     fileprivate static var preview: DamagoAttributes {
-        DamagoAttributes(petName: "Base Pet", udid: "preview-udid")
+        DamagoAttributes(petName: "Base Pet")
     }
 }
 

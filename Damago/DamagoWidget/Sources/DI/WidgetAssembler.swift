@@ -6,9 +6,7 @@
 //
 
 final class WidgetAssembler {
-    private let assembleies: [Assembly] = [
-        ServiceAssembly()
-    ]
+    private let assembleies: [Assembly] = []
 
     func assemble(_ container: DIContainer) {
         assembleies.forEach { $0.assemble(container) }

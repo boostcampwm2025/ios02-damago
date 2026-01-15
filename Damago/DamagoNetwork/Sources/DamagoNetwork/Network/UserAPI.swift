@@ -8,9 +8,9 @@
 import Foundation
 
 public enum UserAPI {
-    case generateCode(udid: String, fcmToken: String)
-    case connectCouple(myCode: String, targetCode: String)
-    case getUserInfo(udid: String)
+    case generateCode(accessToken: String, fcmToken: String)
+    case connectCouple(accessToken: String, targetCode: String)
+    case getUserInfo(accessToken: String)
 }
 
 extension UserAPI: EndPoint {
@@ -31,21 +31,28 @@ extension UserAPI: EndPoint {
     }
     
     public var headers: [String: String]? {
-        ["Content-Type": "application/json; charset=utf-8"]
+        var headers = ["Content-Type": "application/json; charset=utf-8"]
+        switch self {
+        case .generateCode(let token, _),
+             .connectCouple(let token, _),
+             .getUserInfo(let token):
+            headers["Authorization"] = "Bearer \(token)"
+        }
+        return headers
     }
     
     public var body: Data? {
         let parameters: [String: Any?]
         
         switch self {
-        case .generateCode(let udid, let fcmToken):
-            parameters = ["udid": udid, "fcmToken": fcmToken]
+        case .generateCode(_, let fcmToken):
+            parameters = ["fcmToken": fcmToken]
             
-        case .connectCouple(let myCode, let targetCode):
-            parameters = ["myCode": myCode, "targetCode": targetCode]
+        case .connectCouple(_, let targetCode):
+            parameters = ["targetCode": targetCode]
             
-        case .getUserInfo(let udid):
-            parameters = ["udid": udid]
+        case .getUserInfo:
+            parameters = [:]
         }
         
         let validParameters = parameters.compactMapValues { $0 }

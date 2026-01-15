@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol NetworkProvider {
+public protocol NetworkProvider: Sendable {
     func request<T: Decodable>(_ endpoint: EndPoint) async throws -> T
     func requestString(_ endpoint: EndPoint) async throws -> String
     @discardableResult func requestSuccess(_ endpoint: EndPoint) async throws -> Bool
@@ -60,7 +60,8 @@ public final class NetworkProviderImpl: NetworkProvider {
         }
         
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.invalidStatusCode(httpResponse.statusCode, "Server Error")
+            let body = String(data: data, encoding: .utf8) ?? "Unknown Server Error"
+            throw NetworkError.invalidStatusCode(httpResponse.statusCode, body)
         }
         
         return data

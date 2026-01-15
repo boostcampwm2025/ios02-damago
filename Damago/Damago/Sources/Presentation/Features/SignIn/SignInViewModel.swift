@@ -15,7 +15,12 @@ final class SignInViewModel: ViewModel {
     }
 
     struct State {
-        var errorMessage: Pulse<String>?
+        var route: Pulse<Route>?
+    }
+
+    enum Route {
+        case alert(errorMessage: String)
+        case connection
     }
 
     @Published private var state = State()
@@ -40,7 +45,7 @@ final class SignInViewModel: ViewModel {
         input.alertButtonDidTap
             .sink { [weak self] in
                 guard let self else { return }
-                state.errorMessage = nil
+                state.route = nil
             }
             .store(in: &cancellables)
 
@@ -50,8 +55,9 @@ final class SignInViewModel: ViewModel {
     func signIn() async {
         do {
             try await signInUseCase.signIn()
+            self.state.route = .init(.connection)
         } catch {
-            self.state.errorMessage = .init(error.localizedDescription)
+            self.state.route = .init(.alert(errorMessage: error.localizedDescription))
         }
     }
 }

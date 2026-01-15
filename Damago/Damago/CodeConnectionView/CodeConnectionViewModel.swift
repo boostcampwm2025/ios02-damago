@@ -28,7 +28,7 @@ final class CodeConnectionViewModel {
 
     func connectCouple(targetCode: String) async throws {
         do {
-            let success = try await userRepository.connectCouple(myCode: code, targetCode: targetCode)
+            let success = try await userRepository.connectCouple(targetCode: targetCode)
             await MainActor.run { [weak self] in self?.onConnected?(success) }
         } catch {
             await MainActor.run { [weak self] in self?.onConnected?(false) }
@@ -39,8 +39,6 @@ final class CodeConnectionViewModel {
 // MARK: - 코드 생성
 
 extension CodeConnectionViewModel {
-    var udid: String? { UIDevice.current.identifierForVendor?.uuidString }
-
     private func waitForFCMToken() async -> String? {
         // 이미 있으면 반환
         if let token = UserDefaults.standard.string(forKey: "fcmToken") { return token }
@@ -52,7 +50,6 @@ extension CodeConnectionViewModel {
     }
 
     private func requestGenerateCode(fcmToken: String) async throws -> String? {
-        guard let udid = udid else { return nil }
-        return try await userRepository.generateCode(udid: udid, fcmToken: fcmToken)
+        try await userRepository.generateCode(fcmToken: fcmToken)
     }
 }

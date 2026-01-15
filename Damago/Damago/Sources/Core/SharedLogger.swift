@@ -11,6 +11,7 @@ enum SharedLogger {
     static var subSystem: String { Bundle.main.bundleIdentifier ?? "" }
 
     static let apns = Logger(subsystem: subSystem, category: "apnsLogger")
+    static let firebase = Logger(subsystem: subSystem, category: "firebaseLogger")
     static let liveActivityManger = Logger(subsystem: subSystem, category: "liveActivityMangerLogger")
     static let viewController = Logger(subsystem: subSystem, category: "viewControllerLogger")
 }
