@@ -16,18 +16,18 @@ extension PushAPI: EndPoint {
     public var baseURL: URL {
         URL(string: BaseURL.string)!
     }
-    
+
     public var path: String {
         switch self {
         case .saveLiveActivityToken: "/save_live_activity_token"
         case .poke: "/poke"
         }
     }
-    
+
     public var method: HTTPMethod {
         .post
     }
-    
+
     public var headers: [String: String]? {
         var headers = ["Content-Type": "application/json; charset=utf-8"]
         switch self {
@@ -36,10 +36,10 @@ extension PushAPI: EndPoint {
         }
         return headers
     }
-    
+
     public var body: Data? {
         let parameters: [String: Any?]
-        
+
         switch self {
         case let .saveLiveActivityToken(_,  laStartToken, laUpdateToken):
             parameters = [
@@ -50,7 +50,7 @@ extension PushAPI: EndPoint {
         case let .poke(_, message):
             parameters = ["message": message]
         }
-        
+
         let validParameters = parameters.compactMapValues { $0 }
         return try? JSONSerialization.data(withJSONObject: validParameters)
     }
