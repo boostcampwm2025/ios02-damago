@@ -5,18 +5,23 @@ from utils.middleware import get_uid_from_request
 import time
 from utils.constants import BUNDLE_ID
 
+
 def poke(req: https_fn.Request) -> https_fn.Response:
     """
     상대방(partner)에게 '콕 찌르기' 푸시 알림을 전송합니다.
-    
+
     Args:
         req: Header Authorization Bearer Token
+        body: { "message": "사용자가 입력한 메시지 (Optional)" }
     """
     try:
         # 미들웨어로 UID 추출
         my_uid = get_uid_from_request(req)
     except ValueError as e:
         return https_fn.Response(str(e), status=401)
+
+    req_data = req.get_json(silent=True) or req.args
+    custom_message = req_data.get("message")
 
     db = get_db()
 
@@ -28,7 +33,7 @@ def poke(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response("User not found", status=404)
 
     my_user_data = my_user_doc.to_dict()
-    partner_uid = my_user_data.get("partnerUID") # partnerUDID -> partnerUID
+    partner_uid = my_user_data.get("partnerUID")  # partnerUID 사용
 
     if not partner_uid:
         return https_fn.Response("User is not in a couple", status=400)
@@ -47,10 +52,13 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     # --- [Step 2] FCM 전송 ---
     try:
         nickname = my_user_data.get('nickname') or '상대방'
+
+        final_body = custom_message if custom_message else f"{nickname}님이 당신을 콕 찔렀어요!"
+
         message = messaging.Message(
             notification=messaging.Notification(
                 title="콕!",
-                body=f"{nickname}님이 당신을 콕 찔렀어요!",
+                body=final_body,
             ),
             token=target_fcm_token
         )
@@ -67,7 +75,6 @@ def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
     클라이언트로부터 받은 Live Activity용 토큰(Start/Update)을 저장합니다.
     """
     try:
-        # 미들웨어로 UID 추출
         uid = get_uid_from_request(req)
     except ValueError as e:
         return https_fn.Response(str(e), status=401)
@@ -77,7 +84,6 @@ def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
     la_start_token = data.get("laStartToken")
 
     db = get_db()
-    # UDID 대신 UID 사용
     user_ref = db.collection("users").document(uid)
 
     update_data = {"updatedAt": firestore.SERVER_TIMESTAMP}
@@ -88,33 +94,34 @@ def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
 
     return https_fn.Response("Live Activity Token Saved")
 
+
 def update_live_activity(req: https_fn.Request) -> https_fn.Response:
     """
     실행 중인 Live Activity의 상태를 APNs를 통해 업데이트합니다.
     """
     data = req.get_json(silent=True) or req.args
-    target_uid = data.get("targetUID") # targetUDID -> targetUID
-    content_state = data.get("contentState") 
+    target_uid = data.get("targetUID")
+    content_state = data.get("contentState")
 
     if not target_uid or not content_state:
         return https_fn.Response("Missing targetUID or contentState", status=400)
 
     success = update_live_activity_internal(target_uid, content_state)
-    
+
     if success:
         return https_fn.Response(f"Live Activity Updated")
     else:
         return https_fn.Response("Live Activity update skipped or failed", status=200)
 
+
 def update_live_activity_internal(target_uid: str, content_state: dict) -> bool:
     """
-    내부 호출용 Live Activity 업데이트 함수 (targetUDID -> targetUID)
+    내부 호출용 Live Activity 업데이트 함수
     """
     db = get_db()
-    
-    # UDID 대신 UID로 문서 조회
+
     user_doc = db.collection("users").document(target_uid).get()
-    
+
     if not user_doc.exists:
         print(f"User {target_uid} not found")
         return False
@@ -140,11 +147,11 @@ def update_live_activity_internal(target_uid: str, content_state: dict) -> bool:
                 "content-state": content_state
             }
         )
-        
+
         message = messaging.Message(
-            token=fcm_token, 
+            token=fcm_token,
             apns=messaging.APNSConfig(
-                live_activity_token=la_token, 
+                live_activity_token=la_token,
                 headers={
                     "apns-push-type": "liveactivity",
                     "apns-topic": f"{BUNDLE_ID}.push-type.liveactivity",
@@ -161,13 +168,14 @@ def update_live_activity_internal(target_uid: str, content_state: dict) -> bool:
         print(f"Error updating Live Activity: {e}")
         return False
 
+
 def start_live_activity(req: https_fn.Request) -> https_fn.Response:
     """
     Live Activity를 원격으로 시작합니다 (Push-to-Start).
     iOS 17.2 이상에서 지원됩니다.
     """
     data = req.get_json(silent=True) or req.args
-    target_uid = data.get("targetUID") # targetUDID -> targetUID
+    target_uid = data.get("targetUID")
     attributes = data.get("attributes")
     content_state = data.get("contentState")
 
@@ -175,8 +183,7 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response("Missing parameters", status=400)
 
     db = get_db()
-    
-    # UDID 대신 UID로 조회
+
     user_doc = db.collection("users").document(target_uid).get()
     if not user_doc.exists:
         return https_fn.Response("User not found", status=404)
@@ -203,14 +210,14 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
                 "attributes-type": "DamagoAttributes"
             }
         )
-        
+
         # [Debug] Payload 확인
         print(f"[Start LA] Payload Custom Data: {aps.custom_data}")
-        
+
         message = messaging.Message(
-            token=fcm_token, # FCM 등록 토큰
+            token=fcm_token,
             apns=messaging.APNSConfig(
-                live_activity_token=la_start_token, # LA 시작 토큰 (Push-To-Start Token)
+                live_activity_token=la_start_token,
                 headers={
                     "apns-push-type": "liveactivity",
                     "apns-topic": f"{BUNDLE_ID}.push-type.liveactivity",
