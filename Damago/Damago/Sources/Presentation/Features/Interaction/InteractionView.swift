@@ -8,7 +8,7 @@
 import UIKit
 
 final class InteractionView: UIView {
-    private let scrollView: UIScrollView = {
+    let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.showsVerticalScrollIndicator = true
         scrollView.alwaysBounceVertical = true
@@ -24,8 +24,17 @@ final class InteractionView: UIView {
         stackView.distribution = .fill
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.isLayoutMarginsRelativeArrangement = true
-        stackView.layoutMargins = UIEdgeInsets(top: .spacingXS, left: .spacingM, bottom: .spacingXL, right: .spacingM)
+        stackView.layoutMargins = UIEdgeInsets(top: 0, left: .spacingM, bottom: .spacingXL, right: .spacingM)
         return stackView
+    }()
+    
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "커플 활동"
+        label.font = .systemFont(ofSize: 34, weight: .bold)
+        label.textColor = .textPrimary
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     private let subtitleLabel: UILabel = {
@@ -70,6 +79,10 @@ final class InteractionView: UIView {
         setupUI()
     }
     
+    func setSubtitleAlpha(_ alpha: CGFloat) {
+        subtitleLabel.alpha = alpha
+    }
+    
     private func setupUI() {
         backgroundColor = .background
         setupHierarchy()
@@ -80,20 +93,21 @@ final class InteractionView: UIView {
         addSubview(scrollView)
         scrollView.addSubview(contentStackView)
         
+        contentStackView.addArrangedSubview(titleLabel)
         contentStackView.addArrangedSubview(subtitleLabel)
+        contentStackView.setCustomSpacing(.spacingXS, after: titleLabel)
         contentStackView.setCustomSpacing(.spacingXL, after: subtitleLabel)
         
         contentStackView.addArrangedSubview(questionCardView)
         contentStackView.addArrangedSubview(balanceGameCardView)
         contentStackView.addArrangedSubview(historyButton)
-        
         contentStackView.setCustomSpacing(.spacingXL, after: balanceGameCardView)
     }
     
     private func setupConstraints() {
         // ScrollView Layout
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
+            scrollView.topAnchor.constraint(equalTo: topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
