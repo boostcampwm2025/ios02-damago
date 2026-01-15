@@ -8,7 +8,6 @@
 import Foundation
 import ActivityKit
 import OSLog
-import UIKit
 
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
