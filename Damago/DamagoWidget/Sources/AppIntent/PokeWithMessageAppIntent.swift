@@ -18,20 +18,23 @@ struct PokeWithMessageAppIntent: AppIntent, LiveActivityIntent {
     @Parameter(title: "Activity ID")
     var activityID: String
 
-    @Parameter(title: "UDID")
-    var udid: String
-
     @Parameter(title: "Message")
     var message: String
 
-    init(activityID: String, udid: String, message: String) {
+    @Dependency
+    var networkProvider: NetworkProvider
+
+    @Dependency
+    var tokenProvider: TokenProvider
+
+    init(activityID: String, message: String) {
         self.activityID = activityID
-        self.udid = udid
         self.message = message
     }
     init() {}
 
     func perform() async throws -> some IntentResult {
+        let token = try await tokenProvider.provide()
         @MainActor
         func setScreen(_ screen: DamagoAttributes.Screen) async {
             guard let activity = Activity<DamagoAttributes>.activities.first(where: { $0.id == activityID }) else {
@@ -45,12 +48,10 @@ struct PokeWithMessageAppIntent: AppIntent, LiveActivityIntent {
         // 1) 전송 중 화면
         await setScreen(.sending)
 
-        let networkProvider = NetworkProvider()
-
         do {
             // 2) 네트워크 (메인 액터에서 하지 않음)
             try await networkProvider.requestSuccess(
-                PushAPI.poke(udid: udid, message: message)
+                PushAPI.poke(accessToken: token, message: message)
             )
 
             // 3) 성공: idle 복귀

@@ -81,7 +81,6 @@ struct DamagoWidgetLiveActivity: Widget {
             )
             .clipShape(Rectangle())
             actionButtonsView(
-                udid: context.attributes.udid,
                 activityID: context
                     .activityID
             )
@@ -145,15 +144,15 @@ struct DamagoWidgetLiveActivity: Widget {
 
     // MARK: ButtonView
 
-    private func actionButtonsView(udid: String, activityID: String) -> some View {
+    private func actionButtonsView(activityID: String) -> some View {
         VStack(spacing: .spacingS) {
-            feedButton(udid: udid)
-            pokeButton(udid: udid, activityID: activityID)
+            feedButton()
+            pokeButton(activityID: activityID)
         }
     }
 
-    private func feedButton(udid: String) -> some View {
-        Button(intent: FeedAppIntent(udid: udid)) {
+    private func feedButton() -> some View {
+        Button(intent: FeedAppIntent()) {
             HStack(spacing: .spacingS) {
                 Image(systemName: "fork.knife")
                     .foregroundStyle(feedButtonIconColor)
@@ -164,7 +163,7 @@ struct DamagoWidgetLiveActivity: Widget {
         .dynamicIslandActionButton(backgroundColor: feedButtonBackgroundColor)
     }
 
-    private func pokeButton(udid: String, activityID: String) -> some View {
+    private func pokeButton(activityID: String) -> some View {
         Button(intent: ChoosePokeMessageAppIntent(activityID: activityID)) {
             HStack(spacing: .spacingS) {
                 Image(systemName: "heart.fill")
@@ -179,12 +178,13 @@ struct DamagoWidgetLiveActivity: Widget {
     // MARK: PokeButtonView
 
     private func choosePokeMessageView(context: ActivityViewContext<DamagoAttributes>) -> some View {
+        // TODO: UserDefaults에 저장된 단축어를 표시하도록 변경 요함
         let items: [(title: String, index: Int)] = [
-            ("한", 0),
-            ("두글", 1),
-            ("세글자", 2),
-            ("네글자를", 3),
-            ("다섯글자를", 4)
+            ("❤️", 0),
+            ("안녕", 1),
+            ("사랑해", 2),
+            ("보고싶어", 3),
+            ("밥챙겨먹어", 4)
         ]
 
         return VStack(alignment: .leading, spacing: .spacingS) {
@@ -196,7 +196,6 @@ struct DamagoWidgetLiveActivity: Widget {
                     Button(
                         intent: PokeWithMessageAppIntent(
                             activityID: context.activityID,
-                            udid: context.attributes.udid,
                             message: item.title
                         )
                     ) {
@@ -302,7 +301,7 @@ private extension View {
 
 extension DamagoAttributes {
     fileprivate static var preview: DamagoAttributes {
-        DamagoAttributes(petName: "Base Pet", udid: "preview-udid")
+        DamagoAttributes(petName: "Base Pet")
     }
 }
 
