@@ -60,6 +60,9 @@ public final class NetworkProviderImpl: NetworkProvider {
         }
         
         guard (200...299).contains(httpResponse.statusCode) else {
+            if httpResponse.statusCode == 401 {
+                NotificationCenter.default.post(name: Notification.Name("authenticationDidFail"), object: nil)
+            }
             let body = String(data: data, encoding: .utf8) ?? "Unknown Server Error"
             throw NetworkError.invalidStatusCode(httpResponse.statusCode, body)
         }

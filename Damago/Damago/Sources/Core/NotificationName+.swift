@@ -9,4 +9,5 @@ import Foundation
 
 extension Notification.Name {
     static let fcmTokenDidUpdate = Notification.Name("fcmTokenDidUpdate")
+    static let authenticationDidFail = Notification.Name("authenticationDidFail")
 }
