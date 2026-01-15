@@ -32,6 +32,7 @@ final class InteractionViewController: UIViewController {
         super.viewDidLoad()
         setupNavigation()
         setupDelegate()
+        mainView.configure(title: viewModel.title, subtitle: viewModel.subtitle)
         
         let output = viewModel.transform(
             InteractionViewModel.Input(
@@ -74,7 +75,7 @@ extension InteractionViewController: UIScrollViewDelegate {
         if scrollY > threshold {
             if isNavigationBarHidden {
                 navigationController?.setNavigationBarHidden(false, animated: true)
-                navigationItem.title = "커플 활동"
+                navigationItem.title = viewModel.title
                 isNavigationBarHidden = false
             }
         } else {

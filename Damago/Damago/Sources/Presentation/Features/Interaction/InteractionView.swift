@@ -30,7 +30,6 @@ final class InteractionView: UIView {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "커플 활동"
         label.font = .systemFont(ofSize: 34, weight: .bold)
         label.textColor = .textPrimary
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -39,7 +38,6 @@ final class InteractionView: UIView {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "더 가까워지기 위한 일상 활동"
         label.font = .body3
         label.textColor = .textTertiary
         label.numberOfLines = 0
@@ -77,6 +75,11 @@ final class InteractionView: UIView {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupUI()
+    }
+    
+    func configure(title: String, subtitle: String) {
+        self.titleLabel.text = title
+        self.subtitleLabel.text = subtitle
     }
     
     func setSubtitleAlpha(_ alpha: CGFloat) {

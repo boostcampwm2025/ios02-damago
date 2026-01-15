@@ -9,6 +9,9 @@ import Combine
 import Foundation
 
 final class InteractionViewModel: ViewModel {
+    let title = "커플 활동"
+    let subtitle = "더 가까워지기 위한 일상 활동"
+    
     struct Input {
         let historyButtonDidTap: AnyPublisher<Void, Never>
     }
