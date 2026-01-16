@@ -166,6 +166,7 @@ final class ConnectionView: UIView {
         backgroundColor = .background
         setupHierarchy()
         setupConstraints()
+        setupKeyboardDismissOnTap()
     }
 
     private func setupHierarchy() {
