@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "dev": "damago-dev-26",
+    "prod": "damago-a43da"
+  }
+}

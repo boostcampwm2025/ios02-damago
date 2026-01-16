@@ -1,0 +1,5 @@
+firebase_functions~=0.1.0
+nanoid
+firebase-admin>=6.5.0
+google-cloud-firestore
+google-cloud-tasks

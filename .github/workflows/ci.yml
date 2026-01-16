@@ -1,0 +1,81 @@
+name: Damago iOS CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 30 # 빌드가 30분을 넘어가면 강제 종료
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    # Ruby 환경 설정 (Fastlane 구동용)
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3'
+        bundler-cache: true
+
+    # Xcode 버전 선택
+    - name: Select Xcode 26.1
+      run: sudo xcode-select -s /Applications/Xcode_26.1.app/Contents/Developer
+
+    # .gitignore로 누락된 파일 생성
+    # 실제 CI 동작을 위해 GitHub Secrets 설정
+    - name: Create GoogleService-Info.plist
+      run: |
+        mkdir -p ./Damago/Damago/Resources
+        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_PROD_BASE64 }}" | base64 --decode > ./Damago/Damago/Resources/GoogleService-Info-Prod.plist
+        else
+          echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_DEV_BASE64 }}" | base64 --decode > ./Damago/Damago/Resources/GoogleService-Info-Dev.plist
+        fi
+
+    - name: Run Fastlane Tests
+      # CI 환경에서도 Xcode 설정을 읽어오는 시간을 충분히 확보
+      env:
+        FASTLANE_XCODE_LIST_TIMEOUT: 120
+        FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 120
+      run: bundle exec fastlane test
+
+# Merge 시에 함수 배포
+  deploy-functions:
+    name: Deploy Firebase Functions
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install Python Dependencies
+        run: |
+          cd DamagoFirebase/functions
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          cd DamagoFirebase
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            firebase deploy --only functions --project prod --force
+          else
+            firebase deploy --only functions --project dev --force
+          fi

@@ -1,0 +1,31 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Run tests and build verification"
+  lane :test do
+    # Xcode 26.1 환경에 맞춰 실행
+    
+    # 기본적으로 Debug 빌드는 항상 검증
+    configs_to_test = ["Debug"]
+
+    # main 브랜치인 경우에만 Release 빌드까지 추가 검증
+    current_branch = git_branch
+    if current_branch == "main" || ENV["GITHUB_REF_NAME"] == "main"
+      configs_to_test << "Release"
+    end
+
+    configs_to_test.each do |config|
+      puts "🚀 Validating #{config} build..."
+      xcodebuild(
+        build: true,
+        project: "./Damago/Damago.xcodeproj",
+        scheme: "Damago",
+        configuration: config,
+        destination: "generic/platform=iOS Simulator", # 특정 시뮬레이터가 아닌 일반적인 시뮬레이터 사용
+        clean: true,
+        # CI 환경에서 SwiftLint 등 빌드 툴 플러그인 신뢰 문제 해결
+        xcargs: "-skipPackagePluginValidation"
+      )
+    end
+  end
+end
