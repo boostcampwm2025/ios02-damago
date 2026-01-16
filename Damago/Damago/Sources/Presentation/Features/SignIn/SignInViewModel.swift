@@ -20,7 +20,7 @@ final class SignInViewModel: ViewModel {
 
     enum Route {
         case alert(errorMessage: String)
-        case connection
+        case connection(opponentCode: String?)
     }
 
     @Published private var state = State()
@@ -28,9 +28,11 @@ final class SignInViewModel: ViewModel {
     private var cancellables = Set<AnyCancellable>()
 
     private let signInUseCase: SignInUseCase
+    private let opponentCode: String?
 
-    init(signInUseCase: SignInUseCase) {
+    init(signInUseCase: SignInUseCase, opponentCode: String? = nil) {
         self.signInUseCase = signInUseCase
+        self.opponentCode = opponentCode
     }
 
     func transform(_ input: Input) -> Output {
@@ -55,7 +57,7 @@ final class SignInViewModel: ViewModel {
     func signIn() async {
         do {
             try await signInUseCase.signIn()
-            self.state.route = .init(.connection)
+            self.state.route = .init(.connection(opponentCode: opponentCode))
         } catch {
             self.state.route = .init(.alert(errorMessage: error.localizedDescription))
         }

@@ -15,9 +15,11 @@ public protocol NetworkProvider: Sendable {
 
 public final class NetworkProviderImpl: NetworkProvider {
     private let session: URLSession
-    
-    public init(session: URLSession = .shared) {
+    private let onAuthenticationFailed: (@Sendable () -> Void)?
+
+    public init(session: URLSession = .shared, onAuthenticationFailed: (@Sendable () -> Void)? = nil) {
         self.session = session
+        self.onAuthenticationFailed = onAuthenticationFailed
     }
     
     public func request<T: Decodable>(_ endpoint: EndPoint) async throws -> T {
@@ -60,6 +62,9 @@ public final class NetworkProviderImpl: NetworkProvider {
         }
         
         guard (200...299).contains(httpResponse.statusCode) else {
+            if httpResponse.statusCode == 401 {
+                onAuthenticationFailed?()
+            }
             let body = String(data: data, encoding: .utf8) ?? "Unknown Server Error"
             throw NetworkError.invalidStatusCode(httpResponse.statusCode, body)
         }

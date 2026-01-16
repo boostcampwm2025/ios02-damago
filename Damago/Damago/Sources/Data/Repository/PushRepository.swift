@@ -17,12 +17,12 @@ final class PushRepository: PushRepositoryProtocol {
     }
 
     func poke(message: String) async throws -> Bool {
-        let token = try await tokenProvider.provide()
+        let token = try await tokenProvider.idToken()
         return try await networkProvider.requestSuccess(PushAPI.poke(accessToken: token, message: message))
     }
     
     func saveLiveActivityToken(startToken: String?, updateToken: String?) async throws -> Bool {
-        let token = try await tokenProvider.provide()
+        let token = try await tokenProvider.idToken()
         return try await networkProvider.requestSuccess(
             PushAPI.saveLiveActivityToken(
                 accessToken: token,

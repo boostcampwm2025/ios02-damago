@@ -17,7 +17,7 @@ final class PetRepository: PetRepositoryProtocol {
     }
     
     func feed(damagoID: String) async throws -> Bool {
-        let token = try await tokenProvider.provide()
+        let token = try await tokenProvider.idToken()
         return try await networkProvider.requestSuccess(PetAPI.feed(accessToken: token, damagoID: damagoID))
     }
 }

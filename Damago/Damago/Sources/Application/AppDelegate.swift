@@ -128,7 +128,3 @@ extension AppDelegate: MessagingDelegate {
         NotificationCenter.default.post(name: .fcmTokenDidUpdate, object: nil)
     }
 }
-
-extension Notification.Name {
-    static let fcmTokenDidUpdate = Notification.Name("fcmTokenDidUpdate")
-}

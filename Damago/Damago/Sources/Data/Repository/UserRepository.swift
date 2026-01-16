@@ -26,13 +26,13 @@ final class UserRepository: UserRepositoryProtocol {
     }
     
     func generateCode(fcmToken: String) async throws -> String {
-        let token = try await tokenProvider.provide()
+        let token = try await tokenProvider.idToken()
         return try await networkProvider.requestString(UserAPI.generateCode(accessToken: token, fcmToken: fcmToken))
     }
     
-    func connectCouple(targetCode: String) async throws -> Bool {
-        let token = try await tokenProvider.provide()
-        return try await networkProvider.requestSuccess(
+    func connectCouple(targetCode: String) async throws {
+        let token = try await tokenProvider.idToken()
+        try await networkProvider.requestSuccess(
             UserAPI.connectCouple(
                 accessToken: token,
                 targetCode: targetCode
@@ -41,7 +41,7 @@ final class UserRepository: UserRepositoryProtocol {
     }
     
     func getUserInfo() async throws -> UserInfo {
-        let token = try await tokenProvider.provide()
+        let token = try await tokenProvider.idToken()
         let response: UserInfoResponse = try await networkProvider.request(UserAPI.getUserInfo(accessToken: token))
         return response.toDomain()
     }
@@ -52,6 +52,10 @@ final class UserRepository: UserRepositoryProtocol {
 
         let requestResult = try await authService.request(hashedNonce: hashedNonce)
         try await authService.signIn(credential: requestResult, rawNonce: rawNonce)
+    }
+
+    func fcmToken() async throws -> String {
+        try await tokenProvider.fcmToken()
     }
 }
 
