@@ -30,7 +30,6 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: windowScene)
         self.window = window
-        
         if let urlContext = connectionOptions.urlContexts.first {
             handleURL(urlContext.url)
         } else {
@@ -44,7 +43,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         if let url = URLContexts.first?.url { handleURL(url) }
     }
-    
+
     private func handleURL(_ url: URL) {
         guard url.scheme == "damago", url.host == "connection",
               let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
@@ -75,8 +74,17 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func setupRootViewController() {
         if Auth.auth().currentUser != nil {
-            let tabBarController = TabBarViewController()
-            window?.rootViewController = tabBarController
+            if UserDefaults.standard.bool(forKey: "isConnected") {
+                let tabBarController = TabBarViewController()
+                window?.rootViewController = tabBarController
+            } else {
+                let connectionVM = ConnectionViewModel(
+                    fetchCodeUseCase: AppDIContainer.shared.resolve(FetchCodeUseCase.self),
+                    connectCoupleUseCase: AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
+                )
+                let connectionVC = ConnectionViewController(viewModel: connectionVM)
+                window?.rootViewController = connectionVC
+            }
         } else {
             let signInVM = SignInViewModel(signInUseCase: AppDIContainer.shared.resolve(SignInUseCase.self))
             let signInVC = SignInViewController(viewModel: signInVM)
