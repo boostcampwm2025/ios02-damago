@@ -21,7 +21,7 @@ struct DamagoAttributes: ActivityAttributes {
         var currentExp: Int
         var maxExp: Int
         var lastFedAt: String?
-        var screen: Screen = .idle
+        var screen: Screen? = .idle
         var lastFedAtDate: Date? {
             Date.fromISO8601(lastFedAt)
         }

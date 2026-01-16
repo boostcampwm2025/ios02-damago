@@ -34,7 +34,7 @@ struct PokeWithMessageAppIntent: AppIntent, LiveActivityIntent {
     init() {}
 
     func perform() async throws -> some IntentResult {
-        let token = try await tokenProvider.provide()
+        let token = try await tokenProvider.fcmToken()
         @MainActor
         func setScreen(_ screen: DamagoAttributes.Screen) async {
             guard let activity = Activity<DamagoAttributes>.activities.first(where: { $0.id == activityID }) else {

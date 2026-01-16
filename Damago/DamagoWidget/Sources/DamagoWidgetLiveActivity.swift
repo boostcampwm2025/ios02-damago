@@ -62,7 +62,7 @@ struct DamagoWidgetLiveActivity: Widget {
     @ViewBuilder
     private func expandedCenterContentView(context: ActivityViewContext<DamagoAttributes>) -> some View {
         switch context.state.screen {
-        case .idle:
+        case .idle, .none:
             idleExpandedContentView(context: context)
         case .choosePokeMessage:
             choosePokeMessageView(context: context)
@@ -90,7 +90,7 @@ struct DamagoWidgetLiveActivity: Widget {
     @ViewBuilder
     private func expandedBottomView(context: ActivityViewContext<DamagoAttributes>) -> some View {
         switch context.state.screen {
-        case .idle:
+        case .idle, .none:
             HStack {
                 Text("포만감")
                 linearProgressView(

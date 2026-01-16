@@ -106,6 +106,7 @@
 			membershipExceptions = (
 				Sources/Core/Assembly.swift,
 				Sources/Core/DIContainer.swift,
+				"Sources/Core/NotificationName+.swift",
 				Sources/Core/SharedLogger.swift,
 				Sources/Data/Services/TokenProvider.swift,
 				Sources/Domain/Model/PokeShortcut.swift,
