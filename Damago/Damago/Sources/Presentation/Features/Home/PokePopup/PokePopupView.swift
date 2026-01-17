@@ -241,6 +241,19 @@ extension PokePopupView {
         } else {
             // 일반 모드로 전환할 때만 뷰 재설정
             if isEditingMode {
+                // 편집 모드에서 나올 때 모든 텍스트 필드 포커스 해제
+                shortcutEditViews.values.forEach { views in
+                    views.summaryField.resignFirstResponder()
+                    views.messageField.resignFirstResponder()
+                }
+                
+                // 원본 데이터로 강제 업데이트 (취소 시 수정 내용 제거)
+                state.shortcuts.enumerated().forEach { index, shortcut in
+                    guard let editViews = shortcutEditViews[index] else { return }
+                    editViews.summaryField.text = shortcut.summary
+                    editViews.messageField.text = shortcut.message
+                }
+                
                 editButton.configuration?.image = UIImage(systemName: "pencil")
                 sendButton.isHidden = false
                 saveButton.isHidden = true
