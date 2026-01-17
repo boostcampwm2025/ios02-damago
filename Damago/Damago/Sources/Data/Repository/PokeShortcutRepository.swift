@@ -39,11 +39,11 @@ final class PokeShortcutRepository: PokeShortcutRepositoryProtocol {
     
     private var defaultShortcuts: [PokeShortcut] {
         [
-            PokeShortcut(summary: "안녕!", message: "안녕!"),
-            PokeShortcut(summary: "밥 먹었어?", message: "밥 먹었어?"),
-            PokeShortcut(summary: "오늘 하루 어땠어?", message: "오늘 하루 어땠어?"),
-            PokeShortcut(summary: "사랑해 💕", message: "사랑해 💕"),
-            PokeShortcut(summary: "고마워!", message: "고마워!")
+            PokeShortcut(summary: "안녕", message: "안녕! 오늘도 좋은 하루 보내! 😊"),
+            PokeShortcut(summary: "밥 먹었니", message: "밥 먹었어? 맛있게 먹었니? 🍽️"),
+            PokeShortcut(summary: "하루는", message: "오늘 하루는 어땠어? 힘들지는 않았어? 💪"),
+            PokeShortcut(summary: "사랑해", message: "사랑해 💕 보고 싶어! ❤️"),
+            PokeShortcut(summary: "고마워", message: "고마워! 덕분에 힘이 나! 🙏")
         ]
     }
     
