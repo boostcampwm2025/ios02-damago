@@ -43,10 +43,10 @@ extension UIView {
             let textFieldFrame = activeTextField.convert(activeTextField.bounds, to: self)
             let textFieldBottom = textFieldFrame.maxY
             
-            // 키보드 높이
-            let keyboardHeight = keyboardFrame.height
-            let safeAreaBottom = self.safeAreaInsets.bottom
-            let keyboardTop = self.bounds.height - keyboardHeight + safeAreaBottom
+            // 키보드 프레임을 뷰의 좌표계로 변환
+            guard let window = self.window else { return }
+            let keyboardFrameInView = self.convert(keyboardFrame, from: window)
+            let keyboardTop = keyboardFrameInView.minY
             
             // 텍스트 필드가 키보드 위에 보이도록 조정
             let targetY = keyboardTop - padding - textFieldFrame.height
