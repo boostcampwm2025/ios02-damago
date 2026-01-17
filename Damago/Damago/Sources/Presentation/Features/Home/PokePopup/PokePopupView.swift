@@ -511,6 +511,17 @@ extension PokePopupView {
 extension PokePopupView: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
+        
+        // customTextField에서 엔터를 눌렀고, 편집 모드가 아니며, 전송 버튼이 활성화되어 있고 텍스트가 있을 때만 전송
+        if textField == customTextField,
+           !isEditingMode,
+           sendButton.isEnabled,
+           !sendButton.isHidden,
+           let text = textField.text,
+           !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            sendButton.sendActions(for: .touchUpInside)
+        }
+        
         return true
     }
     
