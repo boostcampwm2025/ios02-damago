@@ -476,6 +476,35 @@ extension PokePopupView {
         }
         
         adjustViewForKeyboard(constraint: constraint, textFields: allTextFields)
+        setupKeyboardButtonControl()
+    }
+    
+    private func setupKeyboardButtonControl() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillShow),
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillHide),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+    
+    @objc
+    private func keyboardWillShow() {
+        sendButton.isEnabled = false
+        cancelButton.isEnabled = false
+    }
+    
+    @objc
+    private func keyboardWillHide() {
+        sendButton.isEnabled = true
+        cancelButton.isEnabled = true
     }
 }
 
