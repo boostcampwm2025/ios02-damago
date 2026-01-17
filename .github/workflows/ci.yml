@@ -30,10 +30,13 @@ jobs:
     - name: Create GoogleService-Info.plist
       run: |
         mkdir -p ./Damago/Damago/Resources
+        
+        # Dev 파일은 빌드 검증(Debug)을 위해 항상 생성
+        echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_DEV_BASE64 }}" | base64 --decode > ./Damago/Damago/Resources/GoogleService-Info-Dev.plist
+        
+        # Main 브랜치인 경우 Release 빌드를 위해 Prod 파일 추가 생성
         if [ "${{ github.ref }}" == "refs/heads/main" ]; then
           echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_PROD_BASE64 }}" | base64 --decode > ./Damago/Damago/Resources/GoogleService-Info-Prod.plist
-        else
-          echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_DEV_BASE64 }}" | base64 --decode > ./Damago/Damago/Resources/GoogleService-Info-Dev.plist
         fi
 
     - name: Run Fastlane Tests

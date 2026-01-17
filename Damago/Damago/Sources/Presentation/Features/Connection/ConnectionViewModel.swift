@@ -116,6 +116,7 @@ final class ConnectionViewModel: ViewModel {
     private func connect() async {
         do {
             try await connectCoupleUseCase.execute(code: state.opponentCode)
+            UserDefaults.standard.setValue(true, forKey: "isConnected")
             state.route = .init(.home)
         } catch {
             state.route = .init(.alert(message: error.localizedDescription))
