@@ -40,6 +40,8 @@ final class PokePopupViewModel: ViewModel {
     
     var onMessageSelected: ((String) -> Void)?
     var onCancel: (() -> Void)?
+    var onRequestSendConfirmation: ((String, @escaping () -> Void) -> Void)?
+    var onRequestCancelConfirmation: ((@escaping () -> Void) -> Void)?
     
     init(shortcutRepository: PokeShortcutRepositoryProtocol) {
         self.shortcutRepository = shortcutRepository
@@ -73,7 +75,7 @@ final class PokePopupViewModel: ViewModel {
         input.cancelButtonTapped
             .sink { [weak self] _ in
                 if self?.state.isEditing == true {
-                    self?.exitEditMode()
+                    self?.requestCancelConfirmation()
                 } else {
                     self?.onCancel?()
                 }
@@ -114,8 +116,16 @@ final class PokePopupViewModel: ViewModel {
     private func handleSend() {
         guard !state.isEditing else { return }
         let message = state.currentText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !message.isEmpty {
-            onMessageSelected?(message)
+        guard !message.isEmpty else { return }
+        
+        onRequestSendConfirmation?(message) { [weak self] in
+            self?.onMessageSelected?(message)
+        }
+    }
+    
+    private func requestCancelConfirmation() {
+        onRequestCancelConfirmation? { [weak self] in
+            self?.exitEditMode()
         }
     }
     
