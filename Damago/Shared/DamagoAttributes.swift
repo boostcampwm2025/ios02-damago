@@ -68,7 +68,7 @@ struct DamagoAttributes: ActivityAttributes {
 }
 
 extension DamagoAttributes {
-    public enum Screen:String, Codable, Hashable {
+    public enum Screen: String, Codable, Hashable {
         case idle
         case choosePokeMessage
         case sending
