@@ -73,9 +73,7 @@ final class HomeViewModel: ViewModel {
         state.isLoading = true
         Task {
             defer {
-                Task { @MainActor in
-                    state.isLoading = false
-                }
+                state.isLoading = false
             }
             do {
                 let userInfo = try await userRepository.getUserInfo()
