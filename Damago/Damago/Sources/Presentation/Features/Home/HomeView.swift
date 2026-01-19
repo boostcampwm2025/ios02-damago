@@ -110,13 +110,6 @@ final class HomeView: UIView {
         return button
     }()
 
-    private let loadingIndicator: UIActivityIndicatorView = {
-        let indicator = UIActivityIndicatorView(style: .large)
-        indicator.color = .damagoPrimary
-        indicator.hidesWhenStopped = true
-        indicator.translatesAutoresizingMaskIntoConstraints = false
-        return indicator
-    }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -132,13 +125,12 @@ final class HomeView: UIView {
         backgroundColor = .background
         setupHierarchy()
         setupConstraints()
-        updateLoading(isLoading: true)
     }
 
     private func setupHierarchy() {
         cardContentContainer.addSubview(characterView)
         cardShadowContainer.addSubview(cardContentContainer)
-        [capsuleLabel, dDayLabel, nameLabel, cardShadowContainer, feedButton, pokeButton, expBar, loadingIndicator]
+        [capsuleLabel, dDayLabel, nameLabel, cardShadowContainer, feedButton, pokeButton, expBar]
             .forEach { addSubview($0) }
     }
 
@@ -176,10 +168,7 @@ final class HomeView: UIView {
 
             feedButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
             feedButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
-            feedButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingXL),
-
-            loadingIndicator.centerXAnchor.constraint(equalTo: centerXAnchor),
-            loadingIndicator.centerYAnchor.constraint(equalTo: centerYAnchor)
+            feedButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingXL)
         ])
     }
 
@@ -192,15 +181,12 @@ extension HomeView {
     }
 
     func updateLoading(isLoading: Bool) {
-        if isLoading {
-            loadingIndicator.startAnimating()
-        } else {
-            loadingIndicator.stopAnimating()
-        }
-
         let contentAlpha: CGFloat = isLoading ? 0 : 1
-        [capsuleLabel, dDayLabel, nameLabel, cardShadowContainer, feedButton, pokeButton, expBar]
-            .forEach { $0.alpha = contentAlpha }
+        UIView.animate(withDuration: 0.3) {
+            [self.capsuleLabel, self.dDayLabel, self.nameLabel, self.cardShadowContainer, 
+             self.feedButton, self.pokeButton, self.expBar]
+                .forEach { $0.alpha = contentAlpha }
+        }
     }
 
     func updateCoin(amount: Int) {

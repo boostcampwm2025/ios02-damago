@@ -11,6 +11,7 @@ import UIKit
 final class HomeViewController: UIViewController {
     private let mainView = HomeView()
     private let viewModel: HomeViewModel
+    private let progressView = ProgressView()
 
     private var cancellables = Set<AnyCancellable>()
     private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
@@ -71,7 +72,16 @@ final class HomeViewController: UIViewController {
     func bind(_ output: HomeViewModel.Output) {
         output
             .mapForUI { $0.isLoading }
-            .sink { [weak self] in self?.mainView.updateLoading(isLoading: $0) }
+            .sink { [weak self] isLoading in
+                guard let self else { return }
+                self.mainView.updateLoading(isLoading: isLoading)
+                
+                if isLoading {
+                    self.progressView.show(in: self.view, message: "불러오는 중...")
+                } else {
+                    self.progressView.hide()
+                }
+            }
             .store(in: &cancellables)
 
         output
