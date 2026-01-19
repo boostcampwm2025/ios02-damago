@@ -58,7 +58,10 @@ final class HomeViewModel: ViewModel {
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
         input.viewDidLoad
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] in self?.fetchUserInfo() }
+            .sink { [weak self] in
+                self?.fetchUserInfo()
+                self?.bindGlobalState()
+            }
             .store(in: &cancellables)
 
         input.feedButtonDidTap
@@ -84,13 +87,6 @@ final class HomeViewModel: ViewModel {
             }
             do {
                 let userInfo = try await userRepository.getUserInfo()
-
-                if let damagoID = userInfo.damagoID, let coupleID = userInfo.coupleID {
-                    globalStore.startMonitoring(damagoID: damagoID, coupleID: coupleID)
-                    bindGlobalState()
-                } else {
-                    SharedLogger.firebase.error("Missing damagoID or coupleID in UserInfo")
-                }
 
                 self.damagoID = userInfo.damagoID
                 state.totalCoin = userInfo.totalCoin

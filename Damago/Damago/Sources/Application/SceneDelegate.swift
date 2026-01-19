@@ -41,7 +41,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             setupRootViewController()
         }
         
-        observeAuthenticationFailure()
+        observeAuthenticationStateDidChange()
         window.makeKeyAndVisible()
     }
     
@@ -80,6 +80,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private func setupRootViewController() {
         if Auth.auth().currentUser != nil {
             if UserDefaults.standard.bool(forKey: "isConnected") {
+                startGlobalMonitoring()
                 let tabBarController = TabBarViewController()
                 window?.rootViewController = tabBarController
             } else {
@@ -99,9 +100,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    private func observeAuthenticationFailure() {
+    private func observeAuthenticationStateDidChange() {
         authObserver = NotificationCenter.default.addObserver(
-            forName: .authenticationDidFail,
+            forName: .authenticationStateDidChange,
             object: nil,
             queue: .main
         ) { [weak self] _ in
@@ -112,5 +113,21 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     // 사용자가 Foreground에 돌아왔을 때 서버와 동기화
     func sceneDidBecomeActive(_ scene: UIScene) {
         LiveActivityManager.shared.synchronizeActivity()
+    }
+
+    private func startGlobalMonitoring() {
+        let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+        let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
+
+        Task {
+            do {
+                let userInfo = try await userRepository.getUserInfo()
+                if let damagoID = userInfo.damagoID, let coupleID = userInfo.coupleID {
+                    globalStore.startMonitoring(damagoID: damagoID, coupleID: coupleID)
+                }
+            } catch {
+                SharedLogger.firebase.error("Failed to fetch user info for monitoring: \(error)")
+            }
+        }
     }
 }
