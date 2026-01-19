@@ -146,13 +146,13 @@ struct DamagoWidgetLiveActivity: Widget {
 
     private func actionButtonsView(activityID: String) -> some View {
         VStack(spacing: .spacingS) {
-            feedButton()
+            feedButton(activityID: activityID)
             pokeButton(activityID: activityID)
         }
     }
 
-    private func feedButton() -> some View {
-        Button(intent: FeedAppIntent()) {
+    private func feedButton(activityID: String) -> some View {
+        Button(intent: FeedAppIntent(activityID: activityID)) {
             HStack(spacing: .spacingS) {
                 Image(systemName: "fork.knife")
                     .foregroundStyle(feedButtonIconColor)
