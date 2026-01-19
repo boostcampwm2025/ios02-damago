@@ -28,6 +28,8 @@ protocol TokenProvider: Sendable {
 }
 
 final class TokenProviderImpl: TokenProvider {
+    nonisolated init() { }
+    
     func idToken() async throws -> String {
         guard let currentUser = Auth.auth().currentUser else {
             throw TokenProvidingError.userNotSignedIn
