@@ -7,29 +7,6 @@
 
 import UIKit
 
-// 패딩을 가진 커스텀 레이블
-private final class PaddedLabel: UILabel {
-    private let padding = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
-    
-    override func drawText(in rect: CGRect) {
-        super.drawText(in: rect.inset(by: padding))
-    }
-    
-    override var intrinsicContentSize: CGSize {
-        let size = super.intrinsicContentSize
-        return CGSize(
-            width: size.width + padding.left + padding.right,
-            height: size.height + padding.top + padding.bottom
-        )
-    }
-    
-    override var bounds: CGRect {
-        didSet {
-            preferredMaxLayoutWidth = bounds.width - (padding.left + padding.right)
-        }
-    }
-}
-
 final class ProgressView: UIView {
     private let blurEffectView: UIVisualEffectView = {
         let blurEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
@@ -55,9 +32,9 @@ final class ProgressView: UIView {
         return indicator
     }()
     
-    private let messageLabel: PaddedLabel = {
-        let label = PaddedLabel()
-        label.font = .systemFont(ofSize: 18, weight: .bold)
+    private let messageLabel: PaddingLabel = {
+        let label = PaddingLabel()
+        label.font = .body1
         label.textColor = .white
         label.textAlignment = .center
         label.numberOfLines = 0
