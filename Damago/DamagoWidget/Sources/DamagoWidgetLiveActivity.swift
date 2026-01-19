@@ -306,4 +306,3 @@ private extension View {
         modifier(CapsuleActionButtonModifier(backgroundColor: backgroundColor))
     }
 }
-
