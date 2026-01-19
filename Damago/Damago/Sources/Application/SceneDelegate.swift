@@ -9,6 +9,7 @@ import ActivityKit
 import DamagoNetwork
 import AppIntents
 import FirebaseAuth
+import OSLog
 import UIKit
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {

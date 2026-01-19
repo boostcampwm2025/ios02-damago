@@ -91,11 +91,13 @@ final class TabBarViewController: UITabBarController {
         case .collection:
             return UIViewController()
         case .home:
+            let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
             let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
             let petRepository = AppDIContainer.shared.resolve(PetRepositoryProtocol.self)
             let pushRepository = AppDIContainer.shared.resolve(PushRepositoryProtocol.self)
-            
+
             let vm = HomeViewModel(
+                globalStore: globalStore,
                 userRepository: userRepository,
                 petRepository: petRepository,
                 pushRepository: pushRepository

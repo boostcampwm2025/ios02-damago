@@ -88,12 +88,12 @@ final class HomeViewController: UIViewController {
             .store(in: &cancellables)
 
         output
-            .mapForUI { $0.coinAmount }
+            .mapForUI { $0.totalCoin }
             .sink { [weak self] in self?.mainView.updateCoin(amount: $0) }
             .store(in: &cancellables)
 
         output
-            .mapForUI { HomeView.FeedButtonState(foodAmount: $0.foodAmount, isEnabled: $0.isFeedButtonEnabled) }
+            .mapForUI { HomeView.FeedButtonState(foodAmount: $0.foodCount, isEnabled: $0.isFeedButtonEnabled) }
             .sink { [weak self] in self?.mainView.updateFeedButton(state: $0) }
             .store(in: &cancellables)
 

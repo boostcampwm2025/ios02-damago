@@ -71,6 +71,7 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
     response_data = {
         "uid": uid,  # udid -> uid
         "damagoID": damago_id,
+        "coupleID": user_data.get("coupleID"),
         "partnerUID": user_data.get("partnerUID"), # partnerUDID -> partnerUID
         "nickname": user_data.get("nickname"),
         "petStatus": pet_status,  # 합쳐진 펫 정보

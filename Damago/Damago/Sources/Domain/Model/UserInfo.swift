@@ -10,6 +10,7 @@ import Foundation
 struct UserInfo {
     let uid: String
     let damagoID: String?
+    let coupleID: String?
     let partnerUID: String?
     let nickname: String?
     let petStatus: PetStatus?

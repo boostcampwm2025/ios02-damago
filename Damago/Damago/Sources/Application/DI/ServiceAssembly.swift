@@ -27,5 +27,8 @@ final class ServiceAssembly: Assembly {
         container.register(TokenProvider.self) {
             TokenProviderImpl()
         }
+        container.register(FirestoreService.self) {
+            FirestoreServiceImpl()
+        }
     }
 }
