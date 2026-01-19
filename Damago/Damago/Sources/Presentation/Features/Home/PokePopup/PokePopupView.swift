@@ -310,33 +310,12 @@ extension PokePopupView {
             let editView = createEditView(for: shortcut, at: index)
             exampleButtonsView.addArrangedSubview(editView)
         }
-        
-        // 에디트 모드의 텍스트 필드들도 키보드 조정에 포함
-        updateKeyboardAdjustment()
-    }
-    
-    private func updateKeyboardAdjustment() {
-        guard let constraint = containerViewCenterYConstraint else { return }
-        
-        // 모든 텍스트 필드 수집
-        var allTextFields = [customTextField]
-        for (_, views) in shortcutEditViews {
-            allTextFields.append(views.summaryField)
-            allTextFields.append(views.messageField)
-        }
-        
-        // 기존 observer 제거 후 재등록
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
-        
-        adjustViewForKeyboard(constraint: constraint, textFields: allTextFields)
     }
     
     private func updateEditFieldsText(with shortcuts: [PokeShortcut]) {
         shortcuts.enumerated().forEach { index, shortcut in
             guard let editViews = shortcutEditViews[index] else { return }
             
-            // 편집 중이 아닐 때만 텍스트 업데이트
             if !editViews.summaryField.isFirstResponder && editViews.summaryField.text != shortcut.summary {
                 editViews.summaryField.text = shortcut.summary
             }
@@ -470,25 +449,28 @@ extension PokePopupView {
 // MARK: - Keyboard Handling
 extension PokePopupView {
     private func setupKeyboardDismiss() {
-        // 텍스트 필드 delegate 설정
         customTextField.delegate = self
         customTextField.returnKeyType = .done
         customTextField.maxLength = 20
         
-        // 화면 탭 시 키보드 내리기
         setupKeyboardDismissOnTap()
         
-        // 키보드가 올라올 때 뷰 조정
         guard let constraint = containerViewCenterYConstraint else { return }
         
-        // 모든 텍스트 필드 수집
-        var allTextFields = [customTextField]
-        for (_, views) in shortcutEditViews {
-            allTextFields.append(views.summaryField)
-            allTextFields.append(views.messageField)
-        }
-        
-        adjustViewForKeyboard(constraint: constraint, textFields: allTextFields)
+        adjustViewForKeyboard(
+            constraint: constraint,
+            textFieldsGetter: { [weak self] in
+                guard let self = self else {
+                    return []
+                }
+                var allTextFields = [self.customTextField]
+                for (_, views) in self.shortcutEditViews {
+                    allTextFields.append(views.summaryField)
+                    allTextFields.append(views.messageField)
+                }
+                return allTextFields
+            },
+            padding: 40)
         setupKeyboardButtonControl()
     }
     
