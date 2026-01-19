@@ -13,11 +13,22 @@ final class InteractionViewModel: ViewModel {
     let subtitle = "더 가까워지기 위한 일상 활동"
     
     struct Input {
+        let viewDidLoad: AnyPublisher<Void, Never>
+        let questionSubmitButtonDidTap: AnyPublisher<Void, Never>
+        let answerDidSubmitted: AnyPublisher<String, Never>
         let historyButtonDidTap: AnyPublisher<Void, Never>
     }
     
     struct State {
-        
+        var dailyQuestion: String = ""
+        var myAnswer: String?
+        var opponentAnswer: String?
+        var route: Pulse<Route>?
+    }
+    
+    enum Route {
+        case questionInput(question: String, myAnswer: String?, opponentAnswer: String?)
+        case history
     }
     
     @Published private var state = State()
@@ -26,17 +37,43 @@ final class InteractionViewModel: ViewModel {
     init() { }
     
     func transform(_ input: Input) -> Output {
-        input.historyButtonDidTap
-            .receive(on: DispatchQueue.main)
+        input.viewDidLoad
             .sink { [weak self] in
-                self?.handleHistoryButtonTap()
+                self?.fetchDailyQuestionData()
+            }
+            .store(in: &cancellables)
+        
+        input.questionSubmitButtonDidTap
+            .sink { [weak self] in
+                guard let self else { return }
+                self.state.route = Pulse(.questionInput(
+                        question: self.state.dailyQuestion,
+                        myAnswer: self.state.myAnswer,
+                        opponentAnswer: self.state.opponentAnswer
+                    )
+                )
+            }
+            .store(in: &cancellables)
+        
+        input.answerDidSubmitted
+            .sink { [weak self] answerText in
+                self?.state.myAnswer = answerText
+            }
+            .store(in: &cancellables)
+        
+        input.historyButtonDidTap
+            .sink { [weak self] in
+                self?.state.route = Pulse(.history)
             }
             .store(in: &cancellables)
         
         return $state.eraseToAnyPublisher()
     }
     
-    func handleHistoryButtonTap() {
-        print("지난 활동 확인하기 버튼 클릭")
+    private func fetchDailyQuestionData() {
+        // TODO: 서버로부터 갱신
+        state.dailyQuestion = "\"우리의 첫 여행에서 가장 좋았던 추억은 무엇인가요?\""
+        state.myAnswer = nil
+        state.opponentAnswer = nil
     }
 }
