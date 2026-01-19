@@ -96,6 +96,7 @@
 			membershipExceptions = (
 				Sources/AppIntent/BackToIdleAppIntent.swift,
 				Sources/AppIntent/ChoosePokeMessageAppIntent.swift,
+				Sources/AppIntent/FeedAppIntent.swift,
 				Sources/AppIntent/PokeAppIntent.swift,
 				Sources/AppIntent/PokeWithMessageAppIntent.swift,
 			);
