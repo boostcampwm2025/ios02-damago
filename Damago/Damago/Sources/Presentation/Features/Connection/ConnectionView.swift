@@ -131,6 +131,8 @@ final class ConnectionView: UIView {
         textField.font = .title2
         textField.textColor = .textPrimary
         textField.placeholder = "상대방 코드 입력"
+        textField.returnKeyType = .go
+        textField.enablesReturnKeyAutomatically = true
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }()
