@@ -74,8 +74,6 @@ final class HomeViewController: UIViewController {
             .mapForUI { $0.isLoading }
             .sink { [weak self] isLoading in
                 guard let self else { return }
-                self.mainView.updateLoading(isLoading: isLoading)
-                
                 if isLoading {
                     self.progressView.show(in: self.view, message: "불러오는 중...")
                 } else {

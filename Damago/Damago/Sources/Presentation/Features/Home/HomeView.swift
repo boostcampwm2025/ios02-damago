@@ -110,7 +110,6 @@ final class HomeView: UIView {
         return button
     }()
 
-
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -178,15 +177,6 @@ extension HomeView {
     struct FeedButtonState: Equatable {
         let foodAmount: Int
         let isEnabled: Bool
-    }
-
-    func updateLoading(isLoading: Bool) {
-        let contentAlpha: CGFloat = isLoading ? 0 : 1
-        UIView.animate(withDuration: 0.3) {
-            [self.capsuleLabel, self.dDayLabel, self.nameLabel, self.cardShadowContainer, 
-             self.feedButton, self.pokeButton, self.expBar]
-                .forEach { $0.alpha = contentAlpha }
-        }
     }
 
     func updateCoin(amount: Int) {
