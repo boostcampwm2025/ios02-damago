@@ -352,8 +352,14 @@ extension PokePopupView {
         containerView.layer.cornerRadius = .mediumButton
         containerView.translatesAutoresizingMaskIntoConstraints = false
         
+        let headerLabel = UILabel()
+        headerLabel.text = "요약 / 메시지"
+        headerLabel.font = .caption
+        headerLabel.textColor = .textSecondary
+        headerLabel.translatesAutoresizingMaskIntoConstraints = false
+        
         let summaryField = createEditTextField(
-            placeholder: "요약",
+            placeholder: "",
             text: shortcut.summary,
             font: .caption,
             textColor: .textSecondary,
@@ -361,27 +367,32 @@ extension PokePopupView {
         )
         
         let messageField = createEditTextField(
-            placeholder: "메시지",
+            placeholder: "",
             text: shortcut.message,
             font: .body1,
             textColor: .textPrimary,
             maxLength: 20
         )
         
+        containerView.addSubview(headerLabel)
         containerView.addSubview(summaryField)
         containerView.addSubview(messageField)
         
         NSLayoutConstraint.activate([
-            summaryField.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
+            headerLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 4),
+            headerLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
+            headerLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
+            
+            summaryField.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 2),
             summaryField.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
             summaryField.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
-            summaryField.heightAnchor.constraint(equalToConstant: 28),
+            summaryField.heightAnchor.constraint(equalToConstant: 24),
             
             messageField.topAnchor.constraint(equalTo: summaryField.bottomAnchor, constant: 4),
             messageField.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
             messageField.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
-            messageField.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -8),
-            messageField.heightAnchor.constraint(equalToConstant: 32)
+            messageField.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -6),
+            messageField.heightAnchor.constraint(equalToConstant: 28)
         ])
         
         // 텍스트 변경 감지
