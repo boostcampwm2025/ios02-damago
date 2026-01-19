@@ -45,7 +45,7 @@ final class InteractionView: UIView {
         return label
     }()
     
-    lazy var questionCardView: UIView = makeCardView()
+    lazy var questionCardView = DailyQuestionView()
     lazy var balanceGameCardView: UIView = makeCardView()
     
     let historyButton: UIButton = {
