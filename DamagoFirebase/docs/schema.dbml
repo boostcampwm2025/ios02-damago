@@ -36,7 +36,22 @@ Table couples {
   anniversaryDate timestamp [note: "기념일 원본 데이터"]
   createdAt timestamp [default: `now()`]
   
-  Note: "두 사용자의 관계 및 기념일 원본, 현재 활성화된 다마고 정보를 저장합니다."
+  // --- 밸런스 게임 통계 (Balance Game Stats) ---
+  balanceGameStats_totalAnswered integer [default: 0, note: "총 플레이한 밸런스 게임 수"]
+  balanceGameStats_matchedGames integer [default: 0, note: "일치한 밸런스 게임 수"]
+  balanceGameStats_lastPlayedAt timestamp [note: "마지막 밸런스 게임 플레이 시각"]
+  
+  // --- 일일 응답 통계 (Daily Question Stats) ---
+  dailyQuestionStats_totalAnswered integer [default: 0, note: "총 답변한 일일 응답 수"]
+  dailyQuestionStats_lastAnsweredAt timestamp [note: "마지막 일일 응답 답변 시각"]
+  
+  Note: '''
+  두 사용자의 관계 및 기념일 원본, 현재 활성화된 다마고 정보를 저장합니다.
+  balanceGameStats는 맵(Map) 형태로 저장되며, 밸런스 게임 통계를 추적합니다.
+  dailyQuestionStats는 맵(Map) 형태로 저장되며, 일일 응답 통계를 추적합니다.
+  [Subcollection] balanceGameAnswers: 커플의 밸런스 게임 답변 이력
+  [Subcollection] dailyQuestionAnswers: 커플의 일일 응답 답변 이력
+  '''
 }
 
 Table damagos {
@@ -65,4 +80,83 @@ Table damagos {
   lastActiveAt timestamp [default: `now()`, note: "마지막으로 활성화/교체된 시각. 정렬용"]
   
   Note: "커플이 키우는 다마고들의 이력과 상태 정보입니다. Users/Couples의 damagoID가 현재 활성화된 펫을 가리킵니다."
+}
+
+// ========================================
+// 밸런스 게임 (Balance Game)
+// ========================================
+
+Table balanceGames {
+  id varchar [pk, note: "밸런스 게임 고유 ID (Firestore Auto-ID)"]
+  order integer [note: "표시 순서 (낮은 순서부터 노출)"]
+
+  questionText text [note: "질문 내용"]
+  option1 varchar [note: "선택지 1"]
+  option2 varchar [note: "선택지 2"]
+  
+  createdAt timestamp [default: `now()`, note: "질문 생성 시각"]
+  
+  Note: '''
+  밸런스 게임 질문 목록입니다.
+  각 질문은 두 개의 선택지로 구성되며, 순서로 관리됩니다.
+  '''
+}
+
+Table balanceGameAnswers {
+  id varchar [pk, note: "밸런스 게임 답변 ID = {coupleID}_{balanceGameID} 형식"]
+  coupleID varchar [ref: > couples.id, note: "커플 ID"]
+  balanceGameID varchar [ref: > balanceGames.id, note: "밸런스 게임 ID"]
+  
+  user1Answer integer [note: "사용자1의 선택 (1 or 2), null이면 미답변"]
+  user1AnsweredAt timestamp [note: "사용자1 답변 시각"]
+  
+  user2Answer integer [note: "사용자2의 선택 (1 or 2), null이면 미답변"]
+  user2AnsweredAt timestamp [note: "사용자2 답변 시각"]
+  
+  bothAnswered boolean [default: false, note: "두 사용자 모두 답변 완료 여부"]
+  isMatched boolean [note: "두 사용자의 선택 일치 여부 (bothAnswered일 때만 true/false)"]
+  
+  Note: '''
+  커플의 밸런스 게임 답변을 저장합니다.
+  Firestore 구조: couples/{coupleID}/balanceGameAnswers/{balanceGameID}
+  두 사용자 모두 답변하면 isMatched 값이 계산됩니다.
+  '''
+}
+
+// ========================================
+// 일일 응답 (Daily Question)
+// ========================================
+
+Table dailyQuestions {
+  id varchar [pk, note: "일일 응답 질문 고유 ID (Firestore Auto-ID)"]
+  order integer [note: "표시 순서"]
+
+  questionText text [note: "질문 내용"]
+  
+  createdAt timestamp [default: `now()`, note: "질문 생성 시각"]
+  
+  Note: '''
+  일일 응답 질문 목록입니다.
+  자유 텍스트 답변 형식으로, 매일 새로운 질문을 통해 서로에 대해 알아갑니다.
+  '''
+}
+
+Table dailyQuestionAnswers {
+  id varchar [pk, note: "일일 응답 답변 ID = {coupleID}_{dailyQuestionID} 형식"]
+  coupleID varchar [ref: > couples.id, note: "커플 ID"]
+  dailyQuestionID varchar [ref: > dailyQuestions.id, note: "일일 응답 질문 ID"]
+  
+  user1Answer text [note: "사용자1의 답변 텍스트"]
+  user1AnsweredAt timestamp [note: "사용자1 답변 시각"]
+  
+  user2Answer text [note: "사용자2의 답변 텍스트"]
+  user2AnsweredAt timestamp [note: "사용자2 답변 시각"]
+  
+  bothAnswered boolean [default: false, note: "두 사용자 모두 답변 완료 여부"]
+  
+  Note: '''
+  커플의 일일 응답 답변을 저장합니다.
+  Firestore 구조: couples/{coupleID}/dailyQuestionAnswers/{dailyQuestionID}
+  두 사용자 모두 답변하면 bothAnswered가 true가 되고 서로의 답변을 확인할 수 있습니다.
+  '''
 }
