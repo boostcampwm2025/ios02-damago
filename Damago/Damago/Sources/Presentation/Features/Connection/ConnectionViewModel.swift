@@ -22,8 +22,9 @@ final class ConnectionViewModel: ViewModel {
         var opponentCode = ""
         var route: Pulse<Route>?
         var pasteboardCode: Pulse<String>?
+        var isLoading = false
 
-        var isConnectButtonEnabled: Bool { !opponentCode.isEmpty }
+        var isConnectButtonEnabled: Bool { !opponentCode.isEmpty && !isLoading }
     }
 
     enum Route {
@@ -114,11 +115,15 @@ final class ConnectionViewModel: ViewModel {
     }
 
     private func connect() async {
+        state.isLoading = true
+        
         do {
             try await connectCoupleUseCase.execute(code: state.opponentCode)
             UserDefaults.standard.setValue(true, forKey: "isConnected")
+            state.isLoading = false
             state.route = .init(.home)
         } catch {
+            state.isLoading = false
             state.route = .init(.alert(message: error.localizedDescription))
         }
     }
