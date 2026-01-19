@@ -62,8 +62,8 @@ def poke(req: https_fn.Request) -> https_fn.Response:
             ),
             data={
                 "type": "poke",
-                "fromUDID": my_udid,
-                "message": selected_message or "",
+                "fromUID": my_uid,
+                "message": custom_message or "",
             },
             token=target_fcm_token
         )
