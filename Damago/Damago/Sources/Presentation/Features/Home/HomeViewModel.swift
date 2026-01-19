@@ -18,6 +18,7 @@ final class HomeViewModel: ViewModel {
 
     struct State {
         var isLoading = true
+        var isFeeding = false
         var coinAmount = 0
         var foodAmount = 0
         var dDay = 0
@@ -26,15 +27,10 @@ final class HomeViewModel: ViewModel {
         var currentExp = 0
         var maxExp = 0
         var totalCoin = 0
-        var foodCount = 5
-        var dDay = 365
-        var petName = "모찌"
-        var level = 17
-        var currentExp = 26
-        var maxExp = 100
+        var foodCount = 0
         var lastFedAt: Date?
 
-        var isFeedButtonEnabled: Bool { foodCount > 0 }
+        var isFeedButtonEnabled: Bool { foodCount > 0 && !isFeeding }
         var isPokeButtonEnabled: Bool { true }
     }
 
@@ -123,13 +119,17 @@ final class HomeViewModel: ViewModel {
         
         Task {
             do {
+                state.isFeeding = true
                 let success = try await petRepository.feed(damagoID: damagoID)
                 if success {
                     state.lastFedAt = Date()
                     LiveActivityManager.shared.synchronizeActivity()
+                } else {
+                    state.isFeeding = false
                 }
             } catch {
                 print("Error feeding pet: \(error)")
+                state.isFeeding = false
             }
         }
     }
@@ -178,6 +178,7 @@ final class HomeViewModel: ViewModel {
             .mapForUI { $0.foodCount }
             .sink { [weak self] in
                 self?.state.foodCount = $0
+                self?.state.isFeeding = false
             }
             .store(in: &cancellables)
 

@@ -30,7 +30,7 @@ final class PetRepository: PetRepositoryProtocol {
 
     func observePetStatus(damagoID: String) -> AnyPublisher<Result<PetStatus, Error>, Never> {
         firestoreService.observe(collection: "damagos", document: damagoID)
-            .map { (result: Result<DamagoStatusResponse, Error>) in
+            .map { (result: Result<DamagoDTO, Error>) in
                 switch result {
                 case let .success(value):
                     return .success(value.toDomain())
@@ -41,3 +41,4 @@ final class PetRepository: PetRepositoryProtocol {
             .eraseToAnyPublisher()
     }
 }
+
