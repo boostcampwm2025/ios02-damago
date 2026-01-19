@@ -11,6 +11,7 @@ import UIKit
 final class ConnectionViewController: UIViewController {
     private let mainView = ConnectionView()
     private let viewModel: ConnectionViewModel
+    private let progressView = ProgressView()
 
     private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
     private var cancellables = Set<AnyCancellable>()
@@ -30,6 +31,7 @@ final class ConnectionViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupKeyboard()
         let input = ConnectionViewModel.Input(
             viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
             copyButtonDidTap: mainView.copyButton.tapPublisher,
@@ -40,6 +42,11 @@ final class ConnectionViewController: UIViewController {
         let output = viewModel.transform(input)
         bind(output)
         viewDidLoadPublisher.send()
+    }
+    
+    private func setupKeyboard() {
+        mainView.setupKeyboardDismissOnTap()
+        mainView.opponentCodeTextField.delegate = self
     }
 
     private func bind(_ output: ConnectionViewModel.Output) {
@@ -89,6 +96,18 @@ final class ConnectionViewController: UIViewController {
                 copyCodeToPasteboard(with: code)
             }
             .store(in: &cancellables)
+        
+        output
+            .mapForUI { $0.isLoading }
+            .sink { [weak self] isLoading in
+                guard let self else { return }
+                if isLoading {
+                    progressView.show(in: view, message: "연결 중...")
+                } else {
+                    progressView.hide()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private func presentAlert(with message: String) {
@@ -111,5 +130,18 @@ final class ConnectionViewController: UIViewController {
 
     private func copyCodeToPasteboard(with code: String) {
         UIPasteboard.general.string = code
+    }
+}
+
+extension ConnectionViewController: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        
+        // 연결하기 버튼이 활성화되어 있으면 버튼 액션 실행
+        if mainView.connectButton.isEnabled {
+            mainView.connectButton.sendActions(for: .touchUpInside)
+        }
+        
+        return true
     }
 }
