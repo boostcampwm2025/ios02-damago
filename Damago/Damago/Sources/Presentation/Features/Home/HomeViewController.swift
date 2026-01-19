@@ -70,6 +70,11 @@ final class HomeViewController: UIViewController {
 
     func bind(_ output: HomeViewModel.Output) {
         output
+            .mapForUI { $0.isLoading }
+            .sink { [weak self] in self?.mainView.updateLoading(isLoading: $0) }
+            .store(in: &cancellables)
+
+        output
             .mapForUI { $0.dDay }
             .sink { [weak self] in self?.mainView.updateDDay(days: $0) }
             .store(in: &cancellables)

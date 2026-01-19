@@ -16,13 +16,14 @@ final class HomeViewModel: ViewModel {
     }
 
     struct State {
+        var isLoading = true
         var coinAmount = 0
-        var foodAmount = 5
-        var dDay = 365
-        var petName = "모찌"
-        var level = 17
-        var currentExp = 26
-        var maxExp = 100
+        var foodAmount = 0
+        var dDay = 0
+        var petName = ""
+        var level = 0
+        var currentExp = 0
+        var maxExp = 0
         var lastFedAt: Date?
 
         var isFeedButtonEnabled: Bool { foodAmount > 0 }
@@ -69,11 +70,17 @@ final class HomeViewModel: ViewModel {
     }
     
     private func fetchUserInfo() {
+        state.isLoading = true
         Task {
+            defer {
+                Task { @MainActor in
+                    state.isLoading = false
+                }
+            }
             do {
                 let userInfo = try await userRepository.getUserInfo()
-                self.damagoID = userInfo.damagoID
                 state.coinAmount = userInfo.totalCoin
+                self.damagoID = userInfo.damagoID
                 
                 if let petStatus = userInfo.petStatus {
                     state.level = petStatus.level
