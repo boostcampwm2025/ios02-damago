@@ -56,6 +56,8 @@
 		29D793FE2EF3B6EB00EE359A /* Exceptions for "Damago" folder in "DamagoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Resources/GoogleService-Info-Dev.plist",
+				"Resources/GoogleService-Info-Prod.plist",
 				Sources/Core/Assembly.swift,
 				Sources/Core/DIContainer.swift,
 				"Sources/Core/NotificationName+.swift",
@@ -74,6 +76,7 @@
 		4B1E304C2EF1700E00EB96A1 /* Exceptions for "Shared" folder in "DamagoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AppGroupUserDefaults.swift,
 				DamagoAttributes.swift,
 				"Date+.swift",
 				"Font+.swift",
@@ -84,11 +87,31 @@
 		4B5FE2E62EF130B7005E31DA /* Exceptions for "Damago" folder in "Damago" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				"Resources/GoogleService-Info-Dev.plist",
-				"Resources/GoogleService-Info-Prod.plist",
 				Resources/Info.plist,
 			);
 			target = 4B5FE2D32EF130B6005E31DA /* Damago */;
+		};
+		7A64CB892F19168E00FE6849 /* Exceptions for "DamagoWidget" folder in "Damago" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Sources/AppIntent/BackToIdleAppIntent.swift,
+				Sources/AppIntent/ChoosePokeMessageAppIntent.swift,
+				Sources/AppIntent/PokeAppIntent.swift,
+				Sources/AppIntent/PokeWithMessageAppIntent.swift,
+			);
+			target = 4B5FE2D32EF130B6005E31DA /* Damago */;
+		};
+		7A95562E2F18ACAA00944B25 /* Exceptions for "Damago" folder in "DamagoWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Sources/Core/Assembly.swift,
+				Sources/Core/DIContainer.swift,
+				"Sources/Core/NotificationName+.swift",
+				Sources/Core/SharedLogger.swift,
+				Sources/Data/Services/TokenProvider.swift,
+				Sources/Domain/Model/PokeShortcut.swift,
+			);
+			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -96,6 +119,7 @@
 		4B1E30302EF16EDC00EB96A1 /* DamagoWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				7A64CB892F19168E00FE6849 /* Exceptions for "DamagoWidget" folder in "Damago" target */,
 				4B1E30432EF16EDD00EB96A1 /* Exceptions for "DamagoWidget" folder in "DamagoWidgetExtension" target */,
 			);
 			path = DamagoWidget;
@@ -113,7 +137,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				4B5FE2E62EF130B7005E31DA /* Exceptions for "Damago" folder in "Damago" target */,
-				29D793FE2EF3B6EB00EE359A /* Exceptions for "Damago" folder in "DamagoWidgetExtension" target */,
+				7A95562E2F18ACAA00944B25 /* Exceptions for "Damago" folder in "DamagoWidgetExtension" target */,
 			);
 			path = Damago;
 			sourceTree = "<group>";
@@ -320,6 +344,25 @@
 			shellScript = "RESOURCE_PATH=\"${PROJECT_DIR}/Damago/Resources\"\n\nSOURCE_PLIST=\"${RESOURCE_PATH}/GoogleService-Info-Prod.plist\"\nif [ \"${CONFIGURATION}\" == \"Debug\" ]; then\n  SOURCE_PLIST=\"${RESOURCE_PATH}/GoogleService-Info-Dev.plist\"\nfi\n\nDESTINATION=\"${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\n\nif [ -f \"$SOURCE_PLIST\" ]; then\n  echo \"Copying ${SOURCE_PLIST} to ${DESTINATION}\"\n  cp \"${SOURCE_PLIST}\" \"${DESTINATION}\"\nelse\n  echo \"Error: Source file ${SOURCE_PLIST} not found!\"\n  exit 1\nfi\n";
 		};
 		4BA8C5C02F174976005BF767 /* Setup Google Service */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Setup Google Service";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "RESOURCE_PATH=\"${PROJECT_DIR}/Damago/Resources\"\n\nSOURCE_PLIST=\"${RESOURCE_PATH}/GoogleService-Info-Prod.plist\"\nif [ \"${CONFIGURATION}\" == \"Debug\" ]; then\n  SOURCE_PLIST=\"${RESOURCE_PATH}/GoogleService-Info-Dev.plist\"\nfi\n\nDESTINATION=\"${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\n\nif [ -f \"$SOURCE_PLIST\" ]; then\n  echo \"Copying ${SOURCE_PLIST} to ${DESTINATION}\"\n  cp \"${SOURCE_PLIST}\" \"${DESTINATION}\"\nelse\n  echo \"Error: Source file ${SOURCE_PLIST} not found!\"\n  exit 1\nfi\n";
+		};
+		DFE8A9072F18DEA30008E70B /* Setup Google Service */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;

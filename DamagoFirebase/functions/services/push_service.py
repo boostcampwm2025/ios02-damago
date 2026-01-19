@@ -60,6 +60,11 @@ def poke(req: https_fn.Request) -> https_fn.Response:
                 title="콕!",
                 body=final_body,
             ),
+            data={
+                "type": "poke",
+                "fromUID": my_uid,
+                "message": custom_message or "",
+            },
             token=target_fcm_token
         )
         response = messaging.send(message)
