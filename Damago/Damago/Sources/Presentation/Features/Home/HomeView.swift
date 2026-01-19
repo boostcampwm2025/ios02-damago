@@ -132,6 +132,7 @@ final class HomeView: UIView {
         backgroundColor = .background
         setupHierarchy()
         setupConstraints()
+        updateLoading(isLoading: true)
     }
 
     private func setupHierarchy() {
