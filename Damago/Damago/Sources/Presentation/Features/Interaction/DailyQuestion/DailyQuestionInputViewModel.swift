@@ -9,11 +9,7 @@ import Combine
 import Foundation
 
 final class DailyQuestionInputViewModel: ViewModel {
-    let question: String
     let answerCompleted = PassthroughSubject<String, Never>()
-    
-    private var mySavedAnswer: String?
-    private let opponentAnswer: String?
     
     struct Input {
         let textDidChange: AnyPublisher<String, Never>
@@ -30,21 +26,17 @@ final class DailyQuestionInputViewModel: ViewModel {
     @Published private var state: State
     private var cancellables = Set<AnyCancellable>()
     
-    init(question: String, myAnswer: String? = nil, opponentAnswer: String? = nil) {
-        self.question = question
-        self.mySavedAnswer = myAnswer
-        self.opponentAnswer = opponentAnswer
-        
-        let initialUIModel: DailyQuestionUIModel
-        if let myAnswer {
-            initialUIModel = Self.makeResultModel(myAnswer: myAnswer, opponentAnswer: opponentAnswer)
+    init(uiModel: DailyQuestionUIModel) {
+        let initialText: String
+        if case .result(let resultState) = uiModel {
+            initialText = resultState.myAnswer.content ?? ""
         } else {
-            initialUIModel = .input(.init(placeholder: "여기에 답변을 입력하세요.", buttonTitle: "답변 제출"))
+            initialText = ""
         }
         
         self.state = State(
-            uiModel: initialUIModel,
-            currentText: myAnswer ?? ""
+            uiModel: uiModel,
+            currentText: initialText
         )
     }
     
@@ -74,16 +66,29 @@ final class DailyQuestionInputViewModel: ViewModel {
     }
     
     private func handleSubmit() {
-        // TODO: 서버 전송 로직
-        // 성공 시 상태 변경
-        let answer = state.currentText
-        self.mySavedAnswer = answer
+        guard case .input(let inputState) = state.uiModel else { return }
         
-        state.uiModel = Self.makeResultModel(myAnswer: answer, opponentAnswer: opponentAnswer)
+        // TODO: 서버 전송 로직 구현 (questionID 사용)
+        // let questionID = inputState.questionID
+        
+        let answer = state.currentText
+        
+        // 로컬 상태 즉시 업데이트 (낙관적 업데이트)
+        state.uiModel = Self.makeResultModel(
+            questionID: inputState.questionID,
+            questionContent: inputState.questionContent,
+            myAnswer: answer,
+            opponentAnswer: nil
+        )
         answerCompleted.send(answer)
     }
     
-    private static func makeResultModel(myAnswer: String, opponentAnswer: String?) -> DailyQuestionUIModel {
+    private static func makeResultModel(
+        questionID: String,
+        questionContent: String,
+        myAnswer: String,
+        opponentAnswer: String?
+    ) -> DailyQuestionUIModel {
         let myCard = AnswerCardUIModel(
             type: .unlocked,
             title: "나의 답변",
@@ -111,6 +116,11 @@ final class DailyQuestionInputViewModel: ViewModel {
             )
         }
         
-        return .result(.init(myAnswer: myCard, opponentAnswer: opponentCard))
+        return .result(.init(
+            questionID: questionID,
+            questionContent: questionContent,
+            myAnswer: myCard,
+            opponentAnswer: opponentCard
+        ))
     }
 }

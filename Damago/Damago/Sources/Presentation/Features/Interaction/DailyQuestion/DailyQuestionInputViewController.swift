@@ -32,8 +32,6 @@ final class DailyQuestionInputViewController: UIViewController {
         setupNavigation()
         setupKeyboard()
         
-        mainView.configure(title: viewModel.question)
-        
         let output = viewModel.transform(
             DailyQuestionInputViewModel.Input(
                 textDidChange: mainView.textView.textPublisher,
@@ -71,9 +69,13 @@ final class DailyQuestionInputViewController: UIViewController {
     }
     
     private func render(_ state: DailyQuestionInputViewModel.State) {
+        // 질문 내용 업데이트
+        let questionContent: String
         switch state.uiModel {
         case .input(let inputState):
+            questionContent = inputState.questionContent
             mainView.updateLayoutMode(.input)
+            mainView.submitButton.setTitle("답변 제출", for: .normal)
             
             if mainView.textView.text != state.currentText {
                 mainView.textView.text = state.currentText
@@ -81,14 +83,16 @@ final class DailyQuestionInputViewController: UIViewController {
             mainView.placeholderLabel.isHidden = !state.currentText.isEmpty
             mainView.textLimitLabel.text = state.textCount
             mainView.submitButton.isEnabled = state.isSubmitButtonEnabled
-            mainView.submitButton.setTitle(inputState.buttonTitle, for: .normal)
             
         case .result(let resultState):
+            questionContent = resultState.questionContent
             mainView.updateLayoutMode(.result)
             mainView.myAnswerResultCardView.configure(with: resultState.myAnswer)
             mainView.opponentAnswerResultCardView.configure(with: resultState.opponentAnswer)
             
             view.endEditing(true)
         }
+        
+        mainView.configure(title: questionContent)
     }
 }

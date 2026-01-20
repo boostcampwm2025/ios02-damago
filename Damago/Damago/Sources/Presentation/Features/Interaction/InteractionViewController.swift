@@ -67,9 +67,18 @@ final class InteractionViewController: UIViewController {
     
     private func bind(_ output: InteractionViewModel.Output) {
         output
-            .mapForUI { $0.dailyQuestion }
-            .sink { [weak self] question in
-                self?.mainView.questionCardView.configure(question: question)
+            .mapForUI { $0.dailyQuestionUIModel }
+            .compactMap { $0 }
+            .sink { [weak self] uiModel in
+                let questionContent: String
+                if case .input(let inputState) = uiModel {
+                    questionContent = inputState.questionContent
+                } else if case .result(let resultState) = uiModel {
+                    questionContent = resultState.questionContent
+                } else {
+                    questionContent = ""
+                }
+                self?.mainView.questionCardView.configure(question: questionContent)
             }
             .store(in: &cancellables)
         
@@ -78,12 +87,8 @@ final class InteractionViewController: UIViewController {
             .sink { [weak self] route in
                 guard let self else { return }
                 switch route {
-                case .questionInput(let question, let myAnswer, let opponentAnswer):
-                    let vm = DailyQuestionInputViewModel(
-                        question: question,
-                        myAnswer: myAnswer,
-                        opponentAnswer: opponentAnswer
-                    )
+                case .questionInput(let uiModel):
+                    let vm = DailyQuestionInputViewModel(uiModel: uiModel)
                     vm.answerCompleted
                         .subscribe(self.answerDidSubmitPublisher)
                         .store(in: &cancellables)

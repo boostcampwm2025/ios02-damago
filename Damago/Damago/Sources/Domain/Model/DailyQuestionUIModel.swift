@@ -10,11 +10,14 @@ enum DailyQuestionUIModel: Equatable {
     case result(ResultState)
     
     struct InputState: Equatable {
+        let questionID: String
+        let questionContent: String
         let placeholder: String
-        let buttonTitle: String
     }
     
     struct ResultState: Equatable {
+        let questionID: String
+        let questionContent: String
         let myAnswer: AnswerCardUIModel
         let opponentAnswer: AnswerCardUIModel
     }
