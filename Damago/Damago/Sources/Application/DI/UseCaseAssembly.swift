@@ -20,6 +20,7 @@ final class UseCaseAssembly: Assembly {
             FetchDailyQuestionUseCaseImpl(
                 dailyQuestionRepository: container.resolve(DailyQuestionRepositoryProtocol.self)
             )
+        }
         container.register(ObservePetStatusUseCase.self) {
             ObservePetStatusUseCaseImpl(petRepository: container.resolve(PetRepositoryProtocol.self))
         }
