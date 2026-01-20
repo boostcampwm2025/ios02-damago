@@ -111,7 +111,9 @@ final class TabBarViewController: UITabBarController {
         case .game:
             return UIViewController()
         case .setting:
-            return UIViewController()
+            let viewModel = SettingsViewModel()
+            let vc = SettingsViewController(viewModel: viewModel)
+            return vc
         }
     }
 }
