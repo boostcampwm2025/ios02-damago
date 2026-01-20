@@ -138,7 +138,6 @@ extension AppDelegate {
         guard let localIP = ProcessInfo.processInfo.environment["USE_LOCAL_EMULATOR"] else { return }
         Firestore.firestore().useEmulator(withHost: localIP, port: 8080)
         let settings = Firestore.firestore().settings
-//        settings.host = "\(localIP):8080"
         settings.isSSLEnabled = false
         Firestore.firestore().settings = settings
         #endif
