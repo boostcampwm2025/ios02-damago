@@ -218,12 +218,15 @@ extension HomeView {
             subtitle: "\(state.foodAmount)개 남음"
         )
 
+        let disabledTitle = state.foodAmount == 0 ? "남은 먹이가 없어요" : "먹이 주는 중"
+        let disabledSubtitle = state.foodAmount == 0 ? "서로에 대해 알아가며 먹이를 얻어 보세요" : nil
+
         let disabledConfig = CTAButton.Configuration(
             backgroundColor: .textTertiary,
             foregroundColor: .white,
             image: UIImage(systemName: "carrot"),
-            title: "남은 먹이가 없어요",
-            subtitle: "서로에 대해 알아가며 먹이를 얻어 보세요"
+            title: disabledTitle,
+            subtitle: disabledSubtitle
         )
 
         feedButton.configure(active: activeConfig, disabled: disabledConfig)

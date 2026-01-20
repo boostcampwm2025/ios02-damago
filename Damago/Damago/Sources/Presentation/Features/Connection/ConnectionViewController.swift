@@ -123,9 +123,7 @@ final class ConnectionViewController: UIViewController {
     }
 
     private func replaceRootVC() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else { return }
-        window.replaceRootViewController(with: TabBarViewController())
+        NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
     }
 
     private func copyCodeToPasteboard(with code: String) {
