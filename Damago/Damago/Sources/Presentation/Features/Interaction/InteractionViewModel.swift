@@ -29,10 +29,14 @@ final class InteractionViewModel: ViewModel {
         case history
     }
     
+    private let fetchDailyQuestionUseCase: FetchDailyQuestionUseCase
+    
     @Published private var state = State()
     private var cancellables = Set<AnyCancellable>()
     
-    init() { }
+    init(fetchDailyQuestionUseCase: FetchDailyQuestionUseCase) {
+        self.fetchDailyQuestionUseCase = fetchDailyQuestionUseCase
+    }
     
     func transform(_ input: Input) -> Output {
         input.viewDidLoad
@@ -64,5 +68,14 @@ final class InteractionViewModel: ViewModel {
     }
     
     private func fetchDailyQuestionData() {
+        Task {
+            do {
+                let uiModel = try await fetchDailyQuestionUseCase.execute()
+                self.state.dailyQuestionUIModel = uiModel
+            } catch {
+                // TODO: Handle Error
+                print("오늘의 질문 가져오기 실패: \(error)")
+            }
+        }
     }
 }

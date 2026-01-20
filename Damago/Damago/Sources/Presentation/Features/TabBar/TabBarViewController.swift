@@ -103,7 +103,9 @@ final class TabBarViewController: UITabBarController {
             let vc = HomeViewController(viewModel: vm)
             return vc
         case .interaction:
-            let vm = InteractionViewModel()
+            let useCase = AppDIContainer.shared.resolve(FetchDailyQuestionUseCase.self)
+            
+            let vm = InteractionViewModel(fetchDailyQuestionUseCase: useCase)
             let vc = InteractionViewController(viewModel: vm)
             return vc
         case .game:
