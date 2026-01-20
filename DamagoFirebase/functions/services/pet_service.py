@@ -243,7 +243,7 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
             
             # Live Activity Payload
             content_state = {
-                "petType": pet_data.get("petType", "Teddy"),
+                "petType": pet_data.get("petType", "Bunny"),
                 "isHungry": True,
                 "statusMessage": new_status,
                 "level": pet_data.get("level"),

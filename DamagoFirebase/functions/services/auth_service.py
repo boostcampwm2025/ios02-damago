@@ -147,7 +147,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             "id": damago_ref.id,
             "coupleID": couple_ref.id,
             "petName": "이름 없는 펫",
-            "petType": "Teddy",
+            "petType": "Bunny",
             "level": 1,
             "currentExp": 0,
             "maxExp": XP_TABLE[0],

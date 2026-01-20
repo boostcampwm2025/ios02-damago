@@ -57,7 +57,7 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
 
             pet_status = {
                 "petName": pet_data.get("petName", "이름 없는 펫"),
-                "petType": pet_data.get("petType", "Teddy"),
+                "petType": pet_data.get("petType", "Bunny"),
                 "level": pet_data.get("level", 1),
                 "currentExp": pet_data.get("currentExp", 0),
                 "maxExp": pet_data.get("maxExp", 20),
