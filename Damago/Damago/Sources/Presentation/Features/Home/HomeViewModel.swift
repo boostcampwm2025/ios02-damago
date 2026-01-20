@@ -96,13 +96,7 @@ final class HomeViewModel: ViewModel {
                     state.currentExp = petStatus.currentExp
                     state.maxExp = petStatus.maxExp
                     state.petName = petStatus.petName
-                    
-                    if let lastFedAtString = petStatus.lastFedAt {
-                        let formatter = ISO8601DateFormatter()
-                        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                        state.lastFedAt = formatter.date(from: lastFedAtString) 
-                                          ?? ISO8601DateFormatter().date(from: lastFedAtString)
-                    }
+                    state.lastFedAt = petStatus.lastFedAt
                 }
             } catch {
                 print("Error fetching user info: \(error)")

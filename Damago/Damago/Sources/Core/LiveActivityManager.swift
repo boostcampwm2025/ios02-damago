@@ -39,7 +39,7 @@ final class LiveActivityManager {
                 level: petStatus.level,
                 currentExp: petStatus.currentExp,
                 maxExp: petStatus.maxExp,
-                lastFedAt: petStatus.lastFedAt
+                lastFedAt: petStatus.lastFedAt?.ISO8601Format()
             )
             let attributes = DamagoAttributes(
                 petName: petStatus.petName

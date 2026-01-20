@@ -103,7 +103,7 @@ extension DamagoStatusResponse {
             isHungry: isHungry,
             statusMessage: statusMessage,
             lastFedAt: lastFedAt,
-            totalPlayTime: totalPlayTime,
+            totalPlayTime: totalPlayTime ?? 0,
             lastActiveAt: lastActiveAt
         )
     }
