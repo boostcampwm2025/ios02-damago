@@ -248,7 +248,7 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
             users = [couple_data.get("user1UID"), couple_data.get("user2UID")]
             
             last_fed_at = pet_data.get("lastFedAt")
-            last_fed_at_str = last_fed_at.isoformat() if last_fed_at else None
+            last_fed_at_str = last_fed_at.isoformat(timespec='seconds') if last_fed_at else None
             
             # Live Activity Payload
             content_state = {

@@ -43,10 +43,10 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
             pet_data = pet_doc.to_dict()
             
             last_fed_at = pet_data.get("lastFedAt")
-            last_fed_at_str = last_fed_at.isoformat() if last_fed_at else None
+            last_fed_at_str = last_fed_at.isoformat(timespec='seconds') if last_fed_at else None
             
             last_active_at = pet_data.get("lastActiveAt")
-            last_active_at_str = last_active_at.isoformat() if last_active_at else None
+            last_active_at_str = last_active_at.isoformat(timespec='seconds') if last_active_at else None
             
             # 커플 정보에서 코인 조회
             couple_id = pet_data.get("coupleID")

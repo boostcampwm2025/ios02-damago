@@ -7,6 +7,7 @@
 
 import FirebaseAuth
 import FirebaseCore
+import FirebaseFirestore
 import FirebaseMessaging
 import OSLog
 import UIKit
@@ -29,6 +30,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         } catch {
             SharedLogger.firebase.error("키체인 그룹 에러: \(error.localizedDescription)")
         }
+
+        setupFirestoreEmulator()
 
         // 2. iOS 기본 알림 센터(UNUserNotificationCenter) delegate 설정
         // -> 앱이 켜져 있을 때 알림을 어떻게 처리할지 결정하기 위함
@@ -126,5 +129,18 @@ extension AppDelegate: MessagingDelegate {
         UserDefaults.standard.set(fcmToken, forKey: "fcmToken")
 
         NotificationCenter.default.post(name: .fcmTokenDidUpdate, object: nil)
+    }
+}
+
+extension AppDelegate {
+    func setupFirestoreEmulator() {
+        #if DEBUG
+        guard let localIP = ProcessInfo.processInfo.environment["USE_LOCAL_EMULATOR"] else { return }
+        Firestore.firestore().useEmulator(withHost: localIP, port: 8080)
+        let settings = Firestore.firestore().settings
+//        settings.host = "\(localIP):8080"
+        settings.isSSLEnabled = false
+        Firestore.firestore().settings = settings
+        #endif
     }
 }
