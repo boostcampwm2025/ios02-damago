@@ -19,6 +19,6 @@ final class ObservePetStatusUseCaseImpl: ObservePetStatusUseCase {
     }
     
     func execute(damagoID: String) -> AnyPublisher<Result<PetStatus, Error>, Never> {
-        return petRepository.observePetStatus(damagoID: damagoID)
+        petRepository.observePetStatus(damagoID: damagoID)
     }
 }

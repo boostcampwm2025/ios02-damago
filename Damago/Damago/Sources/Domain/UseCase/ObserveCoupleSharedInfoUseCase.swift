@@ -19,6 +19,6 @@ final class ObserveCoupleSharedInfoUseCaseImpl: ObserveCoupleSharedInfoUseCase {
     }
     
     func execute(coupleID: String) -> AnyPublisher<Result<CoupleSharedInfo, Error>, Never> {
-        return userRepository.observeCoupleSharedInfo(coupleID: coupleID)
+        userRepository.observeCoupleSharedInfo(coupleID: coupleID)
     }
 }

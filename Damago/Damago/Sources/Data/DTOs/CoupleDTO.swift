@@ -18,7 +18,7 @@ struct CoupleDTO: Decodable {
     let foodCount: Int
 
     func toDomain() -> CoupleSharedInfo {
-        return CoupleSharedInfo(
+        CoupleSharedInfo(
             foodCount: self.foodCount,
             totalCoin: self.totalCoin
         )
