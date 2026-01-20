@@ -50,7 +50,7 @@ struct FeedAppIntent: AppIntent, LiveActivityIntent {
             await applyPetStatusAndReturnIdle(petStatus)
             return .result()
         } catch {
-            await SharedLogger.liveActivityAppIntent
+            SharedLogger.liveActivityAppIntent
                 .error("Feed request failed: \(String(describing: error))")
 
             await showTransientErrorAndReturnIdle()
@@ -103,7 +103,7 @@ struct FeedAppIntent: AppIntent, LiveActivityIntent {
         let refreshedUserInfo: UserInfoResponse = try await fetchUserInfo(accessToken: accessToken)
 
         guard let petStatus = refreshedUserInfo.petStatus else {
-            await SharedLogger.liveActivityAppIntent
+            SharedLogger.liveActivityAppIntent
                 .error("User info doesn't have pet status")
             return nil
         }
@@ -133,7 +133,7 @@ struct FeedAppIntent: AppIntent, LiveActivityIntent {
         delayNanoseconds: UInt64 = 1_200_000_000
     ) async {
         if let logMessage {
-            await SharedLogger.liveActivityAppIntent.error("\(logMessage)")
+            SharedLogger.liveActivityAppIntent.error("\(logMessage)")
         }
 
         await setScreen(.error)
