@@ -14,4 +14,6 @@ enum SharedLogger {
     static let firebase = Logger(subsystem: subSystem, category: "firebaseLogger")
     static let liveActivityManger = Logger(subsystem: subSystem, category: "liveActivityMangerLogger")
     static let viewController = Logger(subsystem: subSystem, category: "viewControllerLogger")
+    static let liveActivityAppIntent = Logger(subsystem: subSystem, category: "liveActivityAppIntentLogger")
+    static let userDefaults = Logger(subsystem: subSystem, category: "userDefaultsLogger")
 }

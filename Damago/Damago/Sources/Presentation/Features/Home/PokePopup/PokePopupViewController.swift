@@ -14,6 +14,7 @@ final class PokePopupViewController: UIViewController {
     
     private var cancellables = Set<AnyCancellable>()
     private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
+    private var progressView: ProgressView?
     
     var onMessageSelected: ((String) -> Void)?
     var onCancel: (() -> Void)?
@@ -64,8 +65,16 @@ final class PokePopupViewController: UIViewController {
     
     private func setupViewModelCallbacks() {
         viewModel.onMessageSelected = { [weak self] message in
-            self?.dismiss(animated: true) {
-                self?.onMessageSelected?(message)
+            self?.showProgressView()
+            self?.onMessageSelected?(message)
+            // 전송 완료 시뮬레이션 (실제로는 네트워크 요청 완료 후 호출)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self?.hideProgressView()
+                self?.showSendCompleteAlert {
+                    self?.dismiss(animated: true) {
+                        self?.onCancel?()
+                    }
+                }
             }
         }
         
@@ -74,10 +83,69 @@ final class PokePopupViewController: UIViewController {
                 self?.onCancel?()
             }
         }
+        
+        viewModel.onRequestSendConfirmation = { [weak self] message, confirmHandler in
+            self?.showSendConfirmationAlert(message: message, confirmHandler: confirmHandler)
+        }
+        
+        viewModel.onRequestCancelConfirmation = { [weak self] confirmHandler in
+            self?.showCancelConfirmationAlert(confirmHandler: confirmHandler)
+        }
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        view.backgroundColor = .clear
+    private func showSendConfirmationAlert(message: String, confirmHandler: @escaping () -> Void) {
+        let alert = UIAlertController(
+            title: "메시지 전송",
+            message: "이 메시지를 전송하시겠어요?",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "전송", style: .default) { _ in
+            confirmHandler()
+        })
+        
+        present(alert, animated: true)
     }
+    
+    private func showCancelConfirmationAlert(confirmHandler: @escaping () -> Void) {
+        let alert = UIAlertController(
+            title: "편집 취소",
+            message: "편집 내용이 저장되지 않습니다.\n정말 취소하시겠어요?",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "계속 편집", style: .cancel))
+        alert.addAction(UIAlertAction(title: "취소", style: .destructive) { _ in
+            confirmHandler()
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    private func showProgressView() {
+        let progressView = ProgressView()
+        progressView.show(in: view, message: "전송 중...")
+        self.progressView = progressView
+    }
+    
+    private func hideProgressView() {
+        progressView?.hide()
+        progressView = nil
+    }
+    
+    private func showSendCompleteAlert(completion: @escaping () -> Void) {
+        let alert = UIAlertController(
+            title: "전송 완료",
+            message: "메시지가 성공적으로 전송되었습니다.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "확인", style: .default) { _ in
+            completion()
+        })
+        
+        present(alert, animated: true)
+    }
+    
 }

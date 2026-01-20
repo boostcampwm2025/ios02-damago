@@ -5,6 +5,7 @@
 //  Created by 김재영 on 1/12/26.
 //
 
+import Combine
 import DamagoNetwork
 
 final class UserRepository: UserRepositoryProtocol {
@@ -12,17 +13,20 @@ final class UserRepository: UserRepositoryProtocol {
     private let authService: AuthService
     private let cryptoService: CryptoService
     private let tokenProvider: TokenProvider
+    private let firestoreService: FirestoreService
 
     init(
         networkProvider: NetworkProvider,
         authService: AuthService,
         cryptoService: CryptoService,
-        tokenProvider: TokenProvider
+        tokenProvider: TokenProvider,
+        firestoreService: FirestoreService
     ) {
         self.networkProvider = networkProvider
         self.authService = authService
         self.cryptoService = cryptoService
         self.tokenProvider = tokenProvider
+        self.firestoreService = firestoreService
     }
     
     func generateCode(fcmToken: String) async throws -> String {
@@ -57,6 +61,19 @@ final class UserRepository: UserRepositoryProtocol {
     func fcmToken() async throws -> String {
         try await tokenProvider.fcmToken()
     }
+
+    func observeCoupleSharedInfo(coupleID: String) -> AnyPublisher<Result<CoupleSharedInfo, Error>, Never> {
+        firestoreService.observe(collection: "couples", document: coupleID)
+            .map { (result: Result<CoupleDTO, Error>) in
+                switch result {
+                case let .success(value):
+                    return .success(value.toDomain())
+                case let .failure(error):
+                    return .failure(error)
+                }
+            }
+            .eraseToAnyPublisher()
+    }
 }
 
 // MARK: - DTO Mapping
@@ -65,6 +82,7 @@ private extension UserInfoResponse {
         UserInfo(
             uid: uid,
             damagoID: damagoID,
+            coupleID: coupleID,
             partnerUID: partnerUID,
             nickname: nickname,
             petStatus: petStatus?.toDomain(),
@@ -74,7 +92,8 @@ private extension UserInfoResponse {
     }
 }
 
-private extension DamagoStatusResponse {
+
+extension DamagoStatusResponse {
     func toDomain() -> PetStatus {
         PetStatus(
             petName: petName,
@@ -85,7 +104,7 @@ private extension DamagoStatusResponse {
             isHungry: isHungry,
             statusMessage: statusMessage,
             lastFedAt: lastFedAt,
-            totalPlayTime: totalPlayTime,
+            totalPlayTime: totalPlayTime ?? 0,
             lastActiveAt: lastActiveAt
         )
     }

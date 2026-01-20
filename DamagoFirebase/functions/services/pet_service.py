@@ -64,6 +64,13 @@ def feed(req: https_fn.Request) -> https_fn.Response:
         if uid != user1 and uid != user2:
              raise PermissionError("You are not the owner of this pet")
 
+        # --- [Food Consumption Logic] ---
+        current_food_count = couple_data.get("foodCount", 0)
+        if current_food_count <= 0:
+            raise ValueError("Not enough food")
+        
+        new_food_count = current_food_count - 1
+
         # --- [Experience Logic] ---
         new_exp = current_exp + FEED_EXP
         new_level = current_level
@@ -95,18 +102,20 @@ def feed(req: https_fn.Request) -> https_fn.Response:
         }
         transaction.update(doc_ref, update_data)
 
-        # 코인 보상이 있다면 커플 문서 업데이트
+        # 커플 문서 업데이트 (먹이 차감 및 코인 보상)
+        couple_updates = {"foodCount": new_food_count}
         if reward_coin > 0:
-            transaction.update(couple_ref, {
-                "totalCoin": firestore.Increment(reward_coin)
-            })
+            couple_updates["totalCoin"] = firestore.Increment(reward_coin)
+            
+        transaction.update(couple_ref, couple_updates)
 
         return {
             "level": new_level,
             "currentExp": new_exp,
             "maxExp": get_required_exp(new_level),
             "isLevelUp": new_level > current_level,
-            "rewardCoin": reward_coin
+            "rewardCoin": reward_coin,
+            "foodCount": new_food_count
         }
 
     try:
@@ -239,11 +248,11 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
             users = [couple_data.get("user1UID"), couple_data.get("user2UID")]
             
             last_fed_at = pet_data.get("lastFedAt")
-            last_fed_at_str = last_fed_at.isoformat() if last_fed_at else None
+            last_fed_at_str = last_fed_at.isoformat(timespec='seconds') if last_fed_at else None
             
             # Live Activity Payload
             content_state = {
-                "petType": pet_data.get("petType", "Teddy"),
+                "petType": pet_data.get("petType", "Bunny"),
                 "isHungry": True,
                 "statusMessage": new_status,
                 "level": pet_data.get("level"),

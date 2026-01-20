@@ -5,6 +5,8 @@
 //  Created by 김재영 on 1/13/26.
 //
 
+import Foundation
+
 struct PetStatus {
     let petName: String
     let petType: String
@@ -13,7 +15,7 @@ struct PetStatus {
     let maxExp: Int
     let isHungry: Bool
     let statusMessage: String
-    let lastFedAt: String?
+    let lastFedAt: Date?
     let totalPlayTime: Int
-    let lastActiveAt: String?
+    let lastActiveAt: Date?
 }

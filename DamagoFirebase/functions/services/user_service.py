@@ -43,10 +43,10 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
             pet_data = pet_doc.to_dict()
             
             last_fed_at = pet_data.get("lastFedAt")
-            last_fed_at_str = last_fed_at.isoformat() if last_fed_at else None
+            last_fed_at_str = last_fed_at.isoformat(timespec='seconds') if last_fed_at else None
             
             last_active_at = pet_data.get("lastActiveAt")
-            last_active_at_str = last_active_at.isoformat() if last_active_at else None
+            last_active_at_str = last_active_at.isoformat(timespec='seconds') if last_active_at else None
             
             # 커플 정보에서 코인 조회
             couple_id = pet_data.get("coupleID")
@@ -57,7 +57,7 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
 
             pet_status = {
                 "petName": pet_data.get("petName", "이름 없는 펫"),
-                "petType": pet_data.get("petType", "Teddy"),
+                "petType": pet_data.get("petType", "Bunny"),
                 "level": pet_data.get("level", 1),
                 "currentExp": pet_data.get("currentExp", 0),
                 "maxExp": pet_data.get("maxExp", 20),
@@ -71,6 +71,7 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
     response_data = {
         "uid": uid,  # udid -> uid
         "damagoID": damago_id,
+        "coupleID": user_data.get("coupleID"),
         "partnerUID": user_data.get("partnerUID"), # partnerUDID -> partnerUID
         "nickname": user_data.get("nickname"),
         "petStatus": pet_status,  # 합쳐진 펫 정보

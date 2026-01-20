@@ -11,6 +11,7 @@ import UIKit
 final class HomeViewController: UIViewController {
     private let mainView = HomeView()
     private let viewModel: HomeViewModel
+    private let progressView = ProgressView()
 
     private var cancellables = Set<AnyCancellable>()
     private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
@@ -70,17 +71,29 @@ final class HomeViewController: UIViewController {
 
     func bind(_ output: HomeViewModel.Output) {
         output
+            .mapForUI { $0.isLoading }
+            .sink { [weak self] isLoading in
+                guard let self else { return }
+                if isLoading {
+                    self.progressView.show(in: self.view, message: "불러오는 중...")
+                } else {
+                    self.progressView.hide()
+                }
+            }
+            .store(in: &cancellables)
+
+        output
             .mapForUI { $0.dDay }
             .sink { [weak self] in self?.mainView.updateDDay(days: $0) }
             .store(in: &cancellables)
 
         output
-            .mapForUI { $0.coinAmount }
+            .mapForUI { $0.totalCoin }
             .sink { [weak self] in self?.mainView.updateCoin(amount: $0) }
             .store(in: &cancellables)
 
         output
-            .mapForUI { HomeView.FeedButtonState(foodAmount: $0.foodAmount, isEnabled: $0.isFeedButtonEnabled) }
+            .mapForUI { HomeView.FeedButtonState(foodAmount: $0.foodCount, isEnabled: $0.isFeedButtonEnabled) }
             .sink { [weak self] in self?.mainView.updateFeedButton(state: $0) }
             .store(in: &cancellables)
 
