@@ -68,6 +68,7 @@
 				"Date+.swift",
 				"Font+.swift",
 				"Spacing+.swift",
+				"UIImage+.swift",
 			);
 			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
 		};
@@ -92,6 +93,7 @@
 		7A95562E2F18ACAA00944B25 /* Exceptions for "Damago" folder in "DamagoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Resources/Assets.xcassets,
 				Sources/Core/Assembly.swift,
 				Sources/Core/DIContainer.swift,
 				"Sources/Core/NotificationName+.swift",

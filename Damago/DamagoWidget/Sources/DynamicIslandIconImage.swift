@@ -17,7 +17,9 @@ struct DynamicIslandIconImage: View {
     }
 
     var body: some View {
-        Image(iconImageName)
+        let firstFrame = UIImage(named: iconImageName)?
+            .crop(rect: CGRect(origin: .zero, size: CGSize(width: 32, height: 32)))
+        Image(uiImage: firstFrame!)
             .resizable()
             .scaledToFit()
             .frame(width: size, height: size)
