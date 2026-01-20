@@ -168,7 +168,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             "anniversaryDate": None,
             "createdAt": firestore.SERVER_TIMESTAMP,
             "totalCoin": 0,
-            "foodCount": 0
+            "foodCount": 10
         })
 
         # 유저 정보 업데이트 (상호 참조, UDID -> UID)

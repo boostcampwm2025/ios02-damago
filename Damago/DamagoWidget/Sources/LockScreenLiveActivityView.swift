@@ -31,6 +31,7 @@ private extension LockScreenLiveActivityView {
             let firstFrame = UIImage(named: context.state.imageName)?
                 .crop(rect: CGRect(origin: .zero, size: CGSize(width: 32, height: 32)))
             Image(uiImage: firstFrame!)
+                .interpolation(.none)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 80, height: 80)
