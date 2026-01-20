@@ -16,5 +16,10 @@ final class UseCaseAssembly: Assembly {
         container.register(ConnectCoupleUseCase.self) {
             ConnectCoupleUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }
+        container.register(FetchDailyQuestionUseCase.self) {
+            FetchDailyQuestionUseCaseImpl(
+                dailyQuestionRepository: container.resolve(DailyQuestionRepositoryProtocol.self)
+            )
+        }
     }
 }

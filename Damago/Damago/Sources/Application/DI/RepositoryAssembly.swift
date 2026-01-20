@@ -35,5 +35,12 @@ final class RepositoryAssembly: Assembly {
         container.register(PokeShortcutRepositoryProtocol.self) {
             PokeShortcutRepository()
         }
+        
+        container.register(DailyQuestionRepositoryProtocol.self) {
+            DailyQuestionRepository(
+                networkProvider: container.resolve(NetworkProvider.self),
+                tokenProvider: container.resolve(TokenProvider.self)
+            )
+        }
     }
 }
