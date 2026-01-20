@@ -76,7 +76,7 @@ struct DamagoWidgetLiveActivity: Widget {
     private func idleExpandedContentView(context: ActivityViewContext<DamagoAttributes>) -> some View {
         HStack(spacing: .spacingL) {
             DynamicIslandIconImage(
-                for: context.state.largeImageName,
+                for: context.state.imageName,
                 size: charactrerSize
             )
             .clipShape(Rectangle())
@@ -112,7 +112,7 @@ struct DamagoWidgetLiveActivity: Widget {
             )
             .frame(width: largeIconSize, height: largeIconSize)
             DynamicIslandIconImage(
-                for: context.state.iconImageName,
+                for: context.state.imageName,
                 size: smallIconSize
             )
                 .clipShape(Rectangle())
@@ -135,7 +135,7 @@ struct DamagoWidgetLiveActivity: Widget {
             )
             .frame(width: largeIconSize, height: largeIconSize)
             DynamicIslandIconImage(
-                for: context.state.iconImageName,
+                for: context.state.imageName,
                 size: smallIconSize
             )
                 .clipShape(Rectangle())
