@@ -20,21 +20,23 @@ final class InteractionViewModel: ViewModel {
     }
     
     struct State {
-        var dailyQuestion: String = ""
-        var myAnswer: String?
-        var opponentAnswer: String?
+        var dailyQuestionUIModel: DailyQuestionUIModel?
         var route: Pulse<Route>?
     }
     
     enum Route {
-        case questionInput(question: String, myAnswer: String?, opponentAnswer: String?)
+        case questionInput(uiModel: DailyQuestionUIModel)
         case history
     }
+    
+    private let fetchDailyQuestionUseCase: FetchDailyQuestionUseCase
     
     @Published private var state = State()
     private var cancellables = Set<AnyCancellable>()
     
-    init() { }
+    init(fetchDailyQuestionUseCase: FetchDailyQuestionUseCase) {
+        self.fetchDailyQuestionUseCase = fetchDailyQuestionUseCase
+    }
     
     func transform(_ input: Input) -> Output {
         input.viewDidLoad
@@ -45,19 +47,14 @@ final class InteractionViewModel: ViewModel {
         
         input.questionSubmitButtonDidTap
             .sink { [weak self] in
-                guard let self else { return }
-                self.state.route = Pulse(.questionInput(
-                        question: self.state.dailyQuestion,
-                        myAnswer: self.state.myAnswer,
-                        opponentAnswer: self.state.opponentAnswer
-                    )
-                )
+                guard let self, let uiModel = self.state.dailyQuestionUIModel else { return }
+                self.state.route = Pulse(.questionInput(uiModel: uiModel))
             }
             .store(in: &cancellables)
         
         input.answerDidSubmitted
             .sink { [weak self] answerText in
-                self?.state.myAnswer = answerText
+                // TODO: Update local state if needed or re-fetch
             }
             .store(in: &cancellables)
         
@@ -71,9 +68,14 @@ final class InteractionViewModel: ViewModel {
     }
     
     private func fetchDailyQuestionData() {
-        // TODO: 서버로부터 갱신
-        state.dailyQuestion = "\"우리의 첫 여행에서 가장 좋았던 추억은 무엇인가요?\""
-        state.myAnswer = nil
-        state.opponentAnswer = nil
+        Task {
+            do {
+                let uiModel = try await fetchDailyQuestionUseCase.execute()
+                self.state.dailyQuestionUIModel = uiModel
+            } catch {
+                // TODO: Handle Error
+                print("오늘의 질문 가져오기 실패: \(error)")
+            }
+        }
     }
 }

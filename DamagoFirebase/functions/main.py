@@ -5,7 +5,7 @@
 from firebase_functions import https_fn
 from firebase_functions.options import set_global_options
 from firebase_admin import initialize_app
-from services import auth_service, pet_service, push_service, user_service, seed_service
+from services import auth_service, pet_service, push_service, user_service, seed_service, couple_interaction_service
 
 # For cost control, you can set the maximum number of containers that can be
 # running at the same time. This helps mitigate the impact of unexpected
@@ -50,6 +50,10 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
 @https_fn.on_request()
 def get_user_info(req: https_fn.Request) -> https_fn.Response:
     return user_service.get_user_info(req)
+
+@https_fn.on_request()
+def fetch_daily_question(req: https_fn.Request) -> https_fn.Response:
+    return couple_interaction_service.fetch_daily_question(req)
 
 # ========================================
 # 시드 데이터 관리 (관리자 전용)
