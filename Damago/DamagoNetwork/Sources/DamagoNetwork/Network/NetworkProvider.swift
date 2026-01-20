@@ -25,6 +25,7 @@ public final class NetworkProviderImpl: NetworkProvider {
     public func request<T: Decodable>(_ endpoint: EndPoint) async throws -> T {
         let data = try await requestData(endpoint)
         let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode(T.self, from: data)
     }
     

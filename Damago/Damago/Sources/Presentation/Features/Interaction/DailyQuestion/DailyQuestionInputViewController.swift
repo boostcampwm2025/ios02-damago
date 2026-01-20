@@ -30,6 +30,7 @@ final class DailyQuestionInputViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavigation()
+        setupTextView()
         setupKeyboard()
         
         let output = viewModel.transform(
@@ -50,6 +51,10 @@ final class DailyQuestionInputViewController: UIViewController {
     private func setupNavigation() {
         title = "오늘의 질문"
         navigationItem.largeTitleDisplayMode = .never
+    }
+    
+    private func setupTextView() {
+        mainView.textView.delegate = self
     }
     
     private func setupKeyboard() {
@@ -94,5 +99,14 @@ final class DailyQuestionInputViewController: UIViewController {
         }
         
         mainView.configure(title: questionContent)
+    }
+}
+
+extension DailyQuestionInputViewController: UITextViewDelegate {
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        guard let currentText = textView.text else { return true }
+        guard let stringRange = Range(range, in: currentText) else { return false }
+        let updatedText = currentText.replacingCharacters(in: stringRange, with: text)
+        return updatedText.count <= 200
     }
 }

@@ -121,7 +121,7 @@ struct FeedAppIntent: AppIntent, LiveActivityIntent {
                 level: petStatus.level,
                 currentExp: petStatus.currentExp,
                 maxExp: petStatus.maxExp,
-                lastFedAt: petStatus.lastFedAt
+                lastFedAt: petStatus.lastFedAt?.ISO8601Format()
             )
             state.screen = .idle
         }
