@@ -5,9 +5,11 @@
 
 from firebase_functions import https_fn
 from firebase_admin import firestore
+import google.cloud.firestore
 import csv
 import os
 from pathlib import Path
+from utils.firestore import get_db
 
 def is_admin(req: https_fn.Request) -> bool:
     """
@@ -100,35 +102,49 @@ def seed_daily_questions(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response("Unauthorized: Admin access required", status=403)
     
     try:
+        import time
+        request_id = str(time.time())
+        print(f"[SEED-DAILY] Request {request_id} started")
+        
         # Firestore 클라이언트 초기화
-        db = firestore.client()
+        db = get_db()
         
         # CSV에서 데이터 로드
         questions_data = load_daily_questions_from_csv()
+        print(f"[SEED-DAILY] Request {request_id} - CSV loaded: {len(questions_data)} questions")
         
         # force 파라미터 확인
         force = req.args.get('force', 'false').lower() == 'true'
         
         # 기존 데이터 확인
-        existing_docs = db.collection('dailyQuestions').limit(1).get()
-        if len(list(existing_docs)) > 0 and not force:
+        existing_docs = list(db.collection('dailyQuestions').limit(1).get())
+        has_existing_data = len(existing_docs) > 0
+        
+        print(f"[SEED-DAILY] Request {request_id} - Current state: has_data={has_existing_data}, force={force}")
+        
+        if has_existing_data and not force:
+            print(f"[SEED-DAILY] Request {request_id} - BLOCKED: Data already exists")
             return https_fn.Response(
                 "Daily questions already exist. Use ?force=true to override.",
                 status=409
             )
         
+        print(f"[SEED-DAILY] Request {request_id} - Proceeding to add data")
+        
         # force=true이면 기존 데이터 삭제
-        if force:
+        deleted_count = 0
+        if force and has_existing_data:
             # 기존 데이터 삭제 (배치 단위로)
-            deleted_count = 0
-            docs = db.collection('dailyQuestions').limit(500).get()
-            while len(list(docs)) > 0:
+            while True:
+                docs = list(db.collection('dailyQuestions').limit(500).get())
+                if len(docs) == 0:
+                    break
+                    
                 batch = db.batch()
                 for doc in docs:
                     batch.delete(doc.reference)
                     deleted_count += 1
                 batch.commit()
-                docs = db.collection('dailyQuestions').limit(500).get()
         
         # 배치로 추가 (Firestore는 배치당 최대 500개)
         added_count = 0
@@ -155,10 +171,14 @@ def seed_daily_questions(req: https_fn.Request) -> https_fn.Response:
         if batch_count > 0:
             batch.commit()
         
-        return https_fn.Response(
-            f"Successfully added {added_count} daily questions from CSV",
-            status=200
-        )
+        print(f"[SEED-DAILY] Request {request_id} - COMPLETED: deleted={deleted_count}, added={added_count}")
+        
+        # 성공 메시지
+        message = f"✅ Successfully added {added_count} daily questions from CSV"
+        if deleted_count > 0:
+            message = f"✅ Deleted {deleted_count} existing questions, added {added_count} new questions from CSV"
+        
+        return https_fn.Response(message, status=200)
         
     except Exception as e:
         return https_fn.Response(f"Error: {str(e)}", status=500)
@@ -182,34 +202,48 @@ def seed_balance_games(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response("Unauthorized: Admin access required", status=403)
     
     try:
+        import time
+        request_id = str(time.time())
+        print(f"[SEED-BALANCE] Request {request_id} started")
+        
         # Firestore 클라이언트 초기화
-        db = firestore.client()
+        db = get_db()
         
         # CSV에서 데이터 로드
         games_data = load_balance_games_from_csv()
+        print(f"[SEED-BALANCE] Request {request_id} - CSV loaded: {len(games_data)} games")
         
         # force 파라미터 확인
         force = req.args.get('force', 'false').lower() == 'true'
         
         # 기존 데이터 확인
-        existing_docs = db.collection('balanceGames').limit(1).get()
-        if len(list(existing_docs)) > 0 and not force:
+        existing_docs = list(db.collection('balanceGames').limit(1).get())
+        has_existing_data = len(existing_docs) > 0
+        
+        print(f"[SEED-BALANCE] Request {request_id} - Current state: has_data={has_existing_data}, force={force}")
+        
+        if has_existing_data and not force:
+            print(f"[SEED-BALANCE] Request {request_id} - BLOCKED: Data already exists")
             return https_fn.Response(
                 "Balance games already exist. Use ?force=true to override.",
                 status=409
             )
         
+        print(f"[SEED-BALANCE] Request {request_id} - Proceeding to add data")
+        
         # force=true이면 기존 데이터 삭제
-        if force:
-            deleted_count = 0
-            docs = db.collection('balanceGames').limit(500).get()
-            while len(list(docs)) > 0:
+        deleted_count = 0
+        if force and has_existing_data:
+            while True:
+                docs = list(db.collection('balanceGames').limit(500).get())
+                if len(docs) == 0:
+                    break
+                    
                 batch = db.batch()
                 for doc in docs:
                     batch.delete(doc.reference)
                     deleted_count += 1
                 batch.commit()
-                docs = db.collection('balanceGames').limit(500).get()
         
         # 배치로 추가
         batch = db.batch()
@@ -238,10 +272,14 @@ def seed_balance_games(req: https_fn.Request) -> https_fn.Response:
         if batch_count > 0:
             batch.commit()
         
-        return https_fn.Response(
-            f"Successfully added {added_count} balance games from CSV",
-            status=200
-        )
+        print(f"[SEED-BALANCE] Request {request_id} - COMPLETED: deleted={deleted_count}, added={added_count}")
+        
+        # 성공 메시지
+        message = f"✅ Successfully added {added_count} balance games from CSV"
+        if deleted_count > 0:
+            message = f"✅ Deleted {deleted_count} existing games, added {added_count} new games from CSV"
+        
+        return https_fn.Response(message, status=200)
         
     except Exception as e:
         return https_fn.Response(f"Error: {str(e)}", status=500)
@@ -249,15 +287,15 @@ def seed_balance_games(req: https_fn.Request) -> https_fn.Response:
 
 def clear_seed_data(req: https_fn.Request) -> https_fn.Response:
     """
-    시드 데이터 삭제 (주의: 모든 질문 데이터 삭제됨)
+    시드 데이터 삭제
     
     사용법:
-        # 개발 환경 (에뮬레이터) - 인증 불필요
+        # 모든 시드 데이터 삭제 (dailyQuestions + balanceGames)
         curl -X DELETE http://localhost:5001/damago-dev-26/us-central1/clear_seed_data
         
-        # 프로덕션 - Authorization 헤더 필요
-        curl -X DELETE https://your-function-url/clear_seed_data \
-          -H "Authorization: Bearer YOUR_ID_TOKEN"
+        # 특정 컬렉션만 삭제
+        curl -X DELETE "http://localhost:5001/damago-dev-26/us-central1/clear_seed_data?collection=dailyQuestions"
+        curl -X DELETE "http://localhost:5001/damago-dev-26/us-central1/clear_seed_data?collection=balanceGames"
     """
     
     # 관리자 권한 확인 (에뮬레이터에서는 자동 통과)
@@ -266,31 +304,45 @@ def clear_seed_data(req: https_fn.Request) -> https_fn.Response:
     
     try:
         # Firestore 클라이언트 초기화
-        db = firestore.client()
+        db = get_db()
         
-        collection = req.args.get('collection', '')
+        # collection 파라미터 확인 (없으면 둘 다 삭제)
+        collection = req.args.get('collection', 'all')
         
-        if collection not in ['dailyQuestions', 'balanceGames']:
+        # 삭제할 컬렉션 목록
+        if collection == 'all':
+            collections_to_delete = ['dailyQuestions', 'balanceGames']
+        elif collection in ['dailyQuestions', 'balanceGames']:
+            collections_to_delete = [collection]
+        else:
             return https_fn.Response(
-                "Invalid collection. Use: dailyQuestions or balanceGames",
+                "Invalid collection. Use: dailyQuestions, balanceGames, or omit for all",
                 status=400
             )
         
-        # 배치 삭제
-        docs = db.collection(collection).limit(500).get()
-        deleted_count = 0
+        total_deleted = 0
+        results = []
         
-        batch = db.batch()
-        for doc in docs:
-            batch.delete(doc.reference)
-            deleted_count += 1
+        for coll_name in collections_to_delete:
+            deleted_count = 0
+            
+            # 배치 단위로 삭제
+            while True:
+                docs = list(db.collection(coll_name).limit(500).get())
+                if len(docs) == 0:
+                    break
+                
+                batch = db.batch()
+                for doc in docs:
+                    batch.delete(doc.reference)
+                    deleted_count += 1
+                batch.commit()
+            
+            total_deleted += deleted_count
+            results.append(f"{coll_name}: {deleted_count}")
         
-        batch.commit()
-        
-        return https_fn.Response(
-            f"Deleted {deleted_count} documents from {collection}",
-            status=200
-        )
+        message = f"✅ Deleted {total_deleted} documents ({', '.join(results)})"
+        return https_fn.Response(message, status=200)
         
     except Exception as e:
         return https_fn.Response(f"Error: {str(e)}", status=500)
