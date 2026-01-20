@@ -115,8 +115,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     
     my_code = my_doc.to_dict().get("code")
 
-    if my_code == target_code:
-        return https_fn.Response("Cannot connect to yourself", status=400)
+    # if my_code == target_code:
+    #     return https_fn.Response("Cannot connect to yourself", status=400)
 
     # 상대방 정보는 코드로 조회
     target_snapshot = users_ref.where("code", "==", target_code).limit(1).get()
