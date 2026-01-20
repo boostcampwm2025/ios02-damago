@@ -45,7 +45,8 @@ final class CardHeaderView: UIView {
         setupUI()
     }
     
-    func configure(title: String, foods: Int? = nil, coins: Int? = nil) {
+    func configure(title: String, foods: Int? = nil, coins: Int? = nil, badge: String = "일일 미션") {
+        missionBadge.text = badge
         titleLabel.text = title
         setupRewards(foods: foods, coins: coins)
     }

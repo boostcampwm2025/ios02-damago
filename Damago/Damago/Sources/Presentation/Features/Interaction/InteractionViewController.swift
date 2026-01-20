@@ -17,6 +17,11 @@ final class InteractionViewController: UIViewController {
     private var isNavigationBarHidden = true
     private var cancellables = Set<AnyCancellable>()
     
+    private lazy var balanceGameCardChildViewController: BalanceGameCardViewController = {
+        let vc = BalanceGameCardViewController()
+        return vc
+    }()
+    
     init(viewModel: InteractionViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -35,6 +40,7 @@ final class InteractionViewController: UIViewController {
         setupNavigation()
         setupDelegate()
         mainView.configure(title: viewModel.title, subtitle: viewModel.subtitle)
+        embedBalanceGameCardChildViewControllerIfNeeded()
         
         let output = viewModel.transform(
             InteractionViewModel.Input(
@@ -63,6 +69,27 @@ final class InteractionViewController: UIViewController {
     
     private func setupDelegate() {
         mainView.scrollView.delegate = self
+    }
+    
+    private func embedBalanceGameCardChildViewControllerIfNeeded() {
+        guard balanceGameCardChildViewController.parent == nil else { return }
+
+        let containerView = mainView.balanceGameCardView
+
+        addChild(balanceGameCardChildViewController)
+
+        let childView = balanceGameCardChildViewController.view!
+        childView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(childView)
+
+        NSLayoutConstraint.activate([
+            childView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            childView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            childView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            childView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+        ])
+
+        balanceGameCardChildViewController.didMove(toParent: self)
     }
     
     private func bind(_ output: InteractionViewModel.Output) {
