@@ -11,6 +11,7 @@ import UIKit
 final class SignInView: UIView {
     private let logoBanner: UIImageView = {
         let imageView = UIImageView(image: UIImage(resource: .appLogo))
+        imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
@@ -43,9 +44,13 @@ final class SignInView: UIView {
     }
 
     private func setupConstraints() {
+        guard let image = logoBanner.image else { return }
+        let aspectRatio = image.size.height / image.size.width
         NSLayoutConstraint.activate([
-            logoBanner.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingXL),
+            logoBanner.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 2 * .spacingXL),
+            logoBanner.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -2 * .spacingXL),
             logoBanner.centerYAnchor.constraint(equalTo: centerYAnchor),
+            logoBanner.heightAnchor.constraint(equalTo: logoBanner.widthAnchor, multiplier: aspectRatio),
 
             signInButton.heightAnchor.constraint(equalToConstant: 56),
             signInButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
@@ -53,4 +58,8 @@ final class SignInView: UIView {
             signInButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingL)
         ])
     }
+}
+
+#Preview {
+    SignInView()
 }
