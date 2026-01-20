@@ -113,7 +113,8 @@ final class TabBarViewController: UITabBarController {
         case .game:
             return UIViewController()
         case .setting:
-            let viewModel = SettingsViewModel()
+            let signOutUseCase = AppDIContainer.shared.resolve(SignOutUseCase.self)
+            let viewModel = SettingsViewModel(signOutUseCase: signOutUseCase)
             let vc = SettingsViewController(viewModel: viewModel)
             return vc
         }

@@ -37,14 +37,20 @@ nonisolated enum SettingsItem: Hashable {
     case relationship(opponentName: String, isConnected: Bool)
     case toggle(type: ToggleType, isOn: Bool)
     case link(title: String, url: URL?)
-    case action(type: ActionType)
+    case action(type: AlertActionType)
 }
 
-nonisolated enum ActionType: String, Hashable {
+nonisolated enum AlertActionType: String, Hashable {
     case logout = "로그아웃"
     case deleteAccount = "회원 탈퇴"
     
     var title: String { rawValue }
+    var message: String {
+        switch self {
+        case .logout: "정말 로그아웃 하시겠습니까?"
+        case .deleteAccount: "정말 탈퇴 하시겠습니까?\n모든 데이터가 삭제됩니다."
+        }
+    }
     var isDestructive: Bool { self == .deleteAccount }
 }
 
