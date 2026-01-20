@@ -5,7 +5,7 @@
 from firebase_functions import https_fn
 from firebase_functions.options import set_global_options
 from firebase_admin import initialize_app
-from services import auth_service, pet_service, push_service, user_service
+from services import auth_service, pet_service, push_service, user_service, seed_service
 
 # For cost control, you can set the maximum number of containers that can be
 # running at the same time. This helps mitigate the impact of unexpected
@@ -50,3 +50,22 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
 @https_fn.on_request()
 def get_user_info(req: https_fn.Request) -> https_fn.Response:
     return user_service.get_user_info(req)
+
+# ========================================
+# 시드 데이터 관리 (관리자 전용)
+# ========================================
+
+@https_fn.on_request()
+def seed_daily_questions(req: https_fn.Request) -> https_fn.Response:
+    """일일 응답 질문 시드 데이터 추가"""
+    return seed_service.seed_daily_questions(req)
+
+@https_fn.on_request()
+def seed_balance_games(req: https_fn.Request) -> https_fn.Response:
+    """밸런스 게임 시드 데이터 추가"""
+    return seed_service.seed_balance_games(req)
+
+@https_fn.on_request()
+def clear_seed_data(req: https_fn.Request) -> https_fn.Response:
+    """시드 데이터 삭제 (개발 환경 전용)"""
+    return seed_service.clear_seed_data(req)
