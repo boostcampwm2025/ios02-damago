@@ -115,8 +115,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     
     my_code = my_doc.to_dict().get("code")
 
-    if my_code == target_code:
-        return https_fn.Response("Cannot connect to yourself", status=400)
+    # if my_code == target_code:
+    #     return https_fn.Response("Cannot connect to yourself", status=400)
 
     # 상대방 정보는 코드로 조회
     target_snapshot = users_ref.where("code", "==", target_code).limit(1).get()
@@ -147,7 +147,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             "id": damago_ref.id,
             "coupleID": couple_ref.id,
             "petName": "이름 없는 펫",
-            "petType": "Teddy",
+            "petType": "Bunny",
             "level": 1,
             "currentExp": 0,
             "maxExp": XP_TABLE[0],
@@ -167,7 +167,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             "damagoID": damago_ref.id,
             "anniversaryDate": None,
             "createdAt": firestore.SERVER_TIMESTAMP,
-            "totalCoin": 0
+            "totalCoin": 0,
+            "foodCount": 0
         })
 
         # 유저 정보 업데이트 (상호 참조, UDID -> UID)

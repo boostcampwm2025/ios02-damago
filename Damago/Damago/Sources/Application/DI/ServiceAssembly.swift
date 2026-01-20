@@ -12,7 +12,7 @@ final class ServiceAssembly: Assembly {
     func assemble(_ container: any DIContainer) {
         container.register(NetworkProvider.self) {
             NetworkProviderImpl {
-                NotificationCenter.default.post(name: .authenticationDidFail, object: nil)
+                NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
             }
         }
         container.register(WindowProvider.self) {
@@ -26,6 +26,9 @@ final class ServiceAssembly: Assembly {
         }
         container.register(TokenProvider.self) {
             TokenProviderImpl()
+        }
+        container.register(FirestoreService.self) {
+            FirestoreServiceImpl()
         }
     }
 }

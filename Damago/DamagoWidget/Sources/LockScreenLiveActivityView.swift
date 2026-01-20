@@ -28,7 +28,9 @@ struct LockScreenLiveActivityView: View {
 private extension LockScreenLiveActivityView {
     var content: some View {
         HStack(spacing: .spacingM) {
-            Image(context.state.largeImageName)
+            let firstFrame = UIImage(named: context.state.imageName)?
+                .crop(rect: CGRect(origin: .zero, size: CGSize(width: 32, height: 32)))
+            Image(uiImage: firstFrame!)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 80, height: 80)

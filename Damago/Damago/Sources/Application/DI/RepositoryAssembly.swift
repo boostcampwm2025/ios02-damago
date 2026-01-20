@@ -14,14 +14,16 @@ final class RepositoryAssembly: Assembly {
                 networkProvider: container.resolve(NetworkProvider.self),
                 authService: container.resolve(AuthService.self),
                 cryptoService: container.resolve(CryptoService.self),
-                tokenProvider: container.resolve(TokenProvider.self)
+                tokenProvider: container.resolve(TokenProvider.self),
+                firestoreService: container.resolve(FirestoreService.self)
             )
         }
         
         container.register(PetRepositoryProtocol.self) {
             PetRepository(
                 networkProvider: container.resolve(NetworkProvider.self),
-                tokenProvider: container.resolve(TokenProvider.self)
+                tokenProvider: container.resolve(TokenProvider.self),
+                firestoreService: container.resolve(FirestoreService.self)
             )
         }
         
@@ -34,6 +36,13 @@ final class RepositoryAssembly: Assembly {
         
         container.register(PokeShortcutRepositoryProtocol.self) {
             PokeShortcutRepository()
+        }
+        
+        container.register(DailyQuestionRepositoryProtocol.self) {
+            DailyQuestionRepository(
+                networkProvider: container.resolve(NetworkProvider.self),
+                tokenProvider: container.resolve(TokenProvider.self)
+            )
         }
     }
 }

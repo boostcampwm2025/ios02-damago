@@ -44,7 +44,7 @@ struct DamagoWidgetLiveActivity: Widget {
     private func dynamicIslandView(context: ActivityViewContext<DamagoAttributes>) -> DynamicIsland {
         DynamicIsland {
             DynamicIslandExpandedRegion(.center) {
-                expandedCenterView(context: context)
+                expandedCenterContentView(context: context)
             }
 
             DynamicIslandExpandedRegion(.bottom) {
@@ -59,27 +59,49 @@ struct DamagoWidgetLiveActivity: Widget {
         }
     }
 
-    private func expandedCenterView(context: ActivityViewContext<DamagoAttributes>) -> some View {
-        HStack(spacing: .spacingL) {
-            DynamicIslandIconImage(
-                for: context.state.largeImageName,
-                size: charactrerSize
-            )
-                .clipShape(Rectangle())
-
-            actionButtonsView()
+    @ViewBuilder
+    private func expandedCenterContentView(context: ActivityViewContext<DamagoAttributes>) -> some View {
+        switch context.state.screen {
+        case .idle, .none:
+            idleExpandedContentView(context: context)
+        case .choosePokeMessage:
+            choosePokeMessageView(context: context)
+        case .sending:
+            sendingView()
+        case .error:
+            errorView()
         }
     }
 
-    private func expandedBottomView(context: ActivityViewContext<DamagoAttributes>) -> some View {
-        HStack {
-            Text("포만감")
-            linearProgressView(
-                startAt: context.state.lastFedAtDate,
-                timeInterval: DamagoAttributes.feedCooldown
+    private func idleExpandedContentView(context: ActivityViewContext<DamagoAttributes>) -> some View {
+        HStack(spacing: .spacingL) {
+            DynamicIslandIconImage(
+                for: context.state.imageName,
+                size: charactrerSize
+            )
+            .clipShape(Rectangle())
+            actionButtonsView(
+                activityID: context
+                    .activityID
             )
         }
-        .padding(.horizontal, .spacingXL)
+    }
+
+    @ViewBuilder
+    private func expandedBottomView(context: ActivityViewContext<DamagoAttributes>) -> some View {
+        switch context.state.screen {
+        case .idle, .none:
+            HStack {
+                Text("포만감")
+                linearProgressView(
+                    startAt: context.state.lastFedAtDate,
+                    timeInterval: DamagoAttributes.feedCooldown
+                )
+            }
+            .padding(.horizontal, .spacingXL)
+        default:
+            EmptyView()
+        }
     }
 
     private func compactLeadingView(context: ActivityViewContext<DamagoAttributes>) -> some View {
@@ -90,7 +112,7 @@ struct DamagoWidgetLiveActivity: Widget {
             )
             .frame(width: largeIconSize, height: largeIconSize)
             DynamicIslandIconImage(
-                for: context.state.iconImageName,
+                for: context.state.imageName,
                 size: smallIconSize
             )
                 .clipShape(Rectangle())
@@ -113,7 +135,7 @@ struct DamagoWidgetLiveActivity: Widget {
             )
             .frame(width: largeIconSize, height: largeIconSize)
             DynamicIslandIconImage(
-                for: context.state.iconImageName,
+                for: context.state.imageName,
                 size: smallIconSize
             )
                 .clipShape(Rectangle())
@@ -122,15 +144,15 @@ struct DamagoWidgetLiveActivity: Widget {
 
     // MARK: ButtonView
 
-    private func actionButtonsView() -> some View {
+    private func actionButtonsView(activityID: String) -> some View {
         VStack(spacing: .spacingS) {
-            feedButton()
-            pokeButton()
+            feedButton(activityID: activityID)
+            pokeButton(activityID: activityID)
         }
     }
 
-    private func feedButton() -> some View {
-        Button(intent: FeedAppIntent()) {
+    private func feedButton(activityID: String) -> some View {
+        Button(intent: FeedAppIntent(activityID: activityID)) {
             HStack(spacing: .spacingS) {
                 Image(systemName: "fork.knife")
                     .foregroundStyle(feedButtonIconColor)
@@ -141,8 +163,8 @@ struct DamagoWidgetLiveActivity: Widget {
         .dynamicIslandActionButton(backgroundColor: feedButtonBackgroundColor)
     }
 
-    private func pokeButton() -> some View {
-        Button(intent: PokeAppIntent()) {
+    private func pokeButton(activityID: String) -> some View {
+        Button(intent: ChoosePokeMessageAppIntent(activityID: activityID)) {
             HStack(spacing: .spacingS) {
                 Image(systemName: "heart.fill")
                     .foregroundStyle(.white)
@@ -151,6 +173,80 @@ struct DamagoWidgetLiveActivity: Widget {
             }
         }
         .dynamicIslandActionButton(backgroundColor: pokeButtonBackgroundColor)
+    }
+
+    // MARK: PokeButtonView
+
+    private func choosePokeMessageView(context: ActivityViewContext<DamagoAttributes>) -> some View {
+        let defaultItems: [(summary: String, message: String)] = [
+            ("❤️", "사랑해"),
+            ("안녕", "안녕!"),
+            ("사랑해", "오늘도 사랑해"),
+            ("보고싶어", "얼른 보고 싶다"),
+            ("밥챙겨먹어", "밥 맛있게 먹어")
+        ]
+        var items: [(summary: String, message: String)] {
+            guard let data = AppGroupUserDefaults.sharedDefaults().data(
+                forKey: AppGroupUserDefaults.shortcutsKey
+            ),
+                  let shortcuts = try? JSONDecoder().decode([PokeShortcut].self, from: data) else {
+                return defaultItems
+            }
+            return shortcuts.map { shortcuts in
+                (shortcuts.summary, shortcuts.message)
+            }
+        }
+
+        return VStack(alignment: .leading, spacing: .spacingS) {
+            LazyVGrid(
+                columns: [GridItem](repeating: GridItem(.flexible(), spacing: .spacingS), count: 3),
+                spacing: .spacingS
+            ) {
+                ForEach(items, id: \.self.summary) { item in
+                    Button(
+                        intent: PokeWithMessageAppIntent(
+                            activityID: context.activityID,
+                            message: item.message
+                        )
+                    ) {
+                        Text(item.summary)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .foregroundStyle(.white)
+                    }
+                }
+                Button(intent: BackToIdleAppIntent(activityID: context.activityID)) {
+                    Text("뒤로")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .foregroundStyle(.white)
+                }
+                .tint(.pink)
+            }
+        }
+    }
+
+    private func sendingView() -> some View {
+        VStack(alignment: .center, spacing: .spacingS) {
+            Text("전송 중…")
+                .font(.system(size: .spacingM, weight: .semibold))
+                .foregroundStyle(.white)
+            Text("잠시만 기다려 주세요")
+                .font(.system(size: .spacingS, weight: .regular))
+                .foregroundStyle(.white.opacity(0.8))
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+
+    private func errorView() -> some View {
+        VStack(alignment: .center, spacing: .spacingS) {
+            Text("실패")
+                .font(.system(size: .spacingM, weight: .semibold))
+                .foregroundStyle(.white)
+            Text("요청을 처리하지 못했습니다")
+                .font(.system(size: .spacingS, weight: .regular))
+                .foregroundStyle(.white.opacity(0.8))
+                .lineLimit(2)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     // MARK: ProgressView
@@ -210,74 +306,3 @@ private extension View {
         modifier(CapsuleActionButtonModifier(backgroundColor: backgroundColor))
     }
 }
-
-// MARK: - 프리뷰
-
-extension DamagoAttributes {
-    fileprivate static var preview: DamagoAttributes {
-        DamagoAttributes(petName: "Base Pet")
-    }
-}
-
-extension DamagoAttributes.ContentState {
-    fileprivate static var base: DamagoAttributes.ContentState {
-        .init(
-            petType: "Teddy",
-            isHungry: false,
-            statusMessage: "우리가 함께 키우는 작은 행복 🍀",
-            level: 20,
-            currentExp: 30,
-            maxExp: 100,
-            lastFedAt: "2026-01-08T12:00:00Z"
-        )
-    }
-
-    fileprivate static var hungry: DamagoAttributes.ContentState {
-        .init(
-            petType: "Teddy",
-            isHungry: true,
-            statusMessage: "우리가 함께 키우는 작은 행복 🍀",
-            level: 20,
-            currentExp: 30,
-            maxExp: 100,
-            lastFedAt: "2026-01-08T08:00:00Z"
-        )
-    }
-}
-
-#Preview("Notification", as: .content, using: DamagoAttributes.preview) {
-    DamagoWidgetLiveActivity()
-} contentStates: {
-    DamagoAttributes.ContentState.base
-    DamagoAttributes.ContentState.hungry
-}
-
-#Preview("DI - Compact",
-         as: .dynamicIsland(.compact),
-         using: DamagoAttributes.preview,
-         widget: {
-    DamagoWidgetLiveActivity()
-}, contentStates: {
-    DamagoAttributes.ContentState.base
-    DamagoAttributes.ContentState.hungry
-})
-
-#Preview("DI - Minimal",
-         as: .dynamicIsland(.minimal),
-         using: DamagoAttributes.preview,
-         widget: {
-    DamagoWidgetLiveActivity()
-}, contentStates: {
-    DamagoAttributes.ContentState.base
-    DamagoAttributes.ContentState.hungry
-})
-
-#Preview("DI - Expanded",
-         as: .dynamicIsland(.expanded),
-         using: DamagoAttributes.preview,
-         widget: {
-    DamagoWidgetLiveActivity()
-}, contentStates: {
-    DamagoAttributes.ContentState.base
-    DamagoAttributes.ContentState.hungry
-})

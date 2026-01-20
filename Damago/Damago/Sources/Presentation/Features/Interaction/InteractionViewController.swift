@@ -11,16 +11,23 @@ import Combine
 final class InteractionViewController: UIViewController {
     private let mainView = InteractionView()
     private let viewModel: InteractionViewModel
+    private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
+    private let answerDidSubmitPublisher = PassthroughSubject<String, Never>()
     
     private var isNavigationBarHidden = true
     private var cancellables = Set<AnyCancellable>()
-    
+
+    private lazy var balanceGameCardChildViewController: BalanceGameCardViewController = {
+        let vc = BalanceGameCardViewController()
+        return vc
+    }()
+
     init(viewModel: InteractionViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
-    
-    required init(coder: NSCoder) {
+
+    required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
@@ -33,14 +40,20 @@ final class InteractionViewController: UIViewController {
         setupNavigation()
         setupDelegate()
         mainView.configure(title: viewModel.title, subtitle: viewModel.subtitle)
+        embedBalanceGameCardChildViewControllerIfNeeded()
         
         let output = viewModel.transform(
             InteractionViewModel.Input(
+                viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
+                questionSubmitButtonDidTap: mainView.questionCardView.submitButton.tapPublisher,
+                answerDidSubmitted: answerDidSubmitPublisher.eraseToAnyPublisher(),
                 historyButtonDidTap: mainView.historyButton.tapPublisher
             )
         )
         
         bind(output)
+        
+        viewDidLoadPublisher.send()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -51,16 +64,69 @@ final class InteractionViewController: UIViewController {
     private func setupNavigation() {
         navigationController?.navigationBar.prefersLargeTitles = false
         navigationItem.title = ""
+        navigationItem.backButtonDisplayMode = .minimal
     }
     
     private func setupDelegate() {
         mainView.scrollView.delegate = self
     }
+
+    private func embedBalanceGameCardChildViewControllerIfNeeded() {
+        guard balanceGameCardChildViewController.parent == nil else { return }
+
+        let containerView = mainView.balanceGameCardView
+
+        addChild(balanceGameCardChildViewController)
+
+        let childView = balanceGameCardChildViewController.view!
+        childView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(childView)
+
+        NSLayoutConstraint.activate([
+            childView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            childView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            childView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            childView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+        ])
+
+        balanceGameCardChildViewController.didMove(toParent: self)
+    }
     
     private func bind(_ output: InteractionViewModel.Output) {
         output
-            .sink { state in
-                //
+            .mapForUI { $0.dailyQuestionUIModel }
+            .compactMap { $0 }
+            .sink { [weak self] uiModel in
+                let questionContent: String
+                if case .input(let inputState) = uiModel {
+                    questionContent = inputState.questionContent
+                } else if case .result(let resultState) = uiModel {
+                    questionContent = resultState.questionContent
+                } else {
+                    questionContent = ""
+                }
+                self?.mainView.questionCardView.configure(question: questionContent)
+            }
+            .store(in: &cancellables)
+        
+        output
+            .pulse(\.route)
+            .sink { [weak self] route in
+                guard let self else { return }
+                switch route {
+                case .questionInput(let uiModel):
+                    let vm = DailyQuestionInputViewModel(uiModel: uiModel)
+                    vm.answerCompleted
+                        .subscribe(self.answerDidSubmitPublisher)
+                        .store(in: &cancellables)
+                    let vc = DailyQuestionInputViewController(viewModel: vm)
+                    vc.hidesBottomBarWhenPushed = true
+                    self.navigationController?.pushViewController(vc, animated: true)
+                    
+                case .history:
+                    print("지난 내역 보기 클릭")
+                    
+                }
             }
             .store(in: &cancellables)
     }

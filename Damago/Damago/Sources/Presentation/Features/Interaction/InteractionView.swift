@@ -44,8 +44,8 @@ final class InteractionView: UIView {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-    
-    lazy var questionCardView: UIView = makeCardView()
+
+    lazy var questionCardView = DailyQuestionCardView()
     lazy var balanceGameCardView: UIView = makeCardView()
     
     let historyButton: UIButton = {

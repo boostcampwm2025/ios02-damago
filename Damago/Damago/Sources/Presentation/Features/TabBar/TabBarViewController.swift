@@ -91,11 +91,13 @@ final class TabBarViewController: UITabBarController {
         case .collection:
             return UIViewController()
         case .home:
+            let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
             let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
             let petRepository = AppDIContainer.shared.resolve(PetRepositoryProtocol.self)
             let pushRepository = AppDIContainer.shared.resolve(PushRepositoryProtocol.self)
-            
+
             let vm = HomeViewModel(
+                globalStore: globalStore,
                 userRepository: userRepository,
                 petRepository: petRepository,
                 pushRepository: pushRepository
@@ -103,13 +105,17 @@ final class TabBarViewController: UITabBarController {
             let vc = HomeViewController(viewModel: vm)
             return vc
         case .interaction:
-            let vm = InteractionViewModel()
+            let useCase = AppDIContainer.shared.resolve(FetchDailyQuestionUseCase.self)
+            
+            let vm = InteractionViewModel(fetchDailyQuestionUseCase: useCase)
             let vc = InteractionViewController(viewModel: vm)
             return vc
         case .game:
             return UIViewController()
         case .setting:
-            return UIViewController()
+            let viewModel = SettingsViewModel()
+            let vc = SettingsViewController(viewModel: viewModel)
+            return vc
         }
     }
 }

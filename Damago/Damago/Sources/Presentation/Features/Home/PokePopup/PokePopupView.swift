@@ -241,6 +241,19 @@ extension PokePopupView {
         } else {
             // 일반 모드로 전환할 때만 뷰 재설정
             if isEditingMode {
+                // 편집 모드에서 나올 때 모든 텍스트 필드 포커스 해제
+                shortcutEditViews.values.forEach { views in
+                    views.summaryField.resignFirstResponder()
+                    views.messageField.resignFirstResponder()
+                }
+                
+                // 원본 데이터로 강제 업데이트 (취소 시 수정 내용 제거)
+                state.shortcuts.enumerated().forEach { index, shortcut in
+                    guard let editViews = shortcutEditViews[index] else { return }
+                    editViews.summaryField.text = shortcut.summary
+                    editViews.messageField.text = shortcut.message
+                }
+
                 editButton.configuration?.image = UIImage(systemName: "pencil")
                 sendButton.isHidden = false
                 saveButton.isHidden = true
@@ -297,33 +310,12 @@ extension PokePopupView {
             let editView = createEditView(for: shortcut, at: index)
             exampleButtonsView.addArrangedSubview(editView)
         }
-        
-        // 에디트 모드의 텍스트 필드들도 키보드 조정에 포함
-        updateKeyboardAdjustment()
-    }
-    
-    private func updateKeyboardAdjustment() {
-        guard let constraint = containerViewCenterYConstraint else { return }
-        
-        // 모든 텍스트 필드 수집
-        var allTextFields = [customTextField]
-        for (_, views) in shortcutEditViews {
-            allTextFields.append(views.summaryField)
-            allTextFields.append(views.messageField)
-        }
-        
-        // 기존 observer 제거 후 재등록
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
-        
-        adjustViewForKeyboard(constraint: constraint, textFields: allTextFields)
     }
     
     private func updateEditFieldsText(with shortcuts: [PokeShortcut]) {
         shortcuts.enumerated().forEach { index, shortcut in
             guard let editViews = shortcutEditViews[index] else { return }
-            
-            // 편집 중이 아닐 때만 텍스트 업데이트
+
             if !editViews.summaryField.isFirstResponder && editViews.summaryField.text != shortcut.summary {
                 editViews.summaryField.text = shortcut.summary
             }
@@ -359,9 +351,15 @@ extension PokePopupView {
         containerView.backgroundColor = UIColor.white.withAlphaComponent(0.9)
         containerView.layer.cornerRadius = .mediumButton
         containerView.translatesAutoresizingMaskIntoConstraints = false
+
+        let headerLabel = UILabel()
+        headerLabel.text = "요약 / 메시지"
+        headerLabel.font = .caption
+        headerLabel.textColor = .textSecondary
+        headerLabel.translatesAutoresizingMaskIntoConstraints = false
         
         let summaryField = createEditTextField(
-            placeholder: "요약",
+            placeholder: "",
             text: shortcut.summary,
             font: .caption,
             textColor: .textSecondary,
@@ -369,27 +367,32 @@ extension PokePopupView {
         )
         
         let messageField = createEditTextField(
-            placeholder: "메시지",
+            placeholder: "",
             text: shortcut.message,
             font: .body1,
             textColor: .textPrimary,
             maxLength: 20
         )
-        
+
+        containerView.addSubview(headerLabel)
         containerView.addSubview(summaryField)
         containerView.addSubview(messageField)
         
         NSLayoutConstraint.activate([
-            summaryField.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
+            headerLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 4),
+            headerLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
+            headerLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
+            
+            summaryField.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 2),
             summaryField.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
             summaryField.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
-            summaryField.heightAnchor.constraint(equalToConstant: 28),
+            summaryField.heightAnchor.constraint(equalToConstant: 24),
             
             messageField.topAnchor.constraint(equalTo: summaryField.bottomAnchor, constant: 4),
             messageField.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
             messageField.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
-            messageField.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -8),
-            messageField.heightAnchor.constraint(equalToConstant: 32)
+            messageField.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -6),
+            messageField.heightAnchor.constraint(equalToConstant: 28)
         ])
         
         // 텍스트 변경 감지
@@ -457,31 +460,74 @@ extension PokePopupView {
 // MARK: - Keyboard Handling
 extension PokePopupView {
     private func setupKeyboardDismiss() {
-        // 텍스트 필드 delegate 설정
         customTextField.delegate = self
         customTextField.returnKeyType = .done
         customTextField.maxLength = 20
-        
-        // 화면 탭 시 키보드 내리기
+
         setupKeyboardDismissOnTap()
         
-        // 키보드가 올라올 때 뷰 조정
         guard let constraint = containerViewCenterYConstraint else { return }
         
-        // 모든 텍스트 필드 수집
-        var allTextFields = [customTextField]
-        for (_, views) in shortcutEditViews {
-            allTextFields.append(views.summaryField)
-            allTextFields.append(views.messageField)
-        }
+        adjustViewForKeyboard(
+            constraint: constraint,
+            textFieldsGetter: { [weak self] in
+                guard let self = self else {
+                    return []
+                }
+                var allTextFields = [self.customTextField]
+                for (_, views) in self.shortcutEditViews {
+                    allTextFields.append(views.summaryField)
+                    allTextFields.append(views.messageField)
+                }
+                return allTextFields
+            },
+            padding: 40)
+        setupKeyboardButtonControl()
+    }
+    
+    private func setupKeyboardButtonControl() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillShow),
+            name: UIResponder.keyboardWillShowNotification,
+            object: nil
+        )
         
-        adjustViewForKeyboard(constraint: constraint, textFields: allTextFields)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillHide),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+    
+    @objc
+    private func keyboardWillShow() {
+        sendButton.isEnabled = false
+        cancelButton.isEnabled = false
+    }
+    
+    @objc
+    private func keyboardWillHide() {
+        sendButton.isEnabled = true
+        cancelButton.isEnabled = true
     }
 }
 
 extension PokePopupView: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
+        
+        // customTextField에서 엔터를 눌렀고, 편집 모드가 아니며, 전송 버튼이 활성화되어 있고 텍스트가 있을 때만 전송
+        if textField == customTextField,
+           !isEditingMode,
+           sendButton.isEnabled,
+           !sendButton.isHidden,
+           let text = textField.text,
+           !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            sendButton.sendActions(for: .touchUpInside)
+        }
+
         return true
     }
     

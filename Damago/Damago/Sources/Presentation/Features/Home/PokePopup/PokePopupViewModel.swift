@@ -36,9 +36,12 @@ final class PokePopupViewModel: ViewModel {
     @Published private var state = State()
     private var cancellables = Set<AnyCancellable>()
     private let shortcutRepository: PokeShortcutRepositoryProtocol
+    private var originalShortcuts: [PokeShortcut] = [] // 편집 모드 진입 시 원본 데이터 저장
     
     var onMessageSelected: ((String) -> Void)?
     var onCancel: (() -> Void)?
+    var onRequestSendConfirmation: ((String, @escaping () -> Void) -> Void)?
+    var onRequestCancelConfirmation: ((@escaping () -> Void) -> Void)?
     
     init(shortcutRepository: PokeShortcutRepositoryProtocol) {
         self.shortcutRepository = shortcutRepository
@@ -72,7 +75,7 @@ final class PokePopupViewModel: ViewModel {
         input.cancelButtonTapped
             .sink { [weak self] _ in
                 if self?.state.isEditing == true {
-                    self?.exitEditMode()
+                    self?.requestCancelConfirmation()
                 } else {
                     self?.onCancel?()
                 }
@@ -113,18 +116,31 @@ final class PokePopupViewModel: ViewModel {
     private func handleSend() {
         guard !state.isEditing else { return }
         let message = state.currentText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !message.isEmpty {
-            onMessageSelected?(message)
+        guard !message.isEmpty else { return }
+        
+        onRequestSendConfirmation?(message) { [weak self] in
+            self?.onMessageSelected?(message)
+        }
+    }
+    
+    private func requestCancelConfirmation() {
+        onRequestCancelConfirmation? { [weak self] in
+            self?.exitEditMode()
         }
     }
     
     private func toggleEditMode() {
+        let willEnterEditMode = !state.isEditing
+        if willEnterEditMode {
+            // 편집 모드로 들어갈 때 원본 데이터 저장
+            originalShortcuts = state.shortcuts
+        }
         updateState(isEditing: !state.isEditing)
     }
     
     private func exitEditMode() {
-        updateState(isEditing: false)
-        loadShortcuts() // 원래 상태로 복원
+        // 저장된 원본 데이터로 복원
+        updateState(shortcuts: originalShortcuts, isEditing: false)
     }
     
     private func updateShortcutSummary(at index: Int, summary: String) {
