@@ -11,6 +11,8 @@ import Combine
 final class InteractionViewController: UIViewController {
     private let mainView = InteractionView()
     private let viewModel: InteractionViewModel
+    private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
+    private let answerDidSubmitPublisher = PassthroughSubject<String, Never>()
     
     private var isNavigationBarHidden = true
     private var cancellables = Set<AnyCancellable>()
@@ -20,7 +22,7 @@ final class InteractionViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
     
-    required init(coder: NSCoder) {
+    required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
@@ -36,11 +38,16 @@ final class InteractionViewController: UIViewController {
         
         let output = viewModel.transform(
             InteractionViewModel.Input(
+                viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
+                questionSubmitButtonDidTap: mainView.questionCardView.submitButton.tapPublisher,
+                answerDidSubmitted: answerDidSubmitPublisher.eraseToAnyPublisher(),
                 historyButtonDidTap: mainView.historyButton.tapPublisher
             )
         )
         
         bind(output)
+        
+        viewDidLoadPublisher.send()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -51,6 +58,7 @@ final class InteractionViewController: UIViewController {
     private func setupNavigation() {
         navigationController?.navigationBar.prefersLargeTitles = false
         navigationItem.title = ""
+        navigationItem.backButtonDisplayMode = .minimal
     }
     
     private func setupDelegate() {
@@ -59,8 +67,34 @@ final class InteractionViewController: UIViewController {
     
     private func bind(_ output: InteractionViewModel.Output) {
         output
-            .sink { state in
-                //
+            .mapForUI { $0.dailyQuestion }
+            .sink { [weak self] question in
+                self?.mainView.questionCardView.configure(question: question)
+            }
+            .store(in: &cancellables)
+        
+        output
+            .pulse(\.route)
+            .sink { [weak self] route in
+                guard let self else { return }
+                switch route {
+                case .questionInput(let question, let myAnswer, let opponentAnswer):
+                    let vm = DailyQuestionInputViewModel(
+                        question: question,
+                        myAnswer: myAnswer,
+                        opponentAnswer: opponentAnswer
+                    )
+                    vm.answerCompleted
+                        .subscribe(self.answerDidSubmitPublisher)
+                        .store(in: &cancellables)
+                    let vc = DailyQuestionInputViewController(viewModel: vm)
+                    vc.hidesBottomBarWhenPushed = true
+                    self.navigationController?.pushViewController(vc, animated: true)
+                    
+                case .history:
+                    print("지난 내역 보기 클릭")
+                    
+                }
             }
             .store(in: &cancellables)
     }
