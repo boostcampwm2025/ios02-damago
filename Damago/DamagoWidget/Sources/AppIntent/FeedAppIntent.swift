@@ -5,11 +5,11 @@
 //  Created by Eden Landelyse on 1/8/26.
 //
 
-import AppIntents
-import Foundation
-import DamagoNetwork
-import OSLog
 import ActivityKit
+import AppIntents
+import DamagoNetwork
+import Foundation
+import OSLog
 
 struct FeedAppIntent: AppIntent, LiveActivityIntent {
     static var title: LocalizedStringResource = "밥 주기"

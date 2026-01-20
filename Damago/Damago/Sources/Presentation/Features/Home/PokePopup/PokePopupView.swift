@@ -253,7 +253,7 @@ extension PokePopupView {
                     editViews.summaryField.text = shortcut.summary
                     editViews.messageField.text = shortcut.message
                 }
-                
+
                 editButton.configuration?.image = UIImage(systemName: "pencil")
                 sendButton.isHidden = false
                 saveButton.isHidden = true
@@ -315,7 +315,7 @@ extension PokePopupView {
     private func updateEditFieldsText(with shortcuts: [PokeShortcut]) {
         shortcuts.enumerated().forEach { index, shortcut in
             guard let editViews = shortcutEditViews[index] else { return }
-            
+
             if !editViews.summaryField.isFirstResponder && editViews.summaryField.text != shortcut.summary {
                 editViews.summaryField.text = shortcut.summary
             }
@@ -351,7 +351,7 @@ extension PokePopupView {
         containerView.backgroundColor = UIColor.white.withAlphaComponent(0.9)
         containerView.layer.cornerRadius = .mediumButton
         containerView.translatesAutoresizingMaskIntoConstraints = false
-        
+
         let headerLabel = UILabel()
         headerLabel.text = "요약 / 메시지"
         headerLabel.font = .caption
@@ -373,7 +373,7 @@ extension PokePopupView {
             textColor: .textPrimary,
             maxLength: 20
         )
-        
+
         containerView.addSubview(headerLabel)
         containerView.addSubview(summaryField)
         containerView.addSubview(messageField)
@@ -463,7 +463,7 @@ extension PokePopupView {
         customTextField.delegate = self
         customTextField.returnKeyType = .done
         customTextField.maxLength = 20
-        
+
         setupKeyboardDismissOnTap()
         
         guard let constraint = containerViewCenterYConstraint else { return }
@@ -527,7 +527,7 @@ extension PokePopupView: UITextFieldDelegate {
            !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             sendButton.sendActions(for: .touchUpInside)
         }
-        
+
         return true
     }
     

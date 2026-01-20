@@ -48,7 +48,7 @@ extension UIView {
                   ] as? UInt else {
                 return
             }
-            
+
             let textFields = textFieldsGetter()
             guard textFields.contains(where: { $0.isFirstResponder }) else { return }
             

@@ -66,7 +66,7 @@ final class InteractionViewModel: ViewModel {
         
         return $state.eraseToAnyPublisher()
     }
-    
+
     private func fetchDailyQuestionData() {
         Task {
             do {

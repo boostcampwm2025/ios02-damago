@@ -96,7 +96,7 @@ final class ConnectionViewController: UIViewController {
                 copyCodeToPasteboard(with: code)
             }
             .store(in: &cancellables)
-        
+
         output
             .mapForUI { $0.isLoading }
             .sink { [weak self] isLoading in

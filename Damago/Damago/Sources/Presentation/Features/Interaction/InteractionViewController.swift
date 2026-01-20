@@ -16,17 +16,17 @@ final class InteractionViewController: UIViewController {
     
     private var isNavigationBarHidden = true
     private var cancellables = Set<AnyCancellable>()
-    
+
     private lazy var balanceGameCardChildViewController: BalanceGameCardViewController = {
         let vc = BalanceGameCardViewController()
         return vc
     }()
-    
+
     init(viewModel: InteractionViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -70,7 +70,7 @@ final class InteractionViewController: UIViewController {
     private func setupDelegate() {
         mainView.scrollView.delegate = self
     }
-    
+
     private func embedBalanceGameCardChildViewControllerIfNeeded() {
         guard balanceGameCardChildViewController.parent == nil else { return }
 

@@ -19,4 +19,3 @@ struct PetStatus {
     let totalPlayTime: Int
     let lastActiveAt: Date?
 }
-
