@@ -12,7 +12,6 @@ final class InteractionViewController: UIViewController {
     private let mainView = InteractionView()
     private let viewModel: InteractionViewModel
     private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
-    private let answerDidSubmitPublisher = PassthroughSubject<String, Never>()
     
     private var isNavigationBarHidden = true
     private var cancellables = Set<AnyCancellable>()
@@ -46,7 +45,6 @@ final class InteractionViewController: UIViewController {
             InteractionViewModel.Input(
                 viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
                 questionSubmitButtonDidTap: mainView.questionCardView.submitButton.tapPublisher,
-                answerDidSubmitted: answerDidSubmitPublisher.eraseToAnyPublisher(),
                 historyButtonDidTap: mainView.historyButton.tapPublisher
             )
         )
@@ -98,12 +96,15 @@ final class InteractionViewController: UIViewController {
             .compactMap { $0 }
             .sink { [weak self] uiModel in
                 let questionContent: String
-                if case .input(let inputState) = uiModel {
+                let buttonTitle: String
+                
+                switch uiModel {
+                case .input(let inputState):
                     questionContent = inputState.questionContent
-                } else if case .result(let resultState) = uiModel {
+                    buttonTitle = "답변 제출"
+                case .result(let resultState):
                     questionContent = resultState.questionContent
-                } else {
-                    questionContent = ""
+                    buttonTitle = resultState.buttonTitle
                 }
                 self?.mainView.questionCardView.configure(question: questionContent)
             }
@@ -115,10 +116,13 @@ final class InteractionViewController: UIViewController {
                 guard let self else { return }
                 switch route {
                 case .questionInput(let uiModel):
-                    let vm = DailyQuestionInputViewModel(uiModel: uiModel)
-                    vm.answerCompleted
-                        .subscribe(self.answerDidSubmitPublisher)
-                        .store(in: &cancellables)
+                    let submitUseCase = AppDIContainer.shared.resolve(SubmitDailyQuestionAnswerUseCase.self)
+                    
+                    let vm = DailyQuestionInputViewModel(
+                        uiModel: uiModel,
+                        uiModelPublisher: self.viewModel.uiModelPublisher,
+                        submitDailyQuestionAnswerUseCase: submitUseCase
+                    )
                     let vc = DailyQuestionInputViewController(viewModel: vm)
                     vc.hidesBottomBarWhenPushed = true
                     self.navigationController?.pushViewController(vc, animated: true)
