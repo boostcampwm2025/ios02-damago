@@ -27,7 +27,6 @@ final class ExperienceBar: UIView {
         let view = UIProgressView(progressViewStyle: .bar)
         view.trackTintColor = .textTertiary
         view.progressTintColor = .damagoPrimary
-        view.layer.cornerRadius = .smallElement
         view.clipsToBounds = true
         view.heightAnchor.constraint(equalToConstant: 8).isActive = true
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -51,7 +50,20 @@ final class ExperienceBar: UIView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // 완전한 캡슐 형태를 위해 높이의 절반으로 cornerRadius 설정
+        let radius = progressView.bounds.height / 2
+        progressView.layer.cornerRadius = radius
+        
+        // UIProgressView의 내부 subview들도 동일한 cornerRadius 적용
+        progressView.subviews.forEach { subview in
+            subview.layer.cornerRadius = radius
+            subview.clipsToBounds = true
+        }
+    }
+    
     private func setupLayout() {
         textStackView.addArrangedSubview(levelLabel)
         textStackView.addArrangedSubview(expLabel)
