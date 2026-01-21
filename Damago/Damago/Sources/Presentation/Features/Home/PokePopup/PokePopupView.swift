@@ -136,11 +136,11 @@ final class PokePopupView: UIView {
         setupKeyboardDismiss()
         setupKeyboardDismissAndDimmingTap()
     }
-    
+
     private func setupKeyboardDismissAndDimmingTap() {
         setupKeyboardDismissOnTap { [weak self] location in
             guard let self = self else { return }
-            
+
             // containerView 외부를 클릭한 경우에만 취소 동작 실행
             if !self.containerView.frame.contains(location) {
                 self.cancelButton.sendActions(for: .touchUpInside)
@@ -473,6 +473,25 @@ extension PokePopupView {
         titleContainer.font = .title3
         config?.attributedTitle = AttributedString(title, attributes: titleContainer)
         cancelButton.configuration = config
+    }
+}
+
+// MARK: - Dimming Tap Gesture
+extension PokePopupView {
+    private func setupDimmingTapGesture() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleDimmingTap(_:)))
+        tapGesture.cancelsTouchesInView = false
+        addGestureRecognizer(tapGesture)
+    }
+    
+    @objc
+    private func handleDimmingTap(_ gesture: UITapGestureRecognizer) {
+        let location = gesture.location(in: self)
+        
+        // containerView 외부를 클릭한 경우에만 취소 동작 실행
+        if !containerView.frame.contains(location) {
+            cancelButton.sendActions(for: .touchUpInside)
+        }
     }
 }
 
