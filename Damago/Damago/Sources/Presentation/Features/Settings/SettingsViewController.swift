@@ -17,6 +17,7 @@ final class SettingsViewController: UIViewController {
     private let viewDidLoadSubject = PassthroughSubject<Void, Never>()
     private let toggleSubject = PassthroughSubject<(ToggleType, Bool), Never>()
     private let itemSelectedSubject = PassthroughSubject<SettingsItem, Never>()
+    private let alertConfirmSubject = PassthroughSubject<AlertActionType, Never>()
 
     private lazy var dataSource: SettingsDataSource = createDataSource()
 
@@ -54,7 +55,8 @@ final class SettingsViewController: UIViewController {
         let input = SettingsViewModel.Input(
             viewDidLoad: viewDidLoadSubject.eraseToAnyPublisher(),
             toggleChanged: toggleSubject.eraseToAnyPublisher(),
-            itemSelected: itemSelectedSubject.eraseToAnyPublisher()
+            itemSelected: itemSelectedSubject.eraseToAnyPublisher(),
+            alertActionDidConfirm: alertConfirmSubject.eraseToAnyPublisher()
         )
 
         let output = viewModel.transform(input)
@@ -121,10 +123,17 @@ final class SettingsViewController: UIViewController {
             guard let url else { return }
             UIApplication.shared.open(url)
 
-        case .alert(let title, let message):
-            let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        case .alert(let type):
+            let alert = UIAlertController(title: type.title, message: type.message, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-            alert.addAction(UIAlertAction(title: "확인", style: .destructive))
+            alert.addAction(UIAlertAction(title: "확인", style: .destructive) { [weak self] _ in
+                self?.alertConfirmSubject.send(type)
+            })
+            present(alert, animated: true)
+
+        case .error(let message):
+            let alert = UIAlertController(title: "에러", message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "확인", style: .default))
             present(alert, animated: true)
         }
     }

@@ -25,6 +25,7 @@ enum AuthError: LocalizedError {
 protocol AuthService {
     func request(hashedNonce: String) async throws -> AppleCredential
     func signIn(credential: AppleCredential, rawNonce: String) async throws
+    func signOut() throws
 }
 
 final class AuthServiceImpl: NSObject, AuthService {
@@ -59,7 +60,11 @@ final class AuthServiceImpl: NSObject, AuthService {
         )
 
         let authResult = try await Auth.auth().signIn(with: credential)
-        print(authResult)
+    }
+
+    func signOut() throws {
+        let firebaseAuth = Auth.auth()
+        try firebaseAuth.signOut()
     }
 }
 
