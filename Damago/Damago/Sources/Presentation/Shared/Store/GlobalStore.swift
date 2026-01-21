@@ -10,64 +10,31 @@ import Foundation
 import OSLog
 
 protocol GlobalStoreProtocol {
-    var petStatus: AnyPublisher<PetStatus, Never> { get }
-    var coupleSharedInfo: AnyPublisher<CoupleSharedInfo, Never> { get }
+    var globalState: AnyPublisher<GlobalState, Never> { get }
     
-    func startMonitoring(damagoID: String, coupleID: String)
+    func startMonitoring(uid: String)
     func stopMonitoring()
 }
 
 final class GlobalStore: GlobalStoreProtocol {
-    private let observePetStatusUseCase: ObservePetStatusUseCase
-    private let observeCoupleSharedInfoUseCase: ObserveCoupleSharedInfoUseCase
-
-    private let petStatusSubject = CurrentValueSubject<PetStatus?, Never>(nil)
-    private let coupleSharedInfoSubject = CurrentValueSubject<CoupleSharedInfo?, Never>(nil)
-
+    private let observeGlobalStateUseCase: ObserveGlobalStateUseCase
+    private let globalStateSubject = CurrentValueSubject<GlobalState, Never>(.empty)
     private var cancellables = Set<AnyCancellable>()
 
-    var petStatus: AnyPublisher<PetStatus, Never> {
-        petStatusSubject
-            .compactMap { $0 }
-            .eraseToAnyPublisher()
+    var globalState: AnyPublisher<GlobalState, Never> {
+        globalStateSubject.eraseToAnyPublisher()
     }
 
-    var coupleSharedInfo: AnyPublisher<CoupleSharedInfo, Never> {
-        coupleSharedInfoSubject
-            .compactMap { $0 }
-            .eraseToAnyPublisher()
+    init(observeGlobalStateUseCase: ObserveGlobalStateUseCase) {
+        self.observeGlobalStateUseCase = observeGlobalStateUseCase
     }
 
-    init(
-        observePetStatusUseCase: ObservePetStatusUseCase,
-        observeCoupleSharedInfoUseCase: ObserveCoupleSharedInfoUseCase
-    ) {
-        self.observePetStatusUseCase = observePetStatusUseCase
-        self.observeCoupleSharedInfoUseCase = observeCoupleSharedInfoUseCase
-    }
-
-    func startMonitoring(damagoID: String, coupleID: String) {
+    func startMonitoring(uid: String) {
         stopMonitoring()
 
-        observePetStatusUseCase.execute(damagoID: damagoID)
-            .sink { [weak self] result in
-                switch result {
-                case let .success(status):
-                    self?.petStatusSubject.send(status)
-                case let .failure(error):
-                    SharedLogger.firebase.error("Pet status monitoring failed: \(error)")
-                }
-            }
-            .store(in: &cancellables)
-
-        observeCoupleSharedInfoUseCase.execute(coupleID: coupleID)
-            .sink { [weak self] result in
-                switch result {
-                case let .success(info):
-                    self?.coupleSharedInfoSubject.send(info)
-                case let .failure(error):
-                    SharedLogger.firebase.error("Couple info monitoring failed: \(error)")
-                }
+        observeGlobalStateUseCase.execute(uid: uid)
+            .sink { [weak self] newState in
+                self?.globalStateSubject.send(newState)
             }
             .store(in: &cancellables)
     }

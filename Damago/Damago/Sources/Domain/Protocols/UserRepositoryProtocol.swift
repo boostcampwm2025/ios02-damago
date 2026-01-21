@@ -13,6 +13,7 @@ protocol UserRepositoryProtocol {
     func getUserInfo() async throws -> UserInfo
     func signIn() async throws
     func fcmToken() async throws -> String
-    func observeCoupleSharedInfo(coupleID: String) -> AnyPublisher<Result<CoupleSharedInfo, Error>, Never>
+    func observeCoupleSnapshot(coupleID: String) -> AnyPublisher<Result<CoupleSnapshotDTO, Error>, Never>
+    func observeUserSnapshot(uid: String) -> AnyPublisher<Result<UserSnapshotDTO, Error>, Never>
     func signOut() throws
 }

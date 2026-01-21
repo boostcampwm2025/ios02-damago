@@ -62,17 +62,12 @@ final class UserRepository: UserRepositoryProtocol {
         try await tokenProvider.fcmToken()
     }
 
-    func observeCoupleSharedInfo(coupleID: String) -> AnyPublisher<Result<CoupleSharedInfo, Error>, Never> {
+    func observeCoupleSnapshot(coupleID: String) -> AnyPublisher<Result<CoupleSnapshotDTO, Error>, Never> {
         firestoreService.observe(collection: "couples", document: coupleID)
-            .map { (result: Result<CoupleDTO, Error>) in
-                switch result {
-                case let .success(value):
-                    return .success(value.toDomain())
-                case let .failure(error):
-                    return .failure(error)
-                }
-            }
-            .eraseToAnyPublisher()
+    }
+
+    func observeUserSnapshot(uid: String) -> AnyPublisher<Result<UserSnapshotDTO, Error>, Never> {
+        firestoreService.observe(collection: "users", document: uid)
     }
 
     func signOut() throws {

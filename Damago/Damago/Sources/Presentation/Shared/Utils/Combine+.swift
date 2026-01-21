@@ -43,6 +43,27 @@ extension Publisher where Failure == Never {
             .eraseToAnyPublisher()
     }
 
+    func compactMapForUI<T: Equatable>(
+        _ transform: @escaping (Output) -> T?
+    ) -> AnyPublisher<T, Failure> {
+        self
+            .compactMap(transform)
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    func compactMapForUI<T>(
+        _ transform: @escaping (Output) -> T?,
+        isDuplicate: @escaping (T, T) -> Bool
+    ) -> AnyPublisher<T, Failure> {
+        self
+            .compactMap(transform)
+            .removeDuplicates(by: isDuplicate)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
     func pulse<R>(
         _ keyPath: KeyPath<Output, Pulse<R>?>
     ) -> AnyPublisher<R, Failure> {

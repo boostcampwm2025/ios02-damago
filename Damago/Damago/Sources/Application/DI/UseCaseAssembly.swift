@@ -40,5 +40,11 @@ final class UseCaseAssembly: Assembly {
         container.register(SignOutUseCase.self) {
             SignOutUseCaseImpl(repository: container.resolve(UserRepositoryProtocol.self))
         }
+        container.register(ObserveGlobalStateUseCase.self) {
+            ObserveGlobalStateUseCaseImpl(
+                userRepository: container.resolve(UserRepositoryProtocol.self),
+                petRepository: container.resolve(PetRepositoryProtocol.self)
+            )
+        }
     }
 }

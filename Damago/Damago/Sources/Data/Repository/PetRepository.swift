@@ -28,16 +28,7 @@ final class PetRepository: PetRepositoryProtocol {
         return try await networkProvider.requestSuccess(PetAPI.feed(accessToken: token, damagoID: damagoID))
     }
 
-    func observePetStatus(damagoID: String) -> AnyPublisher<Result<PetStatus, Error>, Never> {
+    func observePetSnapshot(damagoID: String) -> AnyPublisher<Result<PetSnapshotDTO, Error>, Never> {
         firestoreService.observe(collection: "damagos", document: damagoID)
-            .map { (result: Result<DamagoStatusResponse, Error>) in
-                switch result {
-                case let .success(value):
-                    return .success(value.toDomain())
-                case let .failure(error):
-                    return .failure(error)
-                }
-            }
-            .eraseToAnyPublisher()
     }
 }
