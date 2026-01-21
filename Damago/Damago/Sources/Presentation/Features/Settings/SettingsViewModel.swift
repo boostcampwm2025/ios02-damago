@@ -120,6 +120,19 @@ final class SettingsViewModel: ViewModel {
             .store(in: &cancellables)
 
         globalStore.globalState
+            .mapForUI { $0.opponentName }
+            .sink { [weak self] name in
+                if let name {
+                    self?.state.opponentName = name
+                    self?.state.isConnected = true
+                } else {
+                    self?.state.opponentName = ""
+                    self?.state.isConnected = false
+                }
+            }
+            .store(in: &cancellables)
+
+        globalStore.globalState
             .compactMap { $0.anniversaryDate }
             .sink { [weak self] date in
                 self?.state.anniversaryDate = date.toString()

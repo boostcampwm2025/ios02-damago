@@ -10,6 +10,7 @@ import Foundation
 struct GlobalState: Equatable {
     // MARK: - User Content
     let nickname: String?
+    let opponentName: String?
     let useFCM: Bool
     let useLiveActivity: Bool
     
@@ -32,6 +33,7 @@ struct GlobalState: Equatable {
     
     static let empty = GlobalState(
         nickname: nil,
+        opponentName: nil,
         useFCM: true,
         useLiveActivity: true,
         totalCoin: nil,

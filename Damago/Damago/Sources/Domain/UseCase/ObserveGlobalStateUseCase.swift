@@ -60,11 +60,23 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
         } else {
             petStream = Just(nil).eraseToAnyPublisher()
         }
+
+        let partnerStream: AnyPublisher<UserSnapshotDTO?, Never>
+        if let partnerUID = userSnapshot.partnerUID {
+            partnerStream = userRepository.observeUserSnapshot(uid: partnerUID)
+                .map { try? $0.get() }
+                .replaceError(with: nil)
+                .prepend(nil)
+                .eraseToAnyPublisher()
+        } else {
+            partnerStream = Just(nil).eraseToAnyPublisher()
+        }
         
-        return Publishers.CombineLatest(coupleStream, petStream)
-            .map { coupleSnapshot, petSnapshot in
+        return Publishers.CombineLatest3(coupleStream, petStream, partnerStream)
+            .map { coupleSnapshot, petSnapshot, partnerSnapshot in
                 GlobalState(
                     nickname: userSnapshot.nickname,
+                    opponentName: partnerSnapshot?.nickname,
                     useFCM: userSnapshot.useFCM,
                     useLiveActivity: userSnapshot.useLiveActivity,
                     totalCoin: coupleSnapshot?.totalCoin,
