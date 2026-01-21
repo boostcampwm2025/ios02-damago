@@ -40,7 +40,6 @@ final class PokePopupViewModel: ViewModel {
     
     var onMessageSelected: ((String) -> Void)?
     var onCancel: (() -> Void)?
-    var onRequestSendConfirmation: ((String, @escaping () -> Void) -> Void)?
     var onRequestCancelConfirmation: ((@escaping () -> Void) -> Void)?
     
     init(shortcutRepository: PokeShortcutRepositoryProtocol) {
@@ -74,11 +73,8 @@ final class PokePopupViewModel: ViewModel {
         
         input.cancelButtonTapped
             .sink { [weak self] _ in
-                if self?.state.isEditing == true {
-                    self?.requestCancelConfirmation()
-                } else {
-                    self?.onCancel?()
-                }
+                // 편집 모드 여부와 관계없이 항상 확인 알럿 표시
+                self?.requestCancelConfirmation()
             }
             .store(in: &cancellables)
         
@@ -118,14 +114,19 @@ final class PokePopupViewModel: ViewModel {
         let message = state.currentText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !message.isEmpty else { return }
         
-        onRequestSendConfirmation?(message) { [weak self] in
-            self?.onMessageSelected?(message)
-        }
+        // 바로 전송 (알럿 없이)
+        onMessageSelected?(message)
     }
     
     private func requestCancelConfirmation() {
         onRequestCancelConfirmation? { [weak self] in
-            self?.exitEditMode()
+            if self?.state.isEditing == true {
+                // 편집 모드였다면 편집 모드 종료
+                self?.exitEditMode()
+            } else {
+                // 일반 모드였다면 팝업 닫기
+                self?.onCancel?()
+            }
         }
     }
     

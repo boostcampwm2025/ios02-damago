@@ -84,38 +84,19 @@ final class PokePopupViewController: UIViewController {
             }
         }
         
-        viewModel.onRequestSendConfirmation = { [weak self] message, confirmHandler in
-            self?.showSendConfirmationAlert(message: message, confirmHandler: confirmHandler)
-        }
-        
         viewModel.onRequestCancelConfirmation = { [weak self] confirmHandler in
             self?.showCancelConfirmationAlert(confirmHandler: confirmHandler)
         }
     }
     
-    private func showSendConfirmationAlert(message: String, confirmHandler: @escaping () -> Void) {
-        let alert = UIAlertController(
-            title: "메시지 전송",
-            message: "이 메시지를 전송하시겠어요?",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        alert.addAction(UIAlertAction(title: "전송", style: .default) { _ in
-            confirmHandler()
-        })
-        
-        present(alert, animated: true)
-    }
-    
     private func showCancelConfirmationAlert(confirmHandler: @escaping () -> Void) {
         let alert = UIAlertController(
-            title: "편집 취소",
-            message: "편집 내용이 저장되지 않습니다.\n정말 취소하시겠어요?",
+            title: "정말 취소하시겠어요?",
+            message: "작성 중인 내용이 사라집니다.",
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "계속 편집", style: .cancel))
+        alert.addAction(UIAlertAction(title: "계속 작성", style: .cancel))
         alert.addAction(UIAlertAction(title: "취소", style: .destructive) { _ in
             confirmHandler()
         })
