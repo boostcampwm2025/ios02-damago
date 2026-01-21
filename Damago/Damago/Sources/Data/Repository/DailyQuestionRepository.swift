@@ -7,6 +7,7 @@
 
 import Combine
 import DamagoNetwork
+import OSLog
 
 final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
     private let networkProvider: NetworkProvider
@@ -62,6 +63,7 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
                 return .success(combinedDTO)
 
             case .failure(let error):
+                SharedLogger.interaction.error("답변 조회 실패: \(error.localizedDescription)")
                 return .failure(error)
             }
         }

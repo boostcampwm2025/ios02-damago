@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import OSLog
 
 final class DailyQuestionInputViewModel: ViewModel {
     struct Input {
@@ -102,8 +103,7 @@ final class DailyQuestionInputViewModel: ViewModel {
                 )
                 
             } catch {
-                // TODO: Handle Error
-                print("답변 전송 실패: \(error)")
+                SharedLogger.interaction.error("답변 전송 실패: \(error.localizedDescription)")
                 
                 await MainActor.run {
                     self.state.isSubmitButtonEnabled = true

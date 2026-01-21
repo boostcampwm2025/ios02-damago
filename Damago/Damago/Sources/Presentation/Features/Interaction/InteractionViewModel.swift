@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import OSLog
 
 final class InteractionViewModel: ViewModel {
     let title = "커플 활동"
@@ -90,7 +91,7 @@ final class InteractionViewModel: ViewModel {
                 // GlobalStore가 아직 데이터를 안 줬을 수도 있으므로 안전하게 fetch 호출
                 await fetchDailyQuestionData()
             } catch {
-                print("UserInfo 가져오기 실패: \(error)")
+                SharedLogger.interaction.error("UserInfo 가져오기 실패: \(error.localizedDescription)")
             }
         }
     }
@@ -113,7 +114,7 @@ final class InteractionViewModel: ViewModel {
             self.state.dailyQuestionUIModel = uiModel
             self.startObserving(uiModel: uiModel)
         } catch {
-            print("오늘의 질문 가져오기 실패: \(error)")
+            SharedLogger.interaction.error("오늘의 질문 가져오기 실패: \(error.localizedDescription)")
         }
     }
     
