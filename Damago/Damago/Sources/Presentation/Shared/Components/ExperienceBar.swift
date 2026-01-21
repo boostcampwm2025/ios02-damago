@@ -5,9 +5,17 @@
 //  Created by 박현수 on 1/8/26.
 //
 
+import Combine
 import UIKit
 
 final class ExperienceBar: UIView {
+    private let levelUpSubject = PassthroughSubject<Int, Never>()
+    var levelUpPublisher: AnyPublisher<Int, Never> {
+        levelUpSubject.eraseToAnyPublisher()
+    }
+
+    private var currentState: State?
+
     private let levelLabel: UILabel = {
         let label = UILabel()
         label.font = .body2
@@ -89,13 +97,34 @@ extension ExperienceBar {
         let level: Int
         let currentExp: Int
         let maxExp: Int
+        
+        var progress: Float {
+            maxExp > 0 ? Float(currentExp) / Float(maxExp) : 0
+        }
     }
 
-    func update(with state: State) {
+    func update(with newState: State) {
+        let isLevelUp = currentState.map { $0.level != 0 && $0.level < newState.level } ?? false
+        currentState = newState
+        
+        guard isLevelUp else {
+            updateUI()
+            return
+        }
+        
+        // 레벨업: 100%까지 채운 후 이벤트 발행
+        progressView.setProgress(1.0, animated: true)
+        levelUpSubject.send(newState.level)
+    }
+    
+    func completeLevelUp() {
+        updateUI()
+    }
+    
+    private func updateUI() {
+        guard let state = currentState else { return }
         levelLabel.text = "Lv. \(state.level)"
         expLabel.text = "\(state.currentExp) / \(state.maxExp)"
-
-        let ratio = state.maxExp > 0 ? Float(state.currentExp) / Float(state.maxExp) : 0
-        progressView.setProgress(ratio, animated: true)
+        progressView.setProgress(state.progress, animated: true)
     }
 }
