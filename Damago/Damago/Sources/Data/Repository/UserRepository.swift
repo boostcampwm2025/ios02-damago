@@ -74,6 +74,10 @@ final class UserRepository: UserRepositoryProtocol {
             }
             .eraseToAnyPublisher()
     }
+
+    func signOut() throws {
+        try authService.signOut()
+    }
 }
 
 // MARK: - DTO Mapping

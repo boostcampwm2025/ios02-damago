@@ -25,8 +25,9 @@ final class SettingsViewModel: ViewModel {
         let viewDidLoad: AnyPublisher<Void, Never>
         let toggleChanged: AnyPublisher<(ToggleType, Bool), Never>
         let itemSelected: AnyPublisher<SettingsItem, Never>
+        let alertActionDidConfirm: AnyPublisher<AlertActionType, Never>
     }
-    
+
     struct State {
         var isNotificationEnabled: Bool = false
         var isLiveActivityEnabled: Bool = false
@@ -53,39 +54,48 @@ final class SettingsViewModel: ViewModel {
             )
         }
     }
-    
+
     enum Route {
         case editProfile
         case webLink(url: URL?)
-        case alert(title: String, message: String)
+        case alert(type: AlertActionType)
+        case error(message: String)
     }
-    
+
     @Published private var state = State()
     private var cancellables = Set<AnyCancellable>()
-    
-    private var isNotificationEnabled = false
-    private var isLiveActivityEnabled = true
-    
+    private let signOutUseCase: SignOutUseCase
+
+    init(signOutUseCase: SignOutUseCase) {
+        self.signOutUseCase = signOutUseCase
+    }
+
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
         input.viewDidLoad
             .sink { }
             .store(in: &cancellables)
-        
+
         input.toggleChanged
             .sink { [weak self] type, isOn in
                 self?.handleToggle(type: type, isOn: isOn)
             }
             .store(in: &cancellables)
-        
+
         input.itemSelected
             .sink { [weak self] item in
                 self?.handleSelection(item: item)
             }
             .store(in: &cancellables)
-        
+
+        input.alertActionDidConfirm
+            .sink { [weak self] type in
+                self?.performAction(type)
+            }
+            .store(in: &cancellables)
+
         return $state.eraseToAnyPublisher()
     }
-    
+
     private func handleToggle(type: ToggleType, isOn: Bool) {
         switch type {
         case .notification:
@@ -94,7 +104,7 @@ final class SettingsViewModel: ViewModel {
             state.isLiveActivityEnabled = isOn
         }
     }
-    
+
     private func handleSelection(item: SettingsItem) {
         switch item {
         case .profile:
@@ -107,9 +117,22 @@ final class SettingsViewModel: ViewModel {
             break
         }
     }
-    
-    private func handleAccountAction(_ type: ActionType) {
-        let message = type == .logout ? "정말 로그아웃 하시겠습니까?" : "정말 탈퇴 하시겠습니까?\n모든 데이터가 삭제됩니다."
-        state.route = Pulse(.alert(title: type.title, message: message))
+
+    private func handleAccountAction(_ type: AlertActionType) {
+        state.route = Pulse(.alert(type: type))
+    }
+
+    private func performAction(_ type: AlertActionType) {
+        switch type {
+        case .logout:
+            do {
+                try signOutUseCase.execute()
+                NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
+            } catch {
+                state.route = Pulse(.error(message: error.localizedDescription))
+            }
+        case .deleteAccount:
+            break
+        }
     }
 }

@@ -27,5 +27,8 @@ final class UseCaseAssembly: Assembly {
         container.register(ObserveCoupleSharedInfoUseCase.self) {
             ObserveCoupleSharedInfoUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }
+        container.register(SignOutUseCase.self) {
+            SignOutUseCaseImpl(repository: container.resolve(UserRepositoryProtocol.self))
+        }
     }
 }

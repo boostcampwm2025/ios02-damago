@@ -14,4 +14,5 @@ protocol UserRepositoryProtocol {
     func signIn() async throws
     func fcmToken() async throws -> String
     func observeCoupleSharedInfo(coupleID: String) -> AnyPublisher<Result<CoupleSharedInfo, Error>, Never>
+    func signOut() throws
 }
