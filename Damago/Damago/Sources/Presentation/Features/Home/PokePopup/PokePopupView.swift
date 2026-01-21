@@ -134,7 +134,18 @@ final class PokePopupView: UIView {
         setupHierarchy()
         setupConstraints()
         setupKeyboardDismiss()
-        setupDimmingTapGesture()
+        setupKeyboardDismissAndDimmingTap()
+    }
+    
+    private func setupKeyboardDismissAndDimmingTap() {
+        setupKeyboardDismissOnTap { [weak self] location in
+            guard let self = self else { return }
+            
+            // containerView 외부를 클릭한 경우에만 취소 동작 실행
+            if !self.containerView.frame.contains(location) {
+                self.cancelButton.sendActions(for: .touchUpInside)
+            }
+        }
     }
     
     deinit {
@@ -462,57 +473,6 @@ extension PokePopupView {
         titleContainer.font = .title3
         config?.attributedTitle = AttributedString(title, attributes: titleContainer)
         cancelButton.configuration = config
-    }
-}
-
-// MARK: - Dimming Tap Gesture
-extension PokePopupView: UIGestureRecognizerDelegate {
-    private func setupDimmingTapGesture() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleDimmingTap(_:)))
-        tapGesture.cancelsTouchesInView = false
-        tapGesture.delegate = self
-        addGestureRecognizer(tapGesture)
-    }
-    
-    @objc
-    private func handleDimmingTap(_ gesture: UITapGestureRecognizer) {
-        let location = gesture.location(in: self)
-        
-        // 키보드가 올라와 있는지 확인
-        let isKeyboardVisible = customTextField.isFirstResponder || 
-                                shortcutEditViews.values.contains { 
-                                    $0.summaryField.isFirstResponder || $0.messageField.isFirstResponder 
-                                }
-        
-        // 키보드가 올라와 있으면 키보드만 내림
-        if isKeyboardVisible {
-            endEditing(true)
-            return
-        }
-        
-        // 키보드가 없고 containerView 외부를 클릭한 경우에만 취소 동작 실행
-        if !containerView.frame.contains(location) {
-            cancelButton.sendActions(for: .touchUpInside)
-        }
-    }
-    
-    // 버튼이나 텍스트필드를 터치하면 제스처가 인식되지 않도록 함
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        // touch.view부터 시작하여 상위 뷰 계층을 탐색
-        var currentView: UIView? = touch.view
-        while let view = currentView {
-            // UIButton이나 UITextField를 찾으면 제스처를 받지 않음 (원래 동작 허용)
-            if view is UIButton || view is UITextField {
-                return false
-            }
-            // self(PokePopupView)에 도달하면 탐색 종료
-            if view == self {
-                break
-            }
-            currentView = view.superview
-        }
-        
-        return true
     }
 }
 

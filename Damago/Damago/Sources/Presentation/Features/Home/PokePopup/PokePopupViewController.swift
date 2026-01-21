@@ -38,14 +38,14 @@ final class PokePopupViewController: UIViewController {
         let output = viewModel.transform(
             PokePopupViewModel.Input(
                 viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
-                shortcutSelected: popupView.shortcutSelectedSubject.eraseToAnyPublisher(),
+                shortcutSelected: popupView.shortcutSelectedSubject.dismissKeyboard(from: popupView),
                 textChanged: popupView.customTextField.textPublisher,
-                sendButtonTapped: popupView.sendButton.tapPublisher,
-                cancelButtonTapped: popupView.cancelButton.tapPublisher,
-                editButtonTapped: popupView.editButton.tapPublisher,
+                sendButtonTapped: popupView.sendButton.tapPublisher.dismissKeyboard(from: popupView),
+                cancelButtonTapped: popupView.cancelButton.tapPublisher.dismissKeyboard(from: popupView),
+                editButtonTapped: popupView.editButton.tapPublisher.dismissKeyboard(from: popupView),
                 shortcutSummaryChanged: popupView.shortcutSummaryChangedSubject.eraseToAnyPublisher(),
                 shortcutMessageChanged: popupView.shortcutMessageChangedSubject.eraseToAnyPublisher(),
-                saveButtonTapped: popupView.saveButton.tapPublisher
+                saveButtonTapped: popupView.saveButton.tapPublisher.dismissKeyboard(from: popupView)
             )
         )
         
