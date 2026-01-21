@@ -6,6 +6,7 @@
 //
 
 import Combine
+import Foundation
 
 protocol UserRepositoryProtocol {
     func generateCode(fcmToken: String) async throws -> String
@@ -15,5 +16,6 @@ protocol UserRepositoryProtocol {
     func fcmToken() async throws -> String
     func observeCoupleSnapshot(coupleID: String) -> AnyPublisher<Result<CoupleSnapshotDTO, Error>, Never>
     func observeUserSnapshot(uid: String) -> AnyPublisher<Result<UserSnapshotDTO, Error>, Never>
+    func updateUserInfo(nickname: String?, anniversaryDate: Date?) async throws
     func signOut() throws
 }

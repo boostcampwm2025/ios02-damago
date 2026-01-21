@@ -15,7 +15,6 @@ final class SettingsViewModel: ViewModel {
         var userName: String
         var anniversaryDate: String
         var dDay: Int
-        var isConnected: Bool
         var opponentName: String
         let privacyPolicyURL: URL?
         let termsURL: URL?
@@ -34,7 +33,6 @@ final class SettingsViewModel: ViewModel {
         var userName: String = ""
         var anniversaryDate: String = ""
         var dDay: Int = 0
-        var isConnected: Bool = false
         var opponentName: String = ""
         let privacyPolicyURL: URL? = URL(string: "https://example.com")
         let termsURL: URL? = URL(string: "https://example.com")
@@ -47,7 +45,6 @@ final class SettingsViewModel: ViewModel {
                 userName: userName,
                 anniversaryDate: anniversaryDate,
                 dDay: dDay,
-                isConnected: isConnected,
                 opponentName: opponentName,
                 privacyPolicyURL: privacyPolicyURL,
                 termsURL: termsURL
@@ -124,10 +121,8 @@ final class SettingsViewModel: ViewModel {
             .sink { [weak self] name in
                 if let name {
                     self?.state.opponentName = name
-                    self?.state.isConnected = true
                 } else {
                     self?.state.opponentName = ""
-                    self?.state.isConnected = false
                 }
             }
             .store(in: &cancellables)

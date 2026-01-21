@@ -34,7 +34,7 @@ nonisolated enum SettingsSection: Int, CaseIterable, Hashable {
 
 nonisolated enum SettingsItem: Hashable {
     case profile(name: String, dDay: Int, anniversaryDate: String)
-    case relationship(opponentName: String, isConnected: Bool)
+    case relationship(opponentName: String)
     case toggle(type: ToggleType, isOn: Bool)
     case link(title: String, url: URL?)
     case action(type: AlertActionType)

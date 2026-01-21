@@ -43,4 +43,3 @@ final class GlobalStore: GlobalStoreProtocol {
         cancellables.removeAll()
     }
 }
-

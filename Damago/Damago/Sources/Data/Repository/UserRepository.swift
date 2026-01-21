@@ -7,6 +7,7 @@
 
 import Combine
 import DamagoNetwork
+import Foundation
 
 final class UserRepository: UserRepositoryProtocol {
     private let networkProvider: NetworkProvider
@@ -68,6 +69,23 @@ final class UserRepository: UserRepositoryProtocol {
 
     func observeUserSnapshot(uid: String) -> AnyPublisher<Result<UserSnapshotDTO, Error>, Never> {
         firestoreService.observe(collection: "users", document: uid)
+    }
+    
+    func updateUserInfo(nickname: String?, anniversaryDate: Date?) async throws {
+        let token = try await tokenProvider.idToken()
+        let dateString = anniversaryDate.map {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime]
+            return formatter.string(from: $0)
+        }
+        
+        try await networkProvider.requestSuccess(
+            UserAPI.updateUserInfo(
+                accessToken: token,
+                nickname: nickname,
+                anniversaryDate: dateString
+            )
+        )
     }
 
     func signOut() throws {
