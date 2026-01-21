@@ -7,7 +7,6 @@
 
 import Combine
 import Foundation
-import UIKit
 
 struct Pulse<R>: Equatable {
     let value: R
@@ -73,15 +72,6 @@ extension Publisher where Failure == Never {
             .removeDuplicates()
             .compactMap { $0?.value }
             .receive(on: DispatchQueue.main)
-            .eraseToAnyPublisher()
-    }
-    
-    /// Publisher가 이벤트를 발행할 때 지정된 뷰의 키보드를 내립니다.
-    func dismissKeyboard(from view: UIView) -> AnyPublisher<Output, Failure> {
-        self
-            .handleEvents(receiveOutput: { _ in
-                view.endEditing(true)
-            })
             .eraseToAnyPublisher()
     }
 }
