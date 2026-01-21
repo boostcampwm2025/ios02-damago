@@ -75,8 +75,19 @@ final class PokePopupViewModel: ViewModel {
         
         input.cancelButtonTapped
             .sink { [weak self] _ in
-                // 편집 모드 여부와 관계없이 항상 확인 알럿 표시
-                self?.requestCancelConfirmation()
+                guard let self = self else { return }
+                
+                // 변경 사항이 있을 때만 확인 알럿 표시
+                if self.state.hasChanges {
+                    self.requestCancelConfirmation()
+                } else {
+                    // 변경 사항이 없으면 바로 취소
+                    if self.state.isEditing {
+                        self.exitEditMode()
+                    } else {
+                        self.onCancel?()
+                    }
+                }
             }
             .store(in: &cancellables)
         
@@ -116,7 +127,6 @@ final class PokePopupViewModel: ViewModel {
         let message = state.currentText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !message.isEmpty else { return }
 
-        // 바로 전송 (알럿 없이)
         onMessageSelected?(message)
     }
     
