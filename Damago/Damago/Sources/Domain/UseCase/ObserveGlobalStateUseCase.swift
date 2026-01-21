@@ -63,7 +63,7 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
         
         return Publishers.CombineLatest(coupleStream, petStream)
             .map { coupleSnapshot, petSnapshot in
-                return GlobalState(
+                GlobalState(
                     nickname: userSnapshot.nickname,
                     useFCM: userSnapshot.useFCM,
                     useLiveActivity: userSnapshot.useLiveActivity,

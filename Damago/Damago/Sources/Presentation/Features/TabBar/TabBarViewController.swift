@@ -121,8 +121,12 @@ final class TabBarViewController: UITabBarController {
         case .game:
             return UIViewController()
         case .setting:
+            let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
             let signOutUseCase = AppDIContainer.shared.resolve(SignOutUseCase.self)
-            let viewModel = SettingsViewModel(signOutUseCase: signOutUseCase)
+            let viewModel = SettingsViewModel(
+                globalStore: globalStore,
+                signOutUseCase: signOutUseCase
+            )
             let vc = SettingsViewController(viewModel: viewModel)
             return vc
         }

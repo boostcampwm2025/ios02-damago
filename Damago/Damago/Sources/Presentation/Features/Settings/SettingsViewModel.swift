@@ -31,11 +31,11 @@ final class SettingsViewModel: ViewModel {
     struct State {
         var isNotificationEnabled: Bool = false
         var isLiveActivityEnabled: Bool = false
-        var userName: String = "사용자 A"
-        var anniversaryDate: String = "2022.02.02."
-        var dDay: Int = 100
-        var isConnected: Bool = true
-        var opponentName: String = "사용자 B"
+        var userName: String = ""
+        var anniversaryDate: String = ""
+        var dDay: Int = 0
+        var isConnected: Bool = false
+        var opponentName: String = ""
         let privacyPolicyURL: URL? = URL(string: "https://example.com")
         let termsURL: URL? = URL(string: "https://example.com")
         var route: Pulse<Route>?
@@ -46,7 +46,7 @@ final class SettingsViewModel: ViewModel {
                 isLiveActivityEnabled: isLiveActivityEnabled,
                 userName: userName,
                 anniversaryDate: anniversaryDate,
-                dDay: 100,
+                dDay: dDay,
                 isConnected: isConnected,
                 opponentName: opponentName,
                 privacyPolicyURL: privacyPolicyURL,
@@ -64,15 +64,22 @@ final class SettingsViewModel: ViewModel {
 
     @Published private var state = State()
     private var cancellables = Set<AnyCancellable>()
+    private let globalStore: GlobalStoreProtocol
     private let signOutUseCase: SignOutUseCase
 
-    init(signOutUseCase: SignOutUseCase) {
+    init(
+        globalStore: GlobalStoreProtocol,
+        signOutUseCase: SignOutUseCase
+    ) {
+        self.globalStore = globalStore
         self.signOutUseCase = signOutUseCase
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
         input.viewDidLoad
-            .sink { }
+            .sink { [weak self] in
+                self?.bindGlobalState()
+            }
             .store(in: &cancellables)
 
         input.toggleChanged
@@ -94,6 +101,31 @@ final class SettingsViewModel: ViewModel {
             .store(in: &cancellables)
 
         return $state.eraseToAnyPublisher()
+    }
+
+    private func bindGlobalState() {
+        globalStore.globalState
+            .compactMapForUI { $0.useFCM }
+            .sink { [weak self] in self?.state.isNotificationEnabled = $0 }
+            .store(in: &cancellables)
+
+        globalStore.globalState
+            .compactMapForUI { $0.useLiveActivity }
+            .sink { [weak self] in self?.state.isLiveActivityEnabled = $0 }
+            .store(in: &cancellables)
+
+        globalStore.globalState
+            .compactMapForUI { $0.nickname }
+            .sink { [weak self] in self?.state.userName = $0 }
+            .store(in: &cancellables)
+
+        globalStore.globalState
+            .compactMap { $0.anniversaryDate }
+            .sink { [weak self] date in
+                self?.state.anniversaryDate = date.toString()
+                self?.state.dDay = date.daysBetween(to: Date()) ?? 0
+            }
+            .store(in: &cancellables)
     }
 
     private func handleToggle(type: ToggleType, isOn: Bool) {
