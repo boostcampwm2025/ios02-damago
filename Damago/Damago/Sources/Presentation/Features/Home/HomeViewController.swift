@@ -67,11 +67,9 @@ final class HomeViewController: UIViewController {
             message: "축하합니다! Lv.\(level)이 되었습니다!",
             preferredStyle: .alert
         )
-        
-        alert.addAction(UIAlertAction(title: "확인", style: .default) { [weak self] _ in
-            self?.mainView.expBar.completeLevelUp()
-        })
-        
+
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+
         present(alert, animated: true)
     }
     

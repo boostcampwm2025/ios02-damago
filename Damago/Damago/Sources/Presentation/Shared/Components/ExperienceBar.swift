@@ -104,23 +104,16 @@ extension ExperienceBar {
     }
 
     func update(with newState: State) {
-        let isLevelUp = currentState.map { $0.level != 0 && $0.level < newState.level } ?? false
+        let oldLevel = currentState?.level ?? 0
         currentState = newState
-        
-        guard isLevelUp else {
-            updateUI()
-            return
+
+        if oldLevel > 0 && oldLevel < newState.level {
+            levelUpSubject.send(newState.level)
         }
-        
-        // 레벨업: 100%까지 채운 후 이벤트 발행
-        progressView.setProgress(1.0, animated: true)
-        levelUpSubject.send(newState.level)
-    }
-    
-    func completeLevelUp() {
+
         updateUI()
     }
-    
+
     private func updateUI() {
         guard let state = currentState else { return }
         levelLabel.text = "Lv. \(state.level)"
