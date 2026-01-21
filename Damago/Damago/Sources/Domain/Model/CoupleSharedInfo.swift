@@ -10,5 +10,5 @@ import Foundation
 struct CoupleSharedInfo: Equatable {
     let foodCount: Int
     let totalCoin: Int
-    let currentQuestionId: String?
+    let currentQuestionID: String?
 }

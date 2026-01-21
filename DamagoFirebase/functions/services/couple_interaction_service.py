@@ -70,9 +70,9 @@ def fetch_daily_question(req: https_fn.Request) -> https_fn.Response:
     question_id = question_doc.id
     question_content = question_data.get("questionText", "")
     
-    # couples 문서에 currentQuestionId 업데이트 (없거나 다를 경우)
-    if couple_data.get("currentQuestionId") != question_id:
-        db.collection("couples").document(couple_id).update({"currentQuestionId": question_id})
+    # couples 문서에 currentQuestionID 업데이트 (없거나 다를 경우)
+    if couple_data.get("currentQuestionID") != question_id:
+        db.collection("couples").document(couple_id).update({"currentQuestionID": question_id})
     
     # 4. 답변 내역 조회 (있다면)
     answer_ref = db.collection("couples").document(couple_id).collection("dailyQuestionAnswers").document(question_id)

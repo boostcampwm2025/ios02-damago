@@ -98,7 +98,7 @@ final class InteractionViewModel: ViewModel {
     
     private func bindGlobalStore() {
         globalStore.coupleSharedInfo
-            .compactMap { $0.currentQuestionId }
+            .compactMap { $0.currentQuestionID }
             .removeDuplicates()
             .sink { [weak self] _ in
                 Task { [weak self] in
