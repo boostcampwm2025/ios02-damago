@@ -20,6 +20,7 @@ struct CoupleDTO: Decodable {
 
     func toDomain() -> CoupleSharedInfo {
         CoupleSharedInfo(
+            coupleID: self.id,
             foodCount: self.foodCount,
             totalCoin: self.totalCoin,
             currentQuestionID: self.currentQuestionID

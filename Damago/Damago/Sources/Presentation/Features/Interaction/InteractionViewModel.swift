@@ -61,7 +61,6 @@ final class InteractionViewModel: ViewModel {
     func transform(_ input: Input) -> Output {
         input.viewDidLoad
             .sink { [weak self] in
-                self?.initializeData()
                 self?.bindGlobalStore()
             }
             .store(in: &cancellables)
@@ -81,26 +80,16 @@ final class InteractionViewModel: ViewModel {
         
         return $state.eraseToAnyPublisher()
     }
-
-    private func initializeData() {
-        Task {
-            do {
-                let userInfo = try await userRepository.getUserInfo()
-                self.coupleID = userInfo.coupleID
-                // 초기 데이터는 GlobalStore 구독으로 처리되므로 여기서 명시적 fetch는 생략 가능하지만,
-                // GlobalStore가 아직 데이터를 안 줬을 수도 있으므로 안전하게 fetch 호출
-                await fetchDailyQuestionData()
-            } catch {
-                SharedLogger.interaction.error("UserInfo 가져오기 실패: \(error.localizedDescription)")
-            }
-        }
-    }
     
     private func bindGlobalStore() {
         globalStore.coupleSharedInfo
-            .compactMap { $0.currentQuestionID }
-            .removeDuplicates()
-            .sink { [weak self] _ in
+            .compactMap { info -> (String, String)? in
+                guard let questionID = info.currentQuestionID else { return nil }
+                return (info.coupleID, questionID)
+            }
+            .removeDuplicates { $0.1 == $1.1 }
+            .sink { [weak self] coupleID, _ in
+                self?.coupleID = coupleID
                 Task { [weak self] in
                     await self?.fetchDailyQuestionData()
                 }

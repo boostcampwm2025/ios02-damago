@@ -132,11 +132,17 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     couple_ref = db.collection("couples").document(couple_doc_id)
     damago_ref = db.collection("damagos").document()
 
+    # 첫 번째 질문 ID 가져오기 (order=1)
+    first_question_id = None
+    questions_query = db.collection("dailyQuestions").where("order", "==", 1).limit(1).get()
+    if questions_query:
+        first_question_id = questions_query[0].id
+
     from utils.constants import XP_TABLE # 초기 경험치 참조
 
     # --- [Step 3] 트랜잭션 실행 ---
     @google.cloud.firestore.transactional
-    def run_transaction(transaction, couple_ref, damago_ref, my_ref, target_ref, my_uid, target_uid):
+    def run_transaction(transaction, couple_ref, damago_ref, my_ref, target_ref, my_uid, target_uid, question_id):
         snapshot = couple_ref.get(transaction=transaction)
 
         if snapshot.exists:
@@ -168,7 +174,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             "anniversaryDate": None,
             "createdAt": firestore.SERVER_TIMESTAMP,
             "totalCoin": 0,
-            "foodCount": 10
+            "foodCount": 10,
+            "currentQuestionID": question_id
         })
 
         # 유저 정보 업데이트 (상호 참조, UDID -> UID)
@@ -195,7 +202,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             my_doc.reference,
             target_doc.reference,
             my_uid,
-            target_doc.id # target_doc의 ID는 UID임
+            target_doc.id, # target_doc의 ID는 UID임
+            first_question_id
         )
     except Exception as e:
         return https_fn.Response(f"Transaction failed: {str(e)}", status=500)
