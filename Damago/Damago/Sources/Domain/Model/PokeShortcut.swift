@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct PokeShortcut: Codable {
+struct PokeShortcut: Codable, Equatable {
     let summary: String
     let message: String
 }

@@ -25,11 +25,13 @@ final class PokePopupViewModel: ViewModel {
         let shortcuts: [PokeShortcut]
         let currentText: String
         let isEditing: Bool
+        let hasChanges: Bool
         
-        init(shortcuts: [PokeShortcut] = [], currentText: String = "", isEditing: Bool = false) {
+        init(shortcuts: [PokeShortcut] = [], currentText: String = "", isEditing: Bool = false, hasChanges: Bool = false) {
             self.shortcuts = shortcuts
             self.currentText = currentText
             self.isEditing = isEditing
+            self.hasChanges = hasChanges
         }
     }
     
@@ -73,8 +75,19 @@ final class PokePopupViewModel: ViewModel {
         
         input.cancelButtonTapped
             .sink { [weak self] _ in
-                // 편집 모드 여부와 관계없이 항상 확인 알럿 표시
-                self?.requestCancelConfirmation()
+                guard let self = self else { return }
+                
+                // 변경 사항이 있을 때만 확인 알럿 표시
+                if self.state.hasChanges {
+                    self.requestCancelConfirmation()
+                } else {
+                    // 변경 사항이 없으면 바로 취소
+                    if self.state.isEditing {
+                        self.exitEditMode()
+                    } else {
+                        self.onCancel?()
+                    }
+                }
             }
             .store(in: &cancellables)
         
@@ -114,7 +127,6 @@ final class PokePopupViewModel: ViewModel {
         let message = state.currentText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !message.isEmpty else { return }
         
-        // 바로 전송 (알럿 없이)
         onMessageSelected?(message)
     }
     
@@ -164,10 +176,25 @@ final class PokePopupViewModel: ViewModel {
     }
     
     private func updateState(shortcuts: [PokeShortcut]? = nil, currentText: String? = nil, isEditing: Bool? = nil) {
+        let newShortcuts = shortcuts ?? state.shortcuts
+        let newCurrentText = currentText ?? state.currentText
+        let newIsEditing = isEditing ?? state.isEditing
+        
+        // 변경 사항 확인
+        let hasChanges: Bool
+        if newIsEditing {
+            // 편집 모드: 원본과 비교
+            hasChanges = newShortcuts != originalShortcuts
+        } else {
+            // 일반 모드: 텍스트가 비어있지 않은지 확인
+            hasChanges = !newCurrentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        
         state = State(
-            shortcuts: shortcuts ?? state.shortcuts,
-            currentText: currentText ?? state.currentText,
-            isEditing: isEditing ?? state.isEditing
+            shortcuts: newShortcuts,
+            currentText: newCurrentText,
+            isEditing: newIsEditing,
+            hasChanges: hasChanges
         )
     }
     

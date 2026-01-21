@@ -219,6 +219,13 @@ extension PokePopupView {
             customTextField.text = state.currentText
         }
         
+        // 버튼 활성화 상태 업데이트
+        if state.isEditing {
+            saveButton.isEnabled = state.hasChanges
+        } else {
+            sendButton.isEnabled = state.hasChanges
+        }
+        
         // Edit 모드에 따라 UI 업데이트
         if state.isEditing {
             // Edit 모드로 전환할 때만 뷰 재설정
