@@ -106,7 +106,8 @@ final class InteractionViewController: UIViewController {
                     questionContent = resultState.questionContent
                     buttonTitle = resultState.buttonTitle
                 }
-                self?.mainView.questionCardView.configure(question: questionContent)
+                
+                self?.mainView.questionCardView.configure(question: questionContent, buttonTitle: buttonTitle)
             }
             .store(in: &cancellables)
         
