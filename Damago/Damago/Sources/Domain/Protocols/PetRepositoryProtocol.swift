@@ -9,5 +9,5 @@ import Combine
 
 protocol PetRepositoryProtocol {
     func feed(damagoID: String) async throws -> Bool
-    func observePetStatus(damagoID: String) -> AnyPublisher<Result<PetStatus, Error>, Never>
+    func observePetSnapshot(damagoID: String) -> AnyPublisher<Result<PetSnapshotDTO, Error>, Never>
 }

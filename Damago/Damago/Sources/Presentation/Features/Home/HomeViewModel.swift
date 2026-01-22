@@ -136,47 +136,42 @@ final class HomeViewModel: ViewModel {
     }
 
     private func bindGlobalState() {
-        globalStore.petStatus
-            .mapForUI { $0.petName }
-            .sink { [weak self] in
-                self?.state.petName = $0
-            }
+        globalStore.globalState
+            .compactMapForUI { $0.petName }
+            .sink { [weak self] in self?.state.petName = $0 }
             .store(in: &cancellables)
 
-        globalStore.petStatus
-            .mapForUI { $0.level }
-            .sink { [weak self] in
-                self?.state.level = $0
-            }
+        globalStore.globalState
+            .compactMapForUI { $0.level }
+            .sink { [weak self] in self?.state.level = $0 }
             .store(in: &cancellables)
 
-        globalStore.petStatus
-            .mapForUI { $0.currentExp }
-            .sink { [weak self] in
-                self?.state.currentExp = $0
-            }
+        globalStore.globalState
+            .compactMap { $0.currentExp }
+            .sink { [weak self] in self?.state.currentExp = $0 }
             .store(in: &cancellables)
 
-        globalStore.petStatus
-            .mapForUI { $0.maxExp }
-            .sink { [weak self] in
-                self?.state.maxExp = $0
-            }
+        globalStore.globalState
+            .compactMapForUI { $0.maxExp }
+            .sink { [weak self] in self?.state.maxExp = $0 }
+            .store(in: &cancellables)
+            
+        globalStore.globalState
+            .mapForUI { $0.lastFedAt }
+            .sink { [weak self] in self?.state.lastFedAt = $0 }
             .store(in: &cancellables)
 
-        globalStore.coupleSharedInfo
-            .mapForUI { $0.foodCount }
+        globalStore.globalState
+            .compactMapForUI { $0.foodCount }
             .sink { [weak self] in
                 self?.state.foodCount = $0
                 self?.state.isFeeding = false
             }
             .store(in: &cancellables)
 
-        globalStore.coupleSharedInfo
-            .mapForUI { $0.totalCoin }
-            .sink { [weak self] in
-                self?.state.totalCoin = $0
-            }
+        globalStore.globalState
+            .compactMapForUI { $0.totalCoin }
+            .sink { [weak self] in self?.state.totalCoin = $0 }
             .store(in: &cancellables)
     }
 }
