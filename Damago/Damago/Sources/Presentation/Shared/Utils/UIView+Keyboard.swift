@@ -157,7 +157,7 @@ extension UIView {
     
     /// 뷰 계층 내에 first responder인 텍스트필드가 있는지 확인
     private func isAnyTextFieldFirstResponder(in view: UIView) -> Bool {
-        if let textField = view as? UITextField, textField.isFirstResponder {
+        if (view is UITextField || view is UITextView), view.isFirstResponder {
             return true
         }
         
@@ -185,7 +185,7 @@ private class KeyboardDismissGestureDelegate: NSObject, UIGestureRecognizerDeleg
         var currentView: UIView? = touch.view
         while let view = currentView {
             // UIButton이나 UITextField를 찾으면 제스처를 받지 않음 (원래 동작 허용)
-            if view is UIButton || view is UITextField {
+            if view is UIButton || view is UITextField || view is UITextView {
                 return false
             }
             currentView = view.superview
