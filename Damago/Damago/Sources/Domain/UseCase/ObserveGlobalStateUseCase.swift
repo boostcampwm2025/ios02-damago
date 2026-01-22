@@ -79,6 +79,7 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
                     opponentName: partnerSnapshot?.nickname,
                     useFCM: userSnapshot.useFCM,
                     useLiveActivity: userSnapshot.useLiveActivity,
+                    coupleID: coupleSnapshot?.id,
                     totalCoin: coupleSnapshot?.totalCoin,
                     foodCount: coupleSnapshot?.foodCount,
                     anniversaryDate: coupleSnapshot?.anniversaryDate,

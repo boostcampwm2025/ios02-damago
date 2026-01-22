@@ -8,6 +8,7 @@
 import Foundation
 
 struct CoupleSnapshotDTO: Decodable {
+    let id: String
     let totalCoin: Int
     let foodCount: Int
     let anniversaryDate: Date?

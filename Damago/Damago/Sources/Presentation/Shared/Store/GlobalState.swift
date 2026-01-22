@@ -15,6 +15,7 @@ struct GlobalState: Equatable {
     let useLiveActivity: Bool
     
     // MARK: - Couple Content
+    let coupleID: String?
     let totalCoin: Int?
     let foodCount: Int?
     let anniversaryDate: Date?
@@ -36,6 +37,7 @@ struct GlobalState: Equatable {
         opponentName: nil,
         useFCM: true,
         useLiveActivity: true,
+        coupleID: nil,
         totalCoin: nil,
         foodCount: nil,
         anniversaryDate: nil,

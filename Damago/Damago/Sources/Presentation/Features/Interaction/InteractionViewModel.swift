@@ -82,13 +82,9 @@ final class InteractionViewModel: ViewModel {
     }
     
     private func bindGlobalStore() {
-        globalStore.coupleSharedInfo
-            .compactMap { info -> (String, String)? in
-                guard let questionID = info.currentQuestionID else { return nil }
-                return (info.coupleID, questionID)
-            }
-            .removeDuplicates { $0.1 == $1.1 }
-            .sink { [weak self] coupleID, _ in
+        globalStore.globalState
+            .compactMapForUI { $0.coupleID }
+            .sink { [weak self] coupleID in
                 self?.coupleID = coupleID
                 Task { [weak self] in
                     await self?.fetchDailyQuestionData()
