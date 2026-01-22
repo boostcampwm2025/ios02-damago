@@ -1,0 +1,35 @@
+//
+//  DailyQuestionEntity.swift
+//  Damago
+//
+//  Created by 김재영 on 1/22/26.
+//
+
+import Foundation
+import SwiftData
+
+@Model
+final class DailyQuestionEntity {
+    @Attribute(.unique)
+    var questionID: String
+    var questionContent: String
+    var user1Answer: String?
+    var user2Answer: String?
+    var isUser1: Bool
+    var lastUpdated: Date?
+    
+    init(
+        questionID: String,
+        questionContent: String,
+        user1Answer: String? = nil,
+        user2Answer: String? = nil,
+        isUser1: Bool = true
+    ) {
+        self.questionID = questionID
+        self.questionContent = questionContent
+        self.user1Answer = user1Answer
+        self.user2Answer = user2Answer
+        self.isUser1 = isUser1
+        self.lastUpdated = Date()
+    }
+}
