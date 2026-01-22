@@ -105,17 +105,22 @@ final class UserRepository: UserRepositoryProtocol {
     func withdraw() async throws {
         let rawNonce = try cryptoService.randomNonceString()
         let hashedNonce = cryptoService.sha256(rawNonce)
-
         let credential = try await authService.request(hashedNonce: hashedNonce)
-        try await authService.deleteAccount(credential: credential)
 
         let token = try await tokenProvider.idToken()
+
         try await networkProvider.requestSuccess(UserAPI.withdrawUser(accessToken: token))
+
+        try await authService.deleteAccount(credential: credential)
+
+        try authService.signOut()
     }
     
     func checkCoupleConnection() async throws -> Bool {
         let token = try await tokenProvider.idToken()
-        let response: CheckCoupleConnectionResponse = try await networkProvider.request(UserAPI.checkCoupleConnection(accessToken: token))
+        let response: CheckCoupleConnectionResponse = try await networkProvider.request(
+            UserAPI.checkCoupleConnection(accessToken: token)
+        )
         return response.isConnected
     }
 }

@@ -4,6 +4,7 @@ from nanoid import generate
 import google.cloud.firestore
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
+import json
 
 def generate_code(req: https_fn.Request) -> https_fn.Response:
     """

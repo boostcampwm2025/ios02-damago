@@ -61,7 +61,7 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
 
 @https_fn.on_request()
 def withdraw_user(req: https_fn.Request) -> https_fn.Response:
-    return user_service.withdraw_user(req)
+    return auth_service.withdraw_user(req)
 
 @https_fn.on_request()
 def check_couple_connection(req: https_fn.Request) -> https_fn.Response:
