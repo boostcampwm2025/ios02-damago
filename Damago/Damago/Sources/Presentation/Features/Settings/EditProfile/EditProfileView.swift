@@ -97,6 +97,7 @@ final class EditProfileView: UIView {
         picker.preferredDatePickerStyle = .compact
         picker.locale = Locale(identifier: "ko_KR")
         picker.tintColor = .damagoPrimary
+        picker.maximumDate = Date()
         picker.translatesAutoresizingMaskIntoConstraints = false
         return picker
     }()

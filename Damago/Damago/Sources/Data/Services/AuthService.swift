@@ -59,7 +59,7 @@ final class AuthServiceImpl: NSObject, AuthService {
             fullName: credential.fullName
         )
 
-        let authResult = try await Auth.auth().signIn(with: credential)
+        try await Auth.auth().signIn(with: credential)
     }
 
     func signOut() throws {

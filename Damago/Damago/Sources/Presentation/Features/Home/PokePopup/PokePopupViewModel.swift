@@ -27,7 +27,12 @@ final class PokePopupViewModel: ViewModel {
         let isEditing: Bool
         let hasChanges: Bool
         
-        init(shortcuts: [PokeShortcut] = [], currentText: String = "", isEditing: Bool = false, hasChanges: Bool = false) {
+        init(
+            shortcuts: [PokeShortcut] = [],
+            currentText: String = "",
+            isEditing: Bool = false,
+            hasChanges: Bool = false
+        ) {
             self.shortcuts = shortcuts
             self.currentText = currentText
             self.isEditing = isEditing
