@@ -43,7 +43,6 @@ final class SettingsViewModel: ViewModel {
         var notificationCurrentPermission: Bool = false
         var activityCurrentPermission: Bool = false
 
-
         var sectionState: SectionState {
             .init(
                 isNotificationEnabled: isNotificationEnabled,
