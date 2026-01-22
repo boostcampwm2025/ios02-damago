@@ -30,5 +30,8 @@ final class ServiceAssembly: Assembly {
         container.register(FirestoreService.self) {
             FirestoreServiceImpl()
         }
+        container.register(SwiftDataStorage.self) {
+            SwiftDataStorage.shared
+        }
     }
 }

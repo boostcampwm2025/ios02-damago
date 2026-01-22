@@ -11,8 +11,8 @@ public enum UserAPI {
     case generateCode(accessToken: String)
     case connectCouple(accessToken: String, targetCode: String)
     case getUserInfo(accessToken: String)
+    case updateUserInfo(accessToken: String, nickname: String?, anniversaryDate: String?, useFCM: Bool?, useActivity: Bool?)
     case updateFCMToken(accessToken: String, fcmToken: String)
-    case updateUserInfo(accessToken: String, nickname: String?, anniversaryDate: String?)
     case withdrawUser(accessToken: String)
     case checkCoupleConnection(accessToken: String)
 }
@@ -45,9 +45,9 @@ extension UserAPI: EndPoint {
              .connectCouple(let token, _),
              .getUserInfo(let token),
              .updateFCMToken(let token, _),
-             .updateUserInfo(let token, _, _),
              .withdrawUser(let token),
-             .checkCoupleConnection(let token):
+             .checkCoupleConnection(let token),
+             .updateUserInfo(let token, _, _, _, _):
             headers["Authorization"] = "Bearer \(token)"
         }
         return headers
@@ -66,10 +66,12 @@ extension UserAPI: EndPoint {
         case .updateFCMToken(_, let fcmToken):
             parameters = ["fcmToken": fcmToken]
             
-        case .updateUserInfo(_, let nickname, let anniversaryDate):
+        case .updateUserInfo(_, let nickname, let anniversaryDate, let useFCM, let useActivity):
             parameters = [
                 "nickname": nickname,
-                "anniversaryDate": anniversaryDate
+                "anniversaryDate": anniversaryDate,
+                "useFCM": useFCM,
+                "useActivity": useActivity
             ]
             
         case .withdrawUser:

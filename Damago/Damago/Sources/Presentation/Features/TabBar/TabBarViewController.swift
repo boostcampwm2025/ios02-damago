@@ -124,10 +124,12 @@ final class TabBarViewController: UITabBarController {
             let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
             let signOutUseCase = AppDIContainer.shared.resolve(SignOutUseCase.self)
             let withdrawUseCase = AppDIContainer.shared.resolve(WithdrawUseCase.self)
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
             let viewModel = SettingsViewModel(
                 globalStore: globalStore,
                 signOutUseCase: signOutUseCase,
-                withdrawUseCase: withdrawUseCase
+                withdrawUseCase: withdrawUseCase,
+                updateUserUseCase: updateUserUseCase
             )
             let vc = SettingsViewController(viewModel: viewModel)
             return vc

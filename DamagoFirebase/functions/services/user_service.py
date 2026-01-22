@@ -36,19 +36,33 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
         
     nickname = body.get("nickname")
     anniversary_date_str = body.get("anniversaryDate")
+    use_fcm = body.get("useFCM")
+    use_activity = body.get("useActivity")
     
-    # 두 파라미터 모두 없으면 400 Bad Request 리턴
-    if nickname is None and anniversary_date_str is None:
-        return https_fn.Response("Both nickname and anniversaryDate are missing", status=400)
+    # 파라미터가 모두 없으면 400 Bad Request 리턴
+    if all(param is None for param in [nickname, anniversary_date_str, use_fcm, use_activity]):
+        return https_fn.Response("At least one parameter is required", status=400)
         
     db = get_db()
     user_ref = db.collection("users").document(uid)
     
+    updates = {}
+    
     # 1. 닉네임 업데이트
     if nickname is not None:
-        user_ref.update({"nickname": nickname})
+        updates["nickname"] = nickname
         
-    # 2. 기념일 업데이트 (커플인 경우에만)
+    # 2. 알림 설정 업데이트
+    if use_fcm is not None:
+        updates["useFCM"] = use_fcm
+        
+    if use_activity is not None:
+        updates["useActivity"] = use_activity
+        
+    if updates:
+        user_ref.update(updates)
+
+    # 3. 기념일 업데이트 (커플인 경우에만)
     if anniversary_date_str is not None:
         try:
             # ISO 8601 문자열 파싱 (Python 3.11+의 datetime.fromisoformat은 Z 지원하지만 
