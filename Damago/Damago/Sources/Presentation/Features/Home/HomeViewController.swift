@@ -64,7 +64,7 @@ final class HomeViewController: UIViewController {
     private func showLevelUpAlert(level: Int) {
         let alert = UIAlertController(
             title: "🎉 레벨 업!",
-            message: "축하합니다! Lv.\(level)이 되었습니다!",
+            message: "축하합니다! Lv.\(level)이(가) 되었습니다!",
             preferredStyle: .alert
         )
 
