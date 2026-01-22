@@ -131,6 +131,18 @@ extension AppDelegate: MessagingDelegate {
         UserDefaults.standard.set(fcmToken, forKey: "fcmToken")
 
         NotificationCenter.default.post(name: .fcmTokenDidUpdate, object: nil)
+        
+        guard let fcmToken else { return }
+        
+        Task {
+            let useCase = AppDIContainer.shared.resolve(UpdateFCMTokenUseCase.self)
+            do {
+                try await useCase.execute(fcmToken: fcmToken)
+                SharedLogger.apns.info("✅ FCM token 업데이트 완료")
+            } catch {
+                SharedLogger.apns.error("❌ FCM token 업데이트 실패: \(error.localizedDescription)")
+            }
+        }
     }
 }
 

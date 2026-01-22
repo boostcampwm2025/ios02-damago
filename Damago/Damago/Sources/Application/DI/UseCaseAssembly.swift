@@ -45,6 +45,9 @@ final class UseCaseAssembly: Assembly {
                 repository: container.resolve(UserRepositoryProtocol.self)
             )
         }
+        container.register(UpdateFCMTokenUseCase.self) {
+            UpdateFCMTokenUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
         container.register(UpdateUserUseCase.self) {
             UpdateUserUseCaseImpl(
                 userRepository: container.resolve(UserRepositoryProtocol.self)

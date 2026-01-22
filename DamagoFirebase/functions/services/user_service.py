@@ -164,3 +164,43 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
         json.dumps(response_data), 
         mimetype="application/json"
     )
+
+def update_fcm_token(req: https_fn.Request) -> https_fn.Response:
+    """
+    사용자의 FCM 토큰을 업데이트합니다.
+    
+    Args:
+        req (https_fn.Request): 
+            - Header: Authorization Bearer Token
+            - Body: { "fcmToken": "..." }
+            
+    Returns:
+        JSON Response: { "message": "FCM token updated successfully" }
+    """
+    try:
+        uid = get_uid_from_request(req)
+        data = req.get_json()
+        fcm_token = data.get("fcmToken")
+        
+        if not fcm_token:
+            return https_fn.Response("Missing fcmToken", status=400)
+            
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+    except Exception as e:
+        return https_fn.Response(f"Invalid request: {str(e)}", status=400)
+
+    db = get_db()
+    user_ref = db.collection("users").document(uid)
+    
+    # 해당 사용자가 존재하는지 확인
+    doc = user_ref.get()
+    if not doc.exists:
+        return https_fn.Response("User not found", status=404)
+        
+    user_ref.update({"fcmToken": fcm_token})
+    
+    return https_fn.Response(
+        json.dumps({"message": "FCM token updated successfully"}),
+        mimetype="application/json"
+    )

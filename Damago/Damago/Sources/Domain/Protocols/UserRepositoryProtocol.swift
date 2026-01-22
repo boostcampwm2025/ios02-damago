@@ -9,9 +9,10 @@ import Combine
 import Foundation
 
 protocol UserRepositoryProtocol {
-    func generateCode(fcmToken: String) async throws -> String
+    func generateCode() async throws -> String
     func connectCouple(targetCode: String) async throws
     func getUserInfo() async throws -> UserInfo
+    func updateFCMToken(fcmToken: String) async throws
     func signIn() async throws
     func fcmToken() async throws -> String
     func observeCoupleSnapshot(coupleID: String) -> AnyPublisher<Result<CoupleSnapshotDTO, Error>, Never>
