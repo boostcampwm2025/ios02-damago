@@ -17,6 +17,6 @@ final class FetchCodeUseCaseImpl: FetchCodeUseCase {
     }
 
     func execute() async throws -> String {
-        return try await userRepository.generateCode()
+        try await userRepository.generateCode()
     }
 }

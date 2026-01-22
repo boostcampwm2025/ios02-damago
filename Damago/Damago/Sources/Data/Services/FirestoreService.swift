@@ -9,6 +9,7 @@ final class FirestoreServiceImpl: FirestoreService {
     private var observers: [String: Any] = [:]
     private let lock = NSRecursiveLock()
 
+    // swiftlint:disable trailing_closure
     func observe<T: Decodable>(collection: String, document: String) -> AnyPublisher<Result<T, Error>, Never> {
         lock.lock()
         defer { lock.unlock() }
@@ -52,6 +53,7 @@ final class FirestoreServiceImpl: FirestoreService {
         observers[path] = publisher
         return publisher
     }
+    // swiftlint:enable trailing_closure
 
     private func removeObserver(path: String, listener: ListenerRegistration) {
         lock.lock()

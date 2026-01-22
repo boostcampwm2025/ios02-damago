@@ -60,7 +60,8 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
             )
         )
     }
-    
+
+    // swiftlint:disable trailing_closure
     func observeAnswer(
         coupleID: String,
         questionID: String,
@@ -100,7 +101,8 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
         }
         .eraseToAnyPublisher()
     }
-    
+    // swiftlint:enable trailing_closure
+
     @MainActor
     private func saveToLocalAnswer(dto: DailyQuestionDTO) async {
         do {

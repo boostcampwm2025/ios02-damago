@@ -80,7 +80,8 @@ final class InteractionViewModel: ViewModel {
         
         return $state.eraseToAnyPublisher()
     }
-    
+
+    // swiftlint:disable trailing_closure
     private func bindGlobalStore() {
         globalStore.globalState
             .handleEvents(receiveOutput: { [weak self] state in
@@ -94,6 +95,7 @@ final class InteractionViewModel: ViewModel {
             }
             .store(in: &cancellables)
     }
+    // swiftlint:enable trailing_closure
 
     private func fetchDailyQuestionData() async {
         do {
