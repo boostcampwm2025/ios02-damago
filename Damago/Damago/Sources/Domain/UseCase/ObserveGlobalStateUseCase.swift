@@ -83,6 +83,7 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
                     totalCoin: coupleSnapshot?.totalCoin,
                     foodCount: coupleSnapshot?.foodCount,
                     anniversaryDate: coupleSnapshot?.anniversaryDate,
+                    currentQuestionID: coupleSnapshot?.currentQuestionID,
                     petName: petSnapshot?.petName,
                     petType: petSnapshot?.petType,
                     level: petSnapshot?.level,

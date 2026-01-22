@@ -19,7 +19,8 @@ struct GlobalState: Equatable {
     let totalCoin: Int?
     let foodCount: Int?
     let anniversaryDate: Date?
-    
+    let currentQuestionID: String?
+
     // MARK: - Pet Content
     let petName: String?
     let petType: String?
@@ -41,6 +42,7 @@ struct GlobalState: Equatable {
         totalCoin: nil,
         foodCount: nil,
         anniversaryDate: nil,
+        currentQuestionID: nil,
         petName: nil,
         petType: nil,
         level: nil,

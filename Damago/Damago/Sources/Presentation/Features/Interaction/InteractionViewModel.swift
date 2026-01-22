@@ -83,9 +83,11 @@ final class InteractionViewModel: ViewModel {
     
     private func bindGlobalStore() {
         globalStore.globalState
-            .compactMapForUI { $0.coupleID }
-            .sink { [weak self] coupleID in
-                self?.coupleID = coupleID
+            .handleEvents(receiveOutput: { [weak self] state in
+                self?.coupleID = state.coupleID
+            })
+            .compactMapForUI { $0.currentQuestionID }
+            .sink { [weak self] _ in
                 Task { [weak self] in
                     await self?.fetchDailyQuestionData()
                 }

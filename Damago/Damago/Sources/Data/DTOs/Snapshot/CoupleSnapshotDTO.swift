@@ -12,4 +12,5 @@ struct CoupleSnapshotDTO: Decodable {
     let totalCoin: Int
     let foodCount: Int
     let anniversaryDate: Date?
+    let currentQuestionID: String?
 }
