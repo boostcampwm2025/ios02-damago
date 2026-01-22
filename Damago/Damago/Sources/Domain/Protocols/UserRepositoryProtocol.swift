@@ -19,4 +19,5 @@ protocol UserRepositoryProtocol {
     func observeUserSnapshot(uid: String) -> AnyPublisher<Result<UserSnapshotDTO, Error>, Never>
     func updateUserInfo(nickname: String?, anniversaryDate: Date?) async throws
     func signOut() throws
+    func withdraw() async throws
 }

@@ -194,3 +194,68 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response(f"Transaction failed: {str(e)}", status=500)
 
     return https_fn.Response(result_message)
+
+def withdraw_user(req: https_fn.Request) -> https_fn.Response:
+    """
+    회원 탈퇴를 처리합니다.
+
+    1. 해당 user 삭제
+    2. 해당 user가 속한 커플(coupleID) 삭제
+    3. 해당 user 커플의 펫(damagoID) 삭제
+    4. 파트너(partnerUID) 정보 초기화 (coupleID, partnerUID, damagoID 제거)
+
+    Args:
+        req (https_fn.Request): Header Authorization Bearer Token
+
+    Returns:
+        JSON Response: { "message": "User withdrawn successfully" }
+    """
+    try:
+        uid = get_uid_from_request(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+
+    db = get_db()
+    user_ref = db.collection("users").document(uid)
+
+    # 유저 정보 조회
+    user_doc = user_ref.get()
+    if not user_doc.exists:
+        return https_fn.Response("User not found", status=404)
+
+    user_data = user_doc.to_dict()
+    couple_id = user_data.get("coupleID")
+    damago_id = user_data.get("damagoID")
+    partner_uid = user_data.get("partnerUID")
+
+    batch = db.batch()
+
+    # 1. 해당 user 삭제
+    batch.delete(user_ref)
+
+    # 2. 커플 삭제
+    if couple_id:
+        couple_ref = db.collection("couples").document(couple_id)
+        batch.delete(couple_ref)
+
+    # 3. 펫 삭제
+    if damago_id:
+        damago_ref = db.collection("damagos").document(damago_id)
+        batch.delete(damago_ref)
+
+    # 4. 파트너 정보 초기화
+    if partner_uid:
+        partner_ref = db.collection("users").document(partner_uid)
+        batch.update(partner_ref, {
+            "coupleID": firestore.DELETE_FIELD,
+            "partnerUID": firestore.DELETE_FIELD,
+            "damagoID": firestore.DELETE_FIELD,
+            "anniversaryDate": firestore.DELETE_FIELD
+        })
+
+    batch.commit()
+
+    return https_fn.Response(
+        json.dumps({"message": "User withdrawn successfully"}),
+        mimetype="application/json"
+    )

@@ -53,5 +53,8 @@ final class UseCaseAssembly: Assembly {
                 userRepository: container.resolve(UserRepositoryProtocol.self)
             )
         }
+        container.register(WithdrawUseCase.self) {
+            WithdrawUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
     }
 }

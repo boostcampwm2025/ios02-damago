@@ -9,5 +9,6 @@ import Foundation
 
 struct AppleCredential {
     let idToken: String
+    let authorizationCode: String
     let fullName: PersonNameComponents?
 }

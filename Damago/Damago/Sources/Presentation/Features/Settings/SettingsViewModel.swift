@@ -63,13 +63,16 @@ final class SettingsViewModel: ViewModel {
     private var cancellables = Set<AnyCancellable>()
     private let globalStore: GlobalStoreProtocol
     private let signOutUseCase: SignOutUseCase
+    private let withdrawUseCase: WithdrawUseCase
 
     init(
         globalStore: GlobalStoreProtocol,
-        signOutUseCase: SignOutUseCase
+        signOutUseCase: SignOutUseCase,
+        withdrawUseCase: WithdrawUseCase
     ) {
         self.globalStore = globalStore
         self.signOutUseCase = signOutUseCase
+        self.withdrawUseCase = withdrawUseCase
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
@@ -175,7 +178,14 @@ final class SettingsViewModel: ViewModel {
                 state.route = Pulse(.error(message: error.localizedDescription))
             }
         case .deleteAccount:
-            break
+            Task {
+                do {
+                    try await withdrawUseCase.execute()
+                    NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
+                } catch {
+                    state.route = Pulse(.error(message: error.localizedDescription))
+                }
+            }
         }
     }
 }
