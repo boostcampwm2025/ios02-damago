@@ -50,7 +50,7 @@ nonisolated enum AlertActionType: String, Hashable {
         switch self {
         case .logout: "정말 로그아웃 하시겠습니까?"
         case .deleteAccount: "정말 탈퇴 하시겠습니까?\n모든 데이터가 삭제됩니다."
-        case .openSettings: "앱 설정 화면으로 이동하시겠습니까?"
+        case .openSettings: "권한이 필요합니다.\n앱 설정 화면으로 이동하시겠습니까?"
         }
     }
     var isDestructive: Bool { self == .deleteAccount }
