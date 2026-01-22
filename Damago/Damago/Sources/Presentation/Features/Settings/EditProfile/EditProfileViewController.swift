@@ -94,10 +94,3 @@ final class EditProfileViewController: UIViewController {
         present(alert, animated: true)
     }
 }
-
-extension EditProfileViewController: UITextFieldDelegate {
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
-    }
-}

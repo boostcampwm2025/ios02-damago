@@ -12,6 +12,7 @@ final class EditProfileView: UIView {
         let scrollView = UIScrollView()
         scrollView.showsVerticalScrollIndicator = false
         scrollView.alwaysBounceVertical = true
+        scrollView.keyboardDismissMode = .onDrag
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         return scrollView
     }()
@@ -125,7 +126,7 @@ final class EditProfileView: UIView {
         backgroundColor = .background
         setupHierarchy()
         setupConstraints()
-        setupGesture()
+        setupKeyboardDismissOnTap()
     }
     
     private func setupHierarchy() {
@@ -282,16 +283,12 @@ final class EditProfileView: UIView {
             ]
         )
     }
+}
 
-    private func setupGesture() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        tapGesture.cancelsTouchesInView = false
-        addGestureRecognizer(tapGesture)
-    }
-
-    @objc
-    private func dismissKeyboard() {
-        endEditing(true)
+extension EditProfileView: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
 }
 
@@ -325,12 +322,5 @@ extension EditProfileView {
         }
         nicknameTextField.isEnabled = !isUpdating
         datePicker.isEnabled = !isUpdating
-    }
-}
-
-extension EditProfileView: UITextFieldDelegate {
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
     }
 }
