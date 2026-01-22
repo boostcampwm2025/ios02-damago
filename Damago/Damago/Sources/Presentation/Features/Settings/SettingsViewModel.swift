@@ -7,6 +7,8 @@
 
 import Combine
 import Foundation
+import UserNotifications
+import ActivityKit
 
 final class SettingsViewModel: ViewModel {
     struct SectionState: Equatable {
@@ -38,6 +40,10 @@ final class SettingsViewModel: ViewModel {
         let termsURL: URL? = URL(string: "https://example.com")
         var route: Pulse<Route>?
 
+        var notificationCurrentPermission: Bool = false
+        var activityCurrentPermission: Bool = false
+
+
         var sectionState: SectionState {
             .init(
                 isNotificationEnabled: isNotificationEnabled,
@@ -57,25 +63,29 @@ final class SettingsViewModel: ViewModel {
         case webLink(url: URL?)
         case alert(type: AlertActionType)
         case error(message: String)
+        case openSettings
     }
 
     @Published private var state = State()
     private var cancellables = Set<AnyCancellable>()
     private let globalStore: GlobalStoreProtocol
     private let signOutUseCase: SignOutUseCase
+    private let updateUserUseCase: UpdateUserUseCase
 
     init(
         globalStore: GlobalStoreProtocol,
-        signOutUseCase: SignOutUseCase
+        signOutUseCase: SignOutUseCase,
+        updateUserUseCase: UpdateUserUseCase
     ) {
         self.globalStore = globalStore
         self.signOutUseCase = signOutUseCase
+        self.updateUserUseCase = updateUserUseCase
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
         input.viewDidLoad
             .sink { [weak self] in
-                self?.bindGlobalState()
+                self?.refreshPermissionsAndBind()
             }
             .store(in: &cancellables)
 
@@ -100,14 +110,29 @@ final class SettingsViewModel: ViewModel {
         return $state.eraseToAnyPublisher()
     }
 
+    private func refreshPermissionsAndBind() {
+        Task {
+            let notiSettings = await UNUserNotificationCenter.current().notificationSettings()
+            state.notificationCurrentPermission = (notiSettings.authorizationStatus == .authorized)
+            state.activityCurrentPermission = ActivityAuthorizationInfo().areActivitiesEnabled
+            bindGlobalState()
+        }
+    }
+
     private func bindGlobalState() {
         globalStore.globalState
-            .compactMapForUI { $0.useFCM }
+            .compactMapForUI { [weak self] state -> Bool? in
+                guard let self = self else { return nil }
+                return state.useFCM && self.state.notificationCurrentPermission
+            }
             .sink { [weak self] in self?.state.isNotificationEnabled = $0 }
             .store(in: &cancellables)
 
         globalStore.globalState
-            .compactMapForUI { $0.useLiveActivity }
+            .compactMapForUI { [weak self] state -> Bool? in
+                guard let self = self else { return nil }
+                return state.useLiveActivity && self.state.activityCurrentPermission
+            }
             .sink { [weak self] in self?.state.isLiveActivityEnabled = $0 }
             .store(in: &cancellables)
 
@@ -117,13 +142,9 @@ final class SettingsViewModel: ViewModel {
             .store(in: &cancellables)
 
         globalStore.globalState
-            .mapForUI { $0.opponentName }
+            .compactMapForUI { $0.opponentName }
             .sink { [weak self] name in
-                if let name {
-                    self?.state.opponentName = name
-                } else {
-                    self?.state.opponentName = ""
-                }
+                self?.state.opponentName = name
             }
             .store(in: &cancellables)
 
@@ -138,10 +159,66 @@ final class SettingsViewModel: ViewModel {
 
     private func handleToggle(type: ToggleType, isOn: Bool) {
         switch type {
+        case .notification: state.isNotificationEnabled = isOn
+        case .liveActivity: state.isLiveActivityEnabled = isOn
+        }
+
+        Task {
+            if isOn {
+                let isAuthorized = await checkAndRequestPermission(type: type)
+                if isAuthorized {
+                    updateLocalPermission(type: type, value: true)
+                    await updateServerSetting(type: type, isOn: true)
+                } else {
+                    self.revertToggle(type: type, targetState: false)
+                    self.state.route = Pulse(.alert(type: .openSettings))
+                }
+            } else {
+                await updateServerSetting(type: type, isOn: false)
+            }
+        }
+    }
+
+    private func updateLocalPermission(type: ToggleType, value: Bool) {
+        switch type {
+        case .notification: state.notificationCurrentPermission = value
+        case .liveActivity: state.activityCurrentPermission = value
+        }
+    }
+
+    private func checkAndRequestPermission(type: ToggleType) async -> Bool {
+        switch type {
         case .notification:
-            state.isNotificationEnabled = isOn
+            let center = UNUserNotificationCenter.current()
+            let settings = await center.notificationSettings()
+
+            if settings.authorizationStatus == .notDetermined {
+                return (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+            }
+            return settings.authorizationStatus == .authorized
+
         case .liveActivity:
-            state.isLiveActivityEnabled = isOn
+            return ActivityAuthorizationInfo().areActivitiesEnabled
+        }
+    }
+
+    private func updateServerSetting(type: ToggleType, isOn: Bool) async {
+        do {
+            switch type {
+            case .notification:
+                try await updateUserUseCase.execute(nickname: nil, anniversaryDate: nil, useFCM: isOn, useActivity: nil)
+            case .liveActivity:
+                try await updateUserUseCase.execute(nickname: nil, anniversaryDate: nil, useFCM: nil, useActivity: isOn)
+            }
+        } catch {
+            self.revertToggle(type: type, targetState: !isOn)
+        }
+    }
+
+    private func revertToggle(type: ToggleType, targetState: Bool) {
+        switch type {
+        case .notification: state.isNotificationEnabled = targetState
+        case .liveActivity: state.isLiveActivityEnabled = targetState
         }
     }
 
@@ -173,6 +250,8 @@ final class SettingsViewModel: ViewModel {
             }
         case .deleteAccount:
             break
+        case .openSettings:
+            state.route = Pulse(.openSettings)
         }
     }
 }
