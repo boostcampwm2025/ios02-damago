@@ -116,18 +116,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func startGlobalMonitoring() {
-        let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+        guard let uid = Auth.auth().currentUser?.uid else { return }
         let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
-
-        Task {
-            do {
-                let userInfo = try await userRepository.getUserInfo()
-                if let damagoID = userInfo.damagoID, let coupleID = userInfo.coupleID {
-                    globalStore.startMonitoring(damagoID: damagoID, coupleID: coupleID)
-                }
-            } catch {
-                SharedLogger.firebase.error("Failed to fetch user info for monitoring: \(error)")
-            }
-        }
+        globalStore.startMonitoring(uid: uid)
     }
 }

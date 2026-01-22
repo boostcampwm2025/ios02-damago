@@ -3,6 +3,74 @@ from utils.firestore import get_db
 from utils.constants import get_required_exp
 from utils.middleware import get_uid_from_request
 import json
+from datetime import datetime
+
+def update_user_info(req: https_fn.Request) -> https_fn.Response:
+    """
+    사용자 정보(닉네임) 및 커플 기념일(anniversaryDate)을 수정합니다.
+    
+    Args:
+        req (https_fn.Request):
+            Header: Authorization Bearer Token
+            Body: { 
+                "nickname": "NewName" (Optional),
+                "anniversaryDate": "2023-01-01T00:00:00Z" (Optional, ISO8601)
+            }
+            
+    Returns:
+        200 OK: Success
+        400 Bad Request: If both params are missing or invalid date format.
+        401 Unauthorized: Invalid token.
+        404 Not Found: User or Couple not found.
+    """
+    try:
+        uid = get_uid_from_request(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+        
+    try:
+        body = req.get_json()
+    except Exception:
+        return https_fn.Response("Invalid JSON body", status=400)
+        
+    nickname = body.get("nickname")
+    anniversary_date_str = body.get("anniversaryDate")
+    
+    # 두 파라미터 모두 없으면 400 Bad Request 리턴
+    if nickname is None and anniversary_date_str is None:
+        return https_fn.Response("Both nickname and anniversaryDate are missing", status=400)
+        
+    db = get_db()
+    user_ref = db.collection("users").document(uid)
+    
+    # 1. 닉네임 업데이트
+    if nickname is not None:
+        user_ref.update({"nickname": nickname})
+        
+    # 2. 기념일 업데이트 (커플인 경우에만)
+    if anniversary_date_str is not None:
+        try:
+            # ISO 8601 문자열 파싱 (Python 3.11+의 datetime.fromisoformat은 Z 지원하지만 
+            # 구버전 호환성이나 타임존 처리를 위해 replace('Z', '+00:00') 등을 고려)
+            if anniversary_date_str.endswith('Z'):
+                 anniversary_date_str = anniversary_date_str.replace('Z', '+00:00')
+            anniversary_date = datetime.fromisoformat(anniversary_date_str)
+        except ValueError:
+             return https_fn.Response("Invalid date format. Use ISO 8601.", status=400)
+
+        # coupleID 확인을 위해 유저 문서 조회
+        user_snap = user_ref.get()
+        if not user_snap.exists:
+             return https_fn.Response("User not found", status=404)
+             
+        couple_id = user_snap.to_dict().get("coupleID")
+        if couple_id:
+            couple_ref = db.collection("couples").document(couple_id)
+            couple_ref.update({"anniversaryDate": anniversary_date})
+        # 커플이 아닌 경우 기념일 업데이트 요청은 무시하거나 에러 처리할 수 있으나, 
+        # 여기서는 조용히 넘어감(혹은 404 리턴도 가능). 요구사항은 '둘 다 빼먹었을 때만 바로 리턴'이었음.
+
+    return https_fn.Response("Updated successfully", status=200)
 
 def get_user_info(req: https_fn.Request) -> https_fn.Response:
     """

@@ -84,7 +84,7 @@ final class SettingsViewController: UIViewController {
             toSection: .profile
         )
         snapshot.appendItems(
-            [.relationship(opponentName: state.opponentName, isConnected: state.isConnected)],
+            [.relationship(opponentName: state.opponentName)],
             toSection: .relationship
         )
         snapshot.appendItems(
@@ -114,9 +114,13 @@ final class SettingsViewController: UIViewController {
     private func handleRoute(_ route: SettingsViewModel.Route) {
         switch route {
         case .editProfile:
-            let vc = UIViewController()
-            vc.view.backgroundColor = .white
-            vc.title = "프로필 수정"
+            let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
+            let viewModel = EditProfileViewModel(
+                globalStore: globalStore,
+                updateUserUseCase: updateUserUseCase
+            )
+            let vc = EditProfileViewController(viewModel: viewModel)
             navigationController?.pushViewController(vc, animated: true)
 
         case .webLink(let url):
@@ -158,7 +162,7 @@ extension SettingsViewController: UITableViewDelegate {
                 cell.selectionStyle = .none
                 return cell
 
-            case .relationship(let opponentName, let isConnected):
+            case .relationship(let opponentName):
                 let cell = tableView.dequeueReusableCell(
                     withIdentifier: UITableViewCell.reuseIdentifier,
                     for: indexPath
@@ -166,10 +170,10 @@ extension SettingsViewController: UITableViewDelegate {
                 var content = cell.defaultContentConfiguration()
 
                 content.image = UIImage(systemName: "heart.fill")
-                content.imageProperties.tintColor = isConnected ? .systemPink : .systemGray
+                content.imageProperties.tintColor = .systemPink
                 content.text = "커플 연결"
                 content.textProperties.color = .textPrimary
-                content.secondaryText = isConnected ? "\(opponentName)님과 연결됨" : "연결된 상대가 없어요"
+                content.secondaryText = opponentName.isEmpty ? "상대방의 닉네임이 없어요!" : "\(opponentName)님과 연결됨"
                 content.secondaryTextProperties.color = .textSecondary
 
                 cell.contentConfiguration = content

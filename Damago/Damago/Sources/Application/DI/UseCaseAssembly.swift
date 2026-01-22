@@ -31,14 +31,24 @@ final class UseCaseAssembly: Assembly {
                 dailyQuestionRepository: container.resolve(DailyQuestionRepositoryProtocol.self)
             )
         }
-        container.register(ObservePetStatusUseCase.self) {
-            ObservePetStatusUseCaseImpl(petRepository: container.resolve(PetRepositoryProtocol.self))
-        }
-        container.register(ObserveCoupleSharedInfoUseCase.self) {
-            ObserveCoupleSharedInfoUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
-        }
         container.register(SignOutUseCase.self) {
             SignOutUseCaseImpl(repository: container.resolve(UserRepositoryProtocol.self))
+        }
+        container.register(ObserveGlobalStateUseCase.self) {
+            ObserveGlobalStateUseCaseImpl(
+                userRepository: container.resolve(UserRepositoryProtocol.self),
+                petRepository: container.resolve(PetRepositoryProtocol.self)
+            )
+        }
+        container.register(SignOutUseCase.self) {
+            SignOutUseCaseImpl(
+                repository: container.resolve(UserRepositoryProtocol.self)
+            )
+        }
+        container.register(UpdateUserUseCase.self) {
+            UpdateUserUseCaseImpl(
+                userRepository: container.resolve(UserRepositoryProtocol.self)
+            )
         }
     }
 }
