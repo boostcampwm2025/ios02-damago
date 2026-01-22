@@ -142,4 +142,35 @@ extension ConnectionViewController: UITextFieldDelegate {
         
         return true
     }
+    
+    func textField(
+        _ textField: UITextField,
+        shouldChangeCharactersIn range: NSRange,
+        replacementString string: String
+    ) -> Bool {
+        // 삭제 허용
+        guard !string.isEmpty else { return true }
+        
+        // 영어와 숫자만 허용 (한글, 특수문자 차단)
+        let allowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+        let typed = CharacterSet(charactersIn: string.uppercased())
+        guard allowed.isSuperset(of: typed) else { return false }
+        
+        // 대문자로 변환하여 적용
+        guard let text = textField.text,
+              let textRange = Range(range, in: text) else { return false }
+        
+        textField.text = text.replacingCharacters(in: textRange, with: string.uppercased())
+        
+        // 커서 위치 조정
+        let cursorPosition = range.location + string.count
+        if let position = textField.position(from: textField.beginningOfDocument, offset: cursorPosition) {
+            textField.selectedTextRange = textField.textRange(from: position, to: position)
+        }
+        
+        // 값 변경 이벤트 발생
+        textField.sendActions(for: .editingChanged)
+        
+        return false
+    }
 }

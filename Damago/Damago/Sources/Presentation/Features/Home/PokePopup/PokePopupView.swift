@@ -134,6 +134,18 @@ final class PokePopupView: UIView {
         setupHierarchy()
         setupConstraints()
         setupKeyboardDismiss()
+        setupKeyboardDismissAndDimmingTap()
+    }
+    
+    private func setupKeyboardDismissAndDimmingTap() {
+        setupKeyboardDismissOnTap { [weak self] location in
+            guard let self = self else { return }
+            
+            // containerView 외부를 클릭한 경우에만 취소 동작 실행
+            if !self.containerView.frame.contains(location) {
+                self.cancelButton.sendActions(for: .touchUpInside)
+            }
+        }
     }
     
     deinit {
@@ -216,6 +228,13 @@ extension PokePopupView {
         // 텍스트 필드가 편집 중이 아닐 때만 업데이트 (입력 방해 방지)
         if !customTextField.isFirstResponder && customTextField.text != state.currentText {
             customTextField.text = state.currentText
+        }
+        
+        // 버튼 활성화 상태 업데이트
+        if state.isEditing {
+            saveButton.isEnabled = state.hasChanges
+        } else {
+            sendButton.isEnabled = state.hasChanges
         }
         
         // Edit 모드에 따라 UI 업데이트
@@ -463,8 +482,6 @@ extension PokePopupView {
         customTextField.delegate = self
         customTextField.returnKeyType = .done
         customTextField.maxLength = 20
-
-        setupKeyboardDismissOnTap()
         
         guard let constraint = containerViewCenterYConstraint else { return }
         
@@ -482,35 +499,6 @@ extension PokePopupView {
                 return allTextFields
             },
             padding: 40)
-        setupKeyboardButtonControl()
-    }
-    
-    private func setupKeyboardButtonControl() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(keyboardWillShow),
-            name: UIResponder.keyboardWillShowNotification,
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(keyboardWillHide),
-            name: UIResponder.keyboardWillHideNotification,
-            object: nil
-        )
-    }
-    
-    @objc
-    private func keyboardWillShow() {
-        sendButton.isEnabled = false
-        cancelButton.isEnabled = false
-    }
-    
-    @objc
-    private func keyboardWillHide() {
-        sendButton.isEnabled = true
-        cancelButton.isEnabled = true
     }
 }
 

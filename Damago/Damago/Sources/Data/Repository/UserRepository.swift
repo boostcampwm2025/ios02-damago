@@ -96,7 +96,6 @@ private extension UserInfoResponse {
     }
 }
 
-
 extension DamagoStatusResponse {
     func toDomain() -> PetStatus {
         PetStatus(
