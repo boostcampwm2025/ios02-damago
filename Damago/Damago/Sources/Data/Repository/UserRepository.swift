@@ -29,9 +29,9 @@ final class UserRepository: UserRepositoryProtocol {
         self.firestoreService = firestoreService
     }
     
-    func generateCode(fcmToken: String) async throws -> String {
+    func generateCode() async throws -> String {
         let token = try await tokenProvider.idToken()
-        return try await networkProvider.requestString(UserAPI.generateCode(accessToken: token, fcmToken: fcmToken))
+        return try await networkProvider.requestString(UserAPI.generateCode(accessToken: token))
     }
     
     func connectCouple(targetCode: String) async throws {

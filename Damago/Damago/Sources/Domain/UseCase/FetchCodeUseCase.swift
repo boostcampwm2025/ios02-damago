@@ -17,7 +17,6 @@ final class FetchCodeUseCaseImpl: FetchCodeUseCase {
     }
 
     func execute() async throws -> String {
-        let fcmToken = try await userRepository.fcmToken()
-        return try await userRepository.generateCode(fcmToken: fcmToken)
+        return try await userRepository.generateCode()
     }
 }

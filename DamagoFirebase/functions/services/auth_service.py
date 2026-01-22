@@ -19,12 +19,6 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
     except ValueError as e:
         return https_fn.Response(str(e), status=401)
 
-    data = req.get_json(silent=True) or req.args
-    fcm_token = data.get("fcmToken")
-
-    if not fcm_token:
-        return https_fn.Response("Missing fcmToken", status=400)
-
     db = get_db()
     users_ref = db.collection("users")
     # 문서 ID를 UDID 대신 UID로 사용
@@ -36,15 +30,6 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
     if doc_snapshot.exists:
         user_data = doc_snapshot.to_dict()
         existing_code = user_data.get("code")
-        current_db_token = user_data.get("fcmToken")
-
-        # 토큰 갱신
-        if current_db_token != fcm_token:
-            doc_ref.update({
-                "fcmToken": fcm_token,
-                "updatedAt": firestore.SERVER_TIMESTAMP
-            })
-            print(f"Updated FCM token for user {uid}")
 
         return https_fn.Response(f"{existing_code}")
 
@@ -72,7 +57,7 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
         "coupleID": None,
         "anniversaryDate": None,
         "nickname": None,
-        "fcmToken": fcm_token,
+        "fcmToken": None,
         "laStartToken": None,
         "laUpdateToken": None,
         "useFCM": True,

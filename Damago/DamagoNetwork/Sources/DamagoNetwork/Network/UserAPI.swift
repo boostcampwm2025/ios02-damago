@@ -8,7 +8,7 @@
 import Foundation
 
 public enum UserAPI {
-    case generateCode(accessToken: String, fcmToken: String)
+    case generateCode(accessToken: String)
     case connectCouple(accessToken: String, targetCode: String)
     case getUserInfo(accessToken: String)
     case updateFCMToken(accessToken: String, fcmToken: String)
@@ -35,7 +35,7 @@ extension UserAPI: EndPoint {
     public var headers: [String: String]? {
         var headers = ["Content-Type": "application/json; charset=utf-8"]
         switch self {
-        case .generateCode(let token, _),
+        case .generateCode(let token),
              .connectCouple(let token, _),
              .getUserInfo(let token),
              .updateFCMToken(let token, _):
@@ -48,14 +48,11 @@ extension UserAPI: EndPoint {
         let parameters: [String: Any?]
         
         switch self {
-        case .generateCode(_, let fcmToken):
-            parameters = ["fcmToken": fcmToken]
+        case .generateCode, .getUserInfo:
+            parameters = [:]
             
         case .connectCouple(_, let targetCode):
             parameters = ["targetCode": targetCode]
-            
-        case .getUserInfo:
-            parameters = [:]
             
         case .updateFCMToken(_, let fcmToken):
             parameters = ["fcmToken": fcmToken]
