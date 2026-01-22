@@ -49,12 +49,13 @@ final class EditProfileView: UIView {
         return view
     }()
     
-    let nicknameTextField: UITextField = {
+    lazy var nicknameTextField: UITextField = {
         let textField = UITextField()
         textField.font = .body1
         textField.textColor = .textPrimary
         textField.placeholder = "닉네임을 입력해 주세요"
         textField.returnKeyType = .done
+        textField.delegate = self
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }()
@@ -124,6 +125,7 @@ final class EditProfileView: UIView {
         backgroundColor = .background
         setupHierarchy()
         setupConstraints()
+        setupGesture()
     }
     
     private func setupHierarchy() {
@@ -280,6 +282,17 @@ final class EditProfileView: UIView {
             ]
         )
     }
+
+    private func setupGesture() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        addGestureRecognizer(tapGesture)
+    }
+
+    @objc
+    private func dismissKeyboard() {
+        endEditing(true)
+    }
 }
 
 extension EditProfileView {
@@ -312,5 +325,12 @@ extension EditProfileView {
         }
         nicknameTextField.isEnabled = !isUpdating
         datePicker.isEnabled = !isUpdating
+    }
+}
+
+extension EditProfileView: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
 }
