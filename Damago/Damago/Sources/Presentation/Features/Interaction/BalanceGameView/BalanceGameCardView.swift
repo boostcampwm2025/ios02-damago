@@ -97,12 +97,6 @@ final class BalanceGameCardView: UIView {
         return label
     }()
 
-    // 선택한 카드 상태 구분
-    enum Choice {
-        case left
-        case right
-    }
-
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -185,7 +179,7 @@ final class BalanceGameCardView: UIView {
         rightChoiceButton.layer.masksToBounds = true
     }
 
-    func render(selectedChoice: Choice?) {
+    func render(selectedChoice: BalanceGameChoice?) {
         switch selectedChoice {
         case .left:
             animateSelection(leftChoiceButton)
