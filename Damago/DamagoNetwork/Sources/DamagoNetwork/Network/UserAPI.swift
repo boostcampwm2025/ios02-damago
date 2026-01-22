@@ -8,9 +8,10 @@
 import Foundation
 
 public enum UserAPI {
-    case generateCode(accessToken: String, fcmToken: String)
+    case generateCode(accessToken: String)
     case connectCouple(accessToken: String, targetCode: String)
     case getUserInfo(accessToken: String)
+    case updateFCMToken(accessToken: String, fcmToken: String)
     case updateUserInfo(accessToken: String, nickname: String?, anniversaryDate: String?)
 }
 
@@ -24,6 +25,7 @@ extension UserAPI: EndPoint {
         case .generateCode: "/generate_code"
         case .connectCouple: "/connect_couple"
         case .getUserInfo: "/get_user_info"
+        case .updateFCMToken: "/update_fcm_token"
         case .updateUserInfo: "/update_user_info"
         }
     }
@@ -35,9 +37,10 @@ extension UserAPI: EndPoint {
     public var headers: [String: String]? {
         var headers = ["Content-Type": "application/json; charset=utf-8"]
         switch self {
-        case .generateCode(let token, _),
+        case .generateCode(let token),
              .connectCouple(let token, _),
              .getUserInfo(let token),
+             .updateFCMToken(let token, _),
              .updateUserInfo(let token, _, _):
             headers["Authorization"] = "Bearer \(token)"
         }
@@ -48,14 +51,14 @@ extension UserAPI: EndPoint {
         let parameters: [String: Any?]
         
         switch self {
-        case .generateCode(_, let fcmToken):
-            parameters = ["fcmToken": fcmToken]
+        case .generateCode, .getUserInfo:
+            parameters = [:]
             
         case .connectCouple(_, let targetCode):
             parameters = ["targetCode": targetCode]
             
-        case .getUserInfo:
-            parameters = [:]
+        case .updateFCMToken(_, let fcmToken):
+            parameters = ["fcmToken": fcmToken]
             
         case .updateUserInfo(_, let nickname, let anniversaryDate):
             parameters = [
