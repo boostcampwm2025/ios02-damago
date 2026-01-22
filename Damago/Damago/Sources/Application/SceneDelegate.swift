@@ -113,21 +113,28 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     // 사용자가 Foreground에 돌아왔을 때 서버와 동기화
     func sceneDidBecomeActive(_ scene: UIScene) {
         LiveActivityManager.shared.synchronizeActivity()
+        syncPermissions()
     }
 
     private func startGlobalMonitoring() {
-        let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+        guard let uid = Auth.auth().currentUser?.uid else { return }
         let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
+        globalStore.startMonitoring(uid: uid)
+    }
 
+    private func syncPermissions() {
         Task {
-            do {
-                let userInfo = try await userRepository.getUserInfo()
-                if let damagoID = userInfo.damagoID, let coupleID = userInfo.coupleID {
-                    globalStore.startMonitoring(damagoID: damagoID, coupleID: coupleID)
-                }
-            } catch {
-                SharedLogger.firebase.error("Failed to fetch user info for monitoring: \(error)")
-            }
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
+            let notiSettings = await UNUserNotificationCenter.current().notificationSettings()
+            let isNotiAuthorized = (notiSettings.authorizationStatus == .authorized)
+            let isActivityAuthorized = ActivityAuthorizationInfo().areActivitiesEnabled
+
+            try await updateUserUseCase.execute(
+                nickname: nil,
+                anniversaryDate: nil,
+                useFCM: isNotiAuthorized,
+                useActivity: isActivityAuthorized
+            )
         }
     }
 }

@@ -123,6 +123,21 @@ final class DailyQuestionInputView: UIView {
         return button
     }()
     
+    struct ButtonState: Equatable {
+        let isEnabled: Bool
+        let isLoading: Bool
+    }
+    
+    func updateSubmitButton(state: ButtonState) {
+        if state.isLoading {
+            submitButton.setTitle("전송 중...")
+        } else {
+            submitButton.setTitle(state.isEnabled ? "답변 제출" : "답변 내용을 입력해주세요")
+        }
+        
+        submitButton.isEnabled = state.isEnabled
+    }
+    
     private let infoLabel: UILabel = {
         let label = UILabel()
         let attributedString = NSMutableAttributedString()

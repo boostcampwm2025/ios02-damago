@@ -52,8 +52,20 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
     return user_service.get_user_info(req)
 
 @https_fn.on_request()
+def update_fcm_token(req: https_fn.Request) -> https_fn.Response:
+    return user_service.update_fcm_token(req)
+    
+@https_fn.on_request()
+def update_user_info(req: https_fn.Request) -> https_fn.Response:
+    return user_service.update_user_info(req)
+
+@https_fn.on_request()
 def fetch_daily_question(req: https_fn.Request) -> https_fn.Response:
     return couple_interaction_service.fetch_daily_question(req)
+
+@https_fn.on_request()
+def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
+    return couple_interaction_service.submit_daily_question(req)
 
 # ========================================
 # 시드 데이터 관리 (관리자 전용)

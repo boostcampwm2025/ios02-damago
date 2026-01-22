@@ -133,6 +133,9 @@ final class ConnectionView: UIView {
         textField.placeholder = "상대방 코드 입력"
         textField.returnKeyType = .go
         textField.enablesReturnKeyAutomatically = true
+        textField.keyboardType = .asciiCapable
+        textField.autocapitalizationType = .allCharacters
+        textField.autocorrectionType = .no
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }()

@@ -19,12 +19,6 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
     except ValueError as e:
         return https_fn.Response(str(e), status=401)
 
-    data = req.get_json(silent=True) or req.args
-    fcm_token = data.get("fcmToken")
-
-    if not fcm_token:
-        return https_fn.Response("Missing fcmToken", status=400)
-
     db = get_db()
     users_ref = db.collection("users")
     # 문서 ID를 UDID 대신 UID로 사용
@@ -36,15 +30,6 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
     if doc_snapshot.exists:
         user_data = doc_snapshot.to_dict()
         existing_code = user_data.get("code")
-        current_db_token = user_data.get("fcmToken")
-
-        # 토큰 갱신
-        if current_db_token != fcm_token:
-            doc_ref.update({
-                "fcmToken": fcm_token,
-                "updatedAt": firestore.SERVER_TIMESTAMP
-            })
-            print(f"Updated FCM token for user {uid}")
 
         return https_fn.Response(f"{existing_code}")
 
@@ -72,7 +57,7 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
         "coupleID": None,
         "anniversaryDate": None,
         "nickname": None,
-        "fcmToken": fcm_token,
+        "fcmToken": None,
         "laStartToken": None,
         "laUpdateToken": None,
         "useFCM": True,
@@ -132,11 +117,17 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     couple_ref = db.collection("couples").document(couple_doc_id)
     damago_ref = db.collection("damagos").document()
 
+    # 첫 번째 질문 ID 가져오기 (order=1)
+    first_question_id = None
+    questions_query = db.collection("dailyQuestions").where("order", "==", 1).limit(1).get()
+    if questions_query:
+        first_question_id = questions_query[0].id
+
     from utils.constants import XP_TABLE # 초기 경험치 참조
 
     # --- [Step 3] 트랜잭션 실행 ---
     @google.cloud.firestore.transactional
-    def run_transaction(transaction, couple_ref, damago_ref, my_ref, target_ref, my_uid, target_uid):
+    def run_transaction(transaction, couple_ref, damago_ref, my_ref, target_ref, my_uid, target_uid, question_id):
         snapshot = couple_ref.get(transaction=transaction)
 
         if snapshot.exists:
@@ -168,7 +159,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             "anniversaryDate": None,
             "createdAt": firestore.SERVER_TIMESTAMP,
             "totalCoin": 0,
-            "foodCount": 10
+            "foodCount": 10,
+            "currentQuestionID": question_id
         })
 
         # 유저 정보 업데이트 (상호 참조, UDID -> UID)
@@ -195,7 +187,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             my_doc.reference,
             target_doc.reference,
             my_uid,
-            target_doc.id # target_doc의 ID는 UID임
+            target_doc.id, # target_doc의 ID는 UID임
+            first_question_id
         )
     except Exception as e:
         return https_fn.Response(f"Transaction failed: {str(e)}", status=500)

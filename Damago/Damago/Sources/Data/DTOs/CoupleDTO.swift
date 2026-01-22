@@ -16,11 +16,14 @@ struct CoupleDTO: Decodable {
     let createdAt: Date?
     let totalCoin: Int
     let foodCount: Int
+    let currentQuestionID: String?
 
     func toDomain() -> CoupleSharedInfo {
         CoupleSharedInfo(
+            coupleID: self.id,
             foodCount: self.foodCount,
-            totalCoin: self.totalCoin
+            totalCoin: self.totalCoin,
+            currentQuestionID: self.currentQuestionID
         )
     }
 }

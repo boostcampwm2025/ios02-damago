@@ -60,8 +60,9 @@ final class DailyQuestionCardView: UIView {
         setupUI()
     }
     
-    func configure(question: String) {
+    func configure(question: String, buttonTitle: String = "답변 제출") {
         questionLabel.text = question
+        submitButton.setTitle(buttonTitle)
     }
     
     private func setupUI() {

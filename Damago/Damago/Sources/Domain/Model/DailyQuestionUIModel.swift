@@ -13,6 +13,7 @@ enum DailyQuestionUIModel: Equatable {
         let questionID: String
         let questionContent: String
         let placeholder: String
+        let isUser1: Bool
     }
     
     struct ResultState: Equatable {
@@ -20,6 +21,8 @@ enum DailyQuestionUIModel: Equatable {
         let questionContent: String
         let myAnswer: AnswerCardUIModel
         let opponentAnswer: AnswerCardUIModel
+        let buttonTitle: String
+        let isUser1: Bool
     }
 }
 

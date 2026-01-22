@@ -5,6 +5,7 @@
 //  Created by 김재영 on 12/16/25.
 //
 
+import ActivityKit
 import FirebaseAuth
 import FirebaseCore
 import FirebaseFirestore
@@ -41,6 +42,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // -> 앱 최초 실행 시 "알림을 허용하시겠습니까?" 팝업이 뜹니다.
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         Task {
+            defer { syncPermissions() }
             do {
                 let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: authOptions)
                 SharedLogger.apns.info("알림 권한 허용 여부: \(granted)")
@@ -129,6 +131,18 @@ extension AppDelegate: MessagingDelegate {
         UserDefaults.standard.set(fcmToken, forKey: "fcmToken")
 
         NotificationCenter.default.post(name: .fcmTokenDidUpdate, object: nil)
+        
+        guard let fcmToken else { return }
+        
+        Task {
+            let useCase = AppDIContainer.shared.resolve(UpdateFCMTokenUseCase.self)
+            do {
+                try await useCase.execute(fcmToken: fcmToken)
+                SharedLogger.apns.info("✅ FCM token 업데이트 완료")
+            } catch {
+                SharedLogger.apns.error("❌ FCM token 업데이트 실패: \(error.localizedDescription)")
+            }
+        }
     }
 }
 
@@ -141,5 +155,23 @@ extension AppDelegate {
         settings.isSSLEnabled = false
         Firestore.firestore().settings = settings
         #endif
+    }
+}
+
+extension AppDelegate {
+    private func syncPermissions() {
+        Task {
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
+            let notiSettings = await UNUserNotificationCenter.current().notificationSettings()
+            let isNotiAuthorized = (notiSettings.authorizationStatus == .authorized)
+            let isActivityAuthorized = ActivityAuthorizationInfo().areActivitiesEnabled
+
+            try await updateUserUseCase.execute(
+                nickname: nil,
+                anniversaryDate: nil,
+                useFCM: isNotiAuthorized,
+                useActivity: isActivityAuthorized
+            )
+        }
     }
 }

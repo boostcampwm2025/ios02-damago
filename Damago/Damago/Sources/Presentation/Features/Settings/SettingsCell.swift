@@ -75,9 +75,9 @@ final class SettingsProfileCell: UITableViewCell {
     }
 
     func configure(name: String, dDay: Int, date: String) {
-        nameLabel.text = name
+        nameLabel.text = name.isEmpty ? "닉네임이 필요해요!" : name
         dDayLabel.text = "D+\(dDay)"
-        dateLabel.text = "\(date) 처음 만남"
+        dateLabel.text = date.isEmpty ? "처음 만난 날을 등록해 보세요!" : "\(date) 처음 만남"
     }
 }
 

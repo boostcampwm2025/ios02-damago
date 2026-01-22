@@ -38,10 +38,16 @@ final class RepositoryAssembly: Assembly {
             PokeShortcutRepository()
         }
         
+        container.register(DailyQuestionLocalDataSourceProtocol.self) {
+            DailyQuestionLocalDataSource(storage: container.resolve(SwiftDataStorage.self))
+        }
+        
         container.register(DailyQuestionRepositoryProtocol.self) {
             DailyQuestionRepository(
                 networkProvider: container.resolve(NetworkProvider.self),
-                tokenProvider: container.resolve(TokenProvider.self)
+                tokenProvider: container.resolve(TokenProvider.self),
+                firestoreService: container.resolve(FirestoreService.self),
+                localDataSource: container.resolve(DailyQuestionLocalDataSourceProtocol.self)
             )
         }
     }

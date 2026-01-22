@@ -21,14 +21,37 @@ final class UseCaseAssembly: Assembly {
                 dailyQuestionRepository: container.resolve(DailyQuestionRepositoryProtocol.self)
             )
         }
-        container.register(ObservePetStatusUseCase.self) {
-            ObservePetStatusUseCaseImpl(petRepository: container.resolve(PetRepositoryProtocol.self))
+        container.register(SubmitDailyQuestionAnswerUseCase.self) {
+            SubmitDailyQuestionAnswerUseCaseImpl(
+                dailyQuestionRepository: container.resolve(DailyQuestionRepositoryProtocol.self)
+            )
         }
-        container.register(ObserveCoupleSharedInfoUseCase.self) {
-            ObserveCoupleSharedInfoUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        container.register(ObserveDailyQuestionAnswerUseCase.self) {
+            ObserveDailyQuestionAnswerUseCaseImpl(
+                dailyQuestionRepository: container.resolve(DailyQuestionRepositoryProtocol.self)
+            )
         }
         container.register(SignOutUseCase.self) {
             SignOutUseCaseImpl(repository: container.resolve(UserRepositoryProtocol.self))
+        }
+        container.register(ObserveGlobalStateUseCase.self) {
+            ObserveGlobalStateUseCaseImpl(
+                userRepository: container.resolve(UserRepositoryProtocol.self),
+                petRepository: container.resolve(PetRepositoryProtocol.self)
+            )
+        }
+        container.register(SignOutUseCase.self) {
+            SignOutUseCaseImpl(
+                repository: container.resolve(UserRepositoryProtocol.self)
+            )
+        }
+        container.register(UpdateFCMTokenUseCase.self) {
+            UpdateFCMTokenUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
+        container.register(UpdateUserUseCase.self) {
+            UpdateUserUseCaseImpl(
+                userRepository: container.resolve(UserRepositoryProtocol.self)
+            )
         }
     }
 }

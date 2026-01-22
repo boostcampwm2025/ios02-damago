@@ -8,6 +8,8 @@
 import Foundation
 
 struct CoupleSharedInfo: Equatable {
+    let coupleID: String
     let foodCount: Int
     let totalCoin: Int
+    let currentQuestionID: String?
 }

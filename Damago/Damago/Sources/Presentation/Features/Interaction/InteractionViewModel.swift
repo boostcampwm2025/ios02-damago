@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import OSLog
 
 final class InteractionViewModel: ViewModel {
     let title = "커플 활동"
@@ -15,7 +16,6 @@ final class InteractionViewModel: ViewModel {
     struct Input {
         let viewDidLoad: AnyPublisher<Void, Never>
         let questionSubmitButtonDidTap: AnyPublisher<Void, Never>
-        let answerDidSubmitted: AnyPublisher<String, Never>
         let historyButtonDidTap: AnyPublisher<Void, Never>
     }
     
@@ -30,18 +30,38 @@ final class InteractionViewModel: ViewModel {
     }
     
     private let fetchDailyQuestionUseCase: FetchDailyQuestionUseCase
+    private let observeDailyQuestionAnswerUseCase: ObserveDailyQuestionAnswerUseCase
+    private let userRepository: UserRepositoryProtocol
+    private let globalStore: GlobalStoreProtocol
     
     @Published private var state = State()
     private var cancellables = Set<AnyCancellable>()
+    private var observationCancellable: AnyCancellable?
+    private var coupleID: String?
     
-    init(fetchDailyQuestionUseCase: FetchDailyQuestionUseCase) {
+    var uiModelPublisher: AnyPublisher<DailyQuestionUIModel, Never> {
+        $state
+            .compactMap { $0.dailyQuestionUIModel }
+            .removeDuplicates()
+            .eraseToAnyPublisher()
+    }
+    
+    init(
+        fetchDailyQuestionUseCase: FetchDailyQuestionUseCase,
+        observeDailyQuestionAnswerUseCase: ObserveDailyQuestionAnswerUseCase,
+        userRepository: UserRepositoryProtocol,
+        globalStore: GlobalStoreProtocol
+    ) {
         self.fetchDailyQuestionUseCase = fetchDailyQuestionUseCase
+        self.observeDailyQuestionAnswerUseCase = observeDailyQuestionAnswerUseCase
+        self.userRepository = userRepository
+        self.globalStore = globalStore
     }
     
     func transform(_ input: Input) -> Output {
         input.viewDidLoad
             .sink { [weak self] in
-                self?.fetchDailyQuestionData()
+                self?.bindGlobalStore()
             }
             .store(in: &cancellables)
         
@@ -49,12 +69,6 @@ final class InteractionViewModel: ViewModel {
             .sink { [weak self] in
                 guard let self, let uiModel = self.state.dailyQuestionUIModel else { return }
                 self.state.route = Pulse(.questionInput(uiModel: uiModel))
-            }
-            .store(in: &cancellables)
-        
-        input.answerDidSubmitted
-            .sink { [weak self] answerText in
-                // TODO: Update local state if needed or re-fetch
             }
             .store(in: &cancellables)
         
@@ -67,15 +81,67 @@ final class InteractionViewModel: ViewModel {
         return $state.eraseToAnyPublisher()
     }
 
-    private func fetchDailyQuestionData() {
-        Task {
-            do {
-                let uiModel = try await fetchDailyQuestionUseCase.execute()
-                self.state.dailyQuestionUIModel = uiModel
-            } catch {
-                // TODO: Handle Error
-                print("오늘의 질문 가져오기 실패: \(error)")
+    // swiftlint:disable trailing_closure
+    private func bindGlobalStore() {
+        globalStore.globalState
+            .handleEvents(receiveOutput: { [weak self] state in
+                self?.coupleID = state.coupleID
+            })
+            .compactMapForUI { $0.currentQuestionID }
+            .sink { [weak self] _ in
+                Task { [weak self] in
+                    await self?.fetchDailyQuestionData()
+                }
             }
+            .store(in: &cancellables)
+    }
+    // swiftlint:enable trailing_closure
+
+    private func fetchDailyQuestionData() async {
+        do {
+            let uiModel = try await fetchDailyQuestionUseCase.execute()
+            self.state.dailyQuestionUIModel = uiModel
+            self.startObserving(uiModel: uiModel)
+        } catch {
+            SharedLogger.interaction.error("오늘의 질문 가져오기 실패: \(error.localizedDescription)")
         }
+    }
+    
+    private func startObserving(uiModel: DailyQuestionUIModel) {
+        guard let coupleID = self.coupleID else { return }
+        
+        observationCancellable?.cancel()
+        
+        let questionID: String
+        let questionContent: String
+        let isUser1: Bool
+        
+        switch uiModel {
+        case .input(let state):
+            questionID = state.questionID
+            questionContent = state.questionContent
+            isUser1 = state.isUser1
+
+        case .result(let state):
+            questionID = state.questionID
+            questionContent = state.questionContent
+            isUser1 = state.isUser1
+        }
+        
+        self.observationCancellable = self.observeDailyQuestionAnswerUseCase
+            .execute(
+                coupleID: coupleID,
+                questionID: questionID,
+                questionContent: questionContent,
+                isUser1: isUser1
+            )
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] result in
+                if case .success(let updatedModel) = result {
+                    if self?.state.dailyQuestionUIModel != updatedModel {
+                        self?.state.dailyQuestionUIModel = updatedModel
+                    }
+                }
+            }
     }
 }
