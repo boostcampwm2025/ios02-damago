@@ -113,11 +113,28 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     // 사용자가 Foreground에 돌아왔을 때 서버와 동기화
     func sceneDidBecomeActive(_ scene: UIScene) {
         LiveActivityManager.shared.synchronizeActivity()
+        syncPermissions()
     }
 
     private func startGlobalMonitoring() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
         globalStore.startMonitoring(uid: uid)
+    }
+
+    private func syncPermissions() {
+        Task {
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
+            let notiSettings = await UNUserNotificationCenter.current().notificationSettings()
+            let isNotiAuthorized = (notiSettings.authorizationStatus == .authorized)
+            let isActivityAuthorized = ActivityAuthorizationInfo().areActivitiesEnabled
+
+            try await updateUserUseCase.execute(
+                nickname: nil,
+                anniversaryDate: nil,
+                useFCM: isNotiAuthorized,
+                useActivity: isActivityAuthorized
+            )
+        }
     }
 }
