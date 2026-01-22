@@ -5,9 +5,17 @@
 //  Created by 박현수 on 1/8/26.
 //
 
+import Combine
 import UIKit
 
 final class ExperienceBar: UIView {
+    private let levelUpSubject = PassthroughSubject<Int, Never>()
+    var levelUpPublisher: AnyPublisher<Int, Never> {
+        levelUpSubject.eraseToAnyPublisher()
+    }
+
+    private var currentState: State?
+
     private let levelLabel: UILabel = {
         let label = UILabel()
         label.font = .body2
@@ -27,7 +35,6 @@ final class ExperienceBar: UIView {
         let view = UIProgressView(progressViewStyle: .bar)
         view.trackTintColor = .textTertiary
         view.progressTintColor = .damagoPrimary
-        view.layer.cornerRadius = .smallElement
         view.clipsToBounds = true
         view.heightAnchor.constraint(equalToConstant: 8).isActive = true
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -51,7 +58,20 @@ final class ExperienceBar: UIView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // 완전한 캡슐 형태를 위해 높이의 절반으로 cornerRadius 설정
+        let radius = progressView.bounds.height / 2
+        progressView.layer.cornerRadius = radius
+        
+        // UIProgressView의 내부 subview들도 동일한 cornerRadius 적용
+        progressView.subviews.forEach { subview in
+            subview.layer.cornerRadius = radius
+            subview.clipsToBounds = true
+        }
+    }
+    
     private func setupLayout() {
         textStackView.addArrangedSubview(levelLabel)
         textStackView.addArrangedSubview(expLabel)
@@ -77,13 +97,27 @@ extension ExperienceBar {
         let level: Int
         let currentExp: Int
         let maxExp: Int
+        
+        var progress: Float {
+            maxExp > 0 ? Float(currentExp) / Float(maxExp) : 0
+        }
     }
 
-    func update(with state: State) {
+    func update(with newState: State) {
+        let oldLevel = currentState?.level ?? 0
+        currentState = newState
+
+        if oldLevel > 0 && oldLevel < newState.level {
+            levelUpSubject.send(newState.level)
+        }
+
+        updateUI()
+    }
+
+    private func updateUI() {
+        guard let state = currentState else { return }
         levelLabel.text = "Lv. \(state.level)"
         expLabel.text = "\(state.currentExp) / \(state.maxExp)"
-
-        let ratio = state.maxExp > 0 ? Float(state.currentExp) / Float(state.maxExp) : 0
-        progressView.setProgress(ratio, animated: true)
+        progressView.setProgress(state.progress, animated: true)
     }
 }

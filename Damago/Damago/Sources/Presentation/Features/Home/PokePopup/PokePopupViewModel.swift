@@ -126,7 +126,7 @@ final class PokePopupViewModel: ViewModel {
         guard !state.isEditing else { return }
         let message = state.currentText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !message.isEmpty else { return }
-        
+
         onMessageSelected?(message)
     }
     

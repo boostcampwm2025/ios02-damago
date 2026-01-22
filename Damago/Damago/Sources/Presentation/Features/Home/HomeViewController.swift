@@ -42,18 +42,35 @@ final class HomeViewController: UIViewController {
         )
 
         bind(output)
-        setupPokeButtonAction()
+        setupActions()
 
         viewDidLoadPublisher.send()
     }
     
-    // TODO: 구현 위치 수정 고려
-    private func setupPokeButtonAction() {
+    private func setupActions() {
         mainView.pokeButton.tapPublisher
             .sink { [weak self] _ in
                 self?.showPokeMessagePopup()
             }
             .store(in: &cancellables)
+        
+        mainView.expBar.levelUpPublisher
+            .sink { [weak self] level in
+                self?.showLevelUpAlert(level: level)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func showLevelUpAlert(level: Int) {
+        let alert = UIAlertController(
+            title: "🎉 레벨 업!",
+            message: "축하합니다! Lv.\(level)이(가) 되었습니다!",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+
+        present(alert, animated: true)
     }
     
     private func showPokeMessagePopup() {

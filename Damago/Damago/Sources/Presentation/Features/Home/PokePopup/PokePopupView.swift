@@ -136,11 +136,11 @@ final class PokePopupView: UIView {
         setupKeyboardDismiss()
         setupKeyboardDismissAndDimmingTap()
     }
-    
+
     private func setupKeyboardDismissAndDimmingTap() {
         setupKeyboardDismissOnTap { [weak self] location in
             guard let self = self else { return }
-            
+
             // containerView 외부를 클릭한 경우에만 취소 동작 실행
             if !self.containerView.frame.contains(location) {
                 self.cancelButton.sendActions(for: .touchUpInside)
