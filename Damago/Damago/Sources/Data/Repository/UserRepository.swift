@@ -49,6 +49,16 @@ final class UserRepository: UserRepositoryProtocol {
         let response: UserInfoResponse = try await networkProvider.request(UserAPI.getUserInfo(accessToken: token))
         return response.toDomain()
     }
+    
+    func updateFCMToken(fcmToken: String) async throws {
+        let token = try await tokenProvider.idToken()
+        try await networkProvider.requestSuccess(
+            UserAPI.updateFCMToken(
+                accessToken: token,
+                fcmToken: fcmToken
+            )
+        )
+    }
 
     func signIn() async throws {
         let rawNonce = try cryptoService.randomNonceString()

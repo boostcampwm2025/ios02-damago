@@ -11,6 +11,7 @@ protocol UserRepositoryProtocol {
     func generateCode(fcmToken: String) async throws -> String
     func connectCouple(targetCode: String) async throws
     func getUserInfo() async throws -> UserInfo
+    func updateFCMToken(fcmToken: String) async throws
     func signIn() async throws
     func fcmToken() async throws -> String
     func observeCoupleSharedInfo(coupleID: String) -> AnyPublisher<Result<CoupleSharedInfo, Error>, Never>
