@@ -40,5 +40,8 @@ final class UseCaseAssembly: Assembly {
         container.register(SignOutUseCase.self) {
             SignOutUseCaseImpl(repository: container.resolve(UserRepositoryProtocol.self))
         }
+        container.register(UpdateFCMTokenUseCase.self) {
+            UpdateFCMTokenUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
     }
 }
