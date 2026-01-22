@@ -71,7 +71,7 @@ final class UserRepository: UserRepositoryProtocol {
         firestoreService.observe(collection: "users", document: uid)
     }
     
-    func updateUserInfo(nickname: String?, anniversaryDate: Date?) async throws {
+    func updateUserInfo(nickname: String?, anniversaryDate: Date?, useFCM: Bool?, useActivity: Bool?) async throws {
         let token = try await tokenProvider.idToken()
         let dateString = anniversaryDate.map {
             let formatter = ISO8601DateFormatter()
@@ -83,7 +83,9 @@ final class UserRepository: UserRepositoryProtocol {
             UserAPI.updateUserInfo(
                 accessToken: token,
                 nickname: nickname,
-                anniversaryDate: dateString
+                anniversaryDate: dateString,
+                useFCM: useFCM,
+                useActivity: useActivity
             )
         )
     }
