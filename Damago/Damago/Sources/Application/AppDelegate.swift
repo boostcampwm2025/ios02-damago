@@ -31,7 +31,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             SharedLogger.firebase.error("키체인 그룹 에러: \(error.localizedDescription)")
         }
 
-        setupFirestoreEmulator()
+        setupFirebaseEmulators()
 
         // 2. iOS 기본 알림 센터(UNUserNotificationCenter) delegate 설정
         // -> 앱이 켜져 있을 때 알림을 어떻게 처리할지 결정하기 위함
@@ -145,13 +145,18 @@ extension AppDelegate: MessagingDelegate {
 }
 
 extension AppDelegate {
-    func setupFirestoreEmulator() {
+    func setupFirebaseEmulators() {
         #if DEBUG
         guard let localIP = ProcessInfo.processInfo.environment["USE_LOCAL_EMULATOR"] else { return }
+        
+        // Firestore Emulator
         Firestore.firestore().useEmulator(withHost: localIP, port: 8080)
         let settings = Firestore.firestore().settings
         settings.isSSLEnabled = false
         Firestore.firestore().settings = settings
+        
+        // Auth Emulator
+        Auth.auth().useEmulator(withHost: localIP, port: 9099)
         #endif
     }
 }

@@ -85,18 +85,28 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         if Auth.auth().currentUser != nil {
             Task {
-                let isConnected = try await checkConnectionUseCase.execute()
-                if isConnected {
-                    startGlobalMonitoring()
-                    let tabBarController = TabBarViewController()
-                    window?.rootViewController = tabBarController
-                } else {
+                do {
+                    let isConnected = try await checkConnectionUseCase.execute()
+                    if isConnected {
+                        startGlobalMonitoring()
+                        let tabBarController = TabBarViewController()
+                        window?.rootViewController = tabBarController
+                    } else {
+                        let connectionVM = ConnectionViewModel(
+                            fetchCodeUseCase: AppDIContainer.shared.resolve(FetchCodeUseCase.self),
+                            connectCoupleUseCase: AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
+                        )
+                        let connectionVC = ConnectionViewController(viewModel: connectionVM)
+                        window?.rootViewController = connectionVC
+                    }
+                } catch {
                     let connectionVM = ConnectionViewModel(
                         fetchCodeUseCase: AppDIContainer.shared.resolve(FetchCodeUseCase.self),
                         connectCoupleUseCase: AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
                     )
                     let connectionVC = ConnectionViewController(viewModel: connectionVM)
                     window?.rootViewController = connectionVC
+                    fatalError(error.localizedDescription)
                 }
             }
         } else {
