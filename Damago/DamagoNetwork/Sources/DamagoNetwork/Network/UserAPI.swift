@@ -11,6 +11,7 @@ public enum UserAPI {
     case generateCode(accessToken: String, fcmToken: String)
     case connectCouple(accessToken: String, targetCode: String)
     case getUserInfo(accessToken: String)
+    case updateFCMToken(accessToken: String, fcmToken: String)
 }
 
 extension UserAPI: EndPoint {
@@ -23,6 +24,7 @@ extension UserAPI: EndPoint {
         case .generateCode: "/generate_code"
         case .connectCouple: "/connect_couple"
         case .getUserInfo: "/get_user_info"
+        case .updateFCMToken: "/update_fcm_token"
         }
     }
     
@@ -35,7 +37,8 @@ extension UserAPI: EndPoint {
         switch self {
         case .generateCode(let token, _),
              .connectCouple(let token, _),
-             .getUserInfo(let token):
+             .getUserInfo(let token),
+             .updateFCMToken(let token, _):
             headers["Authorization"] = "Bearer \(token)"
         }
         return headers
@@ -53,6 +56,9 @@ extension UserAPI: EndPoint {
             
         case .getUserInfo:
             parameters = [:]
+            
+        case .updateFCMToken(_, let fcmToken):
+            parameters = ["fcmToken": fcmToken]
         }
         
         let validParameters = parameters.compactMapValues { $0 }
