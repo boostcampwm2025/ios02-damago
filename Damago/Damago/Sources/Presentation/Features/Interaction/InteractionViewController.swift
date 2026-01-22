@@ -17,7 +17,8 @@ final class InteractionViewController: UIViewController {
     private var cancellables = Set<AnyCancellable>()
 
     private lazy var balanceGameCardChildViewController: BalanceGameCardViewController = {
-        let vc = BalanceGameCardViewController()
+        let vm = BalanceGameCardViewModel()
+        let vc = BalanceGameCardViewController(viewModel: vm)
         return vc
     }()
 
