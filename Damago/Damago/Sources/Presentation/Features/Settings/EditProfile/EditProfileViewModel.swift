@@ -99,7 +99,9 @@ final class EditProfileViewModel: ViewModel {
             do {
                 try await updateUserUseCase.execute(
                     nickname: state.nickname,
-                    anniversaryDate: state.anniversaryDate
+                    anniversaryDate: state.anniversaryDate,
+                    useFCM: nil,
+                    useActivity: nil
                 )
                 state.route = Pulse(.back)
             } catch {

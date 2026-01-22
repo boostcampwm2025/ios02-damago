@@ -139,6 +139,12 @@ final class SettingsViewController: UIViewController {
             let alert = UIAlertController(title: "에러", message: message, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "확인", style: .default))
             present(alert, animated: true)
+            
+        case .openSettings:
+            guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+            if UIApplication.shared.canOpenURL(url) {
+                UIApplication.shared.open(url)
+            }
         }
     }
 }
