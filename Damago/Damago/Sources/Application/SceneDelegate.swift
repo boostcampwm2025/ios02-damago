@@ -35,6 +35,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: windowScene)
         self.window = window
+        let initialRootVC = UIViewController()
+        initialRootVC.view.backgroundColor = .background
+        window.rootViewController = initialRootVC
         if let urlContext = connectionOptions.urlContexts.first {
             handleURL(urlContext.url)
         } else {
@@ -78,18 +81,23 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func setupRootViewController() {
+        let checkConnectionUseCase = AppDIContainer.shared.resolve(CheckConnectionUseCase.self)
+
         if Auth.auth().currentUser != nil {
-            if UserDefaults.standard.bool(forKey: "isConnected") {
-                startGlobalMonitoring()
-                let tabBarController = TabBarViewController()
-                window?.rootViewController = tabBarController
-            } else {
-                let connectionVM = ConnectionViewModel(
-                    fetchCodeUseCase: AppDIContainer.shared.resolve(FetchCodeUseCase.self),
-                    connectCoupleUseCase: AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
-                )
-                let connectionVC = ConnectionViewController(viewModel: connectionVM)
-                window?.rootViewController = connectionVC
+            Task {
+                let isConnected = try await checkConnectionUseCase.execute()
+                if isConnected {
+                    startGlobalMonitoring()
+                    let tabBarController = TabBarViewController()
+                    window?.rootViewController = tabBarController
+                } else {
+                    let connectionVM = ConnectionViewModel(
+                        fetchCodeUseCase: AppDIContainer.shared.resolve(FetchCodeUseCase.self),
+                        connectCoupleUseCase: AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
+                    )
+                    let connectionVC = ConnectionViewController(viewModel: connectionVM)
+                    window?.rootViewController = connectionVC
+                }
             }
         } else {
             let signInVM = SignInViewModel(signInUseCase: AppDIContainer.shared.resolve(SignInUseCase.self))

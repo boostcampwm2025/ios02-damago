@@ -112,6 +112,12 @@ final class UserRepository: UserRepositoryProtocol {
         let token = try await tokenProvider.idToken()
         try await networkProvider.requestSuccess(UserAPI.withdrawUser(accessToken: token))
     }
+    
+    func checkCoupleConnection() async throws -> Bool {
+        let token = try await tokenProvider.idToken()
+        let response: CheckCoupleConnectionResponse = try await networkProvider.request(UserAPI.checkCoupleConnection(accessToken: token))
+        return response.isConnected
+    }
 }
 
 // MARK: - DTO Mapping
