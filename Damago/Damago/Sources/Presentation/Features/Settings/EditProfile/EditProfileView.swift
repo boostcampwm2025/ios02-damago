@@ -5,14 +5,16 @@
 //  Created by 박현수 on 1/21/26.
 //
 
+import Combine
 import UIKit
 
 final class EditProfileView: UIView {
-    private let scrollView: UIScrollView = {
+    private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.showsVerticalScrollIndicator = false
         scrollView.alwaysBounceVertical = true
         scrollView.keyboardDismissMode = .onDrag
+        scrollView.adjustContentInsetForKeyboard().store(in: &cancellables)
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         return scrollView
     }()
@@ -111,7 +113,9 @@ final class EditProfileView: UIView {
     }()
 
     private let progressView = ProgressView()
-    
+
+    private var cancellables = Set<AnyCancellable>()
+
     init() {
         super.init(frame: .zero)
         setupUI()
