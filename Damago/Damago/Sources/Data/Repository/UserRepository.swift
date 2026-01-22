@@ -114,8 +114,6 @@ final class UserRepository: UserRepositoryProtocol {
         try await networkProvider.requestSuccess(UserAPI.withdrawUser(accessToken: token))
 
         try await authService.deleteAccount(credential: credential)
-
-        try authService.signOut()
     }
     
     func checkCoupleConnection() async throws -> Bool {
