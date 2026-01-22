@@ -80,14 +80,18 @@ final class DailyQuestionInputViewController: UIViewController {
         case .input(let inputState):
             questionContent = inputState.questionContent
             mainView.updateLayoutMode(.input)
-            mainView.submitButton.setTitle("답변 제출", for: .normal)
+            mainView.submitButton.setTitle("답변 제출")
             
             if mainView.textView.text != state.currentText {
                 mainView.textView.text = state.currentText
             }
             mainView.placeholderLabel.isHidden = !state.currentText.isEmpty
             mainView.textLimitLabel.text = state.textCount
-            mainView.submitButton.isEnabled = state.isSubmitButtonEnabled
+            
+            mainView.updateSubmitButton(state: .init(
+                isEnabled: state.isSubmitButtonEnabled,
+                isLoading: state.isLoading
+            ))
             
         case .result(let resultState):
             questionContent = resultState.questionContent

@@ -47,6 +47,30 @@ final class CTAButton: UIButton {
         self.disabledConfig = disabled
         updateButtonStyle()
     }
+    
+    func setTitle(_ title: String) {
+        if let active = activeConfig {
+            activeConfig = Configuration(
+                backgroundColor: active.backgroundColor,
+                foregroundColor: active.foregroundColor,
+                image: active.image,
+                title: title,
+                subtitle: active.subtitle
+            )
+        }
+        
+        if let disabled = disabledConfig {
+            disabledConfig = Configuration(
+                backgroundColor: disabled.backgroundColor,
+                foregroundColor: disabled.foregroundColor,
+                image: disabled.image,
+                title: title,
+                subtitle: disabled.subtitle
+            )
+        }
+        
+        updateButtonStyle()
+    }
 
     override var isEnabled: Bool {
         didSet { updateButtonStyle() }

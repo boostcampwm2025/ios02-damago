@@ -34,6 +34,7 @@ Table couples {
   
   totalCoin integer [default: 0, note: "커플이 보유한 재화 (코인)"]
   foodCount integer [default: 0, note: "커플이 보유한 먹이 개수"]
+  currentQuestionID varchar [ref: > dailyQuestions.id, note: "현재 활성화된 일일 질문 ID"]
   anniversaryDate timestamp [note: "기념일 원본 데이터"]
   createdAt timestamp [default: `now()`]
   

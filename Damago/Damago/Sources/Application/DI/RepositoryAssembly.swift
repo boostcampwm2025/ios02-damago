@@ -41,7 +41,8 @@ final class RepositoryAssembly: Assembly {
         container.register(DailyQuestionRepositoryProtocol.self) {
             DailyQuestionRepository(
                 networkProvider: container.resolve(NetworkProvider.self),
-                tokenProvider: container.resolve(TokenProvider.self)
+                tokenProvider: container.resolve(TokenProvider.self),
+                firestoreService: container.resolve(FirestoreService.self)
             )
         }
     }

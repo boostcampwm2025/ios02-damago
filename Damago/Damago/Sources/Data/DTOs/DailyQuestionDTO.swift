@@ -29,13 +29,16 @@ extension DailyQuestionDTO {
                     placeholderText: nil,
                     iconName: nil
                 ),
-                opponentAnswer: mapOpponentAnswer(content: opponentAnswerContent)
+                opponentAnswer: mapOpponentAnswer(content: opponentAnswerContent),
+                buttonTitle: "답변 확인",
+                isUser1: isUser1
             ))
         } else {
             return .input(.init(
                 questionID: questionID,
                 questionContent: questionContent,
-                placeholder: "여기에 답변을 입력하세요."
+                placeholder: "여기에 답변을 입력하세요.",
+                isUser1: isUser1
             ))
         }
     }
