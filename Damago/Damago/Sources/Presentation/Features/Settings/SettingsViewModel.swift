@@ -218,11 +218,6 @@ final class SettingsViewModel: ViewModel {
                     useFCM: nil,
                     useLiveActivity: isOn
                 )
-                if isOn {
-                    LiveActivityManager.shared.synchronizeActivity()
-                } else {
-                    LiveActivityManager.shared.endAllActivities()
-                }
             }
         } catch {
             self.revertToggle(type: type, targetState: !isOn)

@@ -7,6 +7,7 @@
 
 import Foundation
 import ActivityKit
+import Combine
 import OSLog
 
 final class LiveActivityManager {
@@ -14,17 +15,43 @@ final class LiveActivityManager {
     
     private var userRepository: UserRepositoryProtocol?
     private var pushRepository: PushRepositoryProtocol?
+    private var cancellables = Set<AnyCancellable>()
+    
+    private var isLiveActivityEnabled: Bool = true
     
     private init() {}
     
-    func configure(userRepository: UserRepositoryProtocol, pushRepository: PushRepositoryProtocol) {
+    func configure(
+        userRepository: UserRepositoryProtocol,
+        pushRepository: PushRepositoryProtocol,
+        globalStore: GlobalStoreProtocol
+    ) {
         self.userRepository = userRepository
         self.pushRepository = pushRepository
+        
+        globalStore.globalState
+            .map { $0.useLiveActivity }
+            .removeDuplicates()
+            .sink { [weak self] isEnabled in
+                self?.isLiveActivityEnabled = isEnabled
+                if !isEnabled {
+                    self?.endAllActivities()
+                } else {
+                    self?.synchronizeActivity()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private var monitoredActivityIDs: Set<String> = []
 
     func synchronizeActivity() {
+        guard isLiveActivityEnabled else {
+            SharedLogger.liveActivityManger.info("Live Activity가 비활성화되어 있어 동기화를 중단합니다.")
+            endAllActivities()
+            return
+        }
+        
         // 커플 연결 상태 확인
         guard UserDefaults.standard.bool(forKey: "isConnected") else {
             // 커플 연결이 안 되어 있으면 모든 Live Activity 종료
@@ -128,7 +155,7 @@ final class LiveActivityManager {
         }
     }
 
-    func endAllActivities() {
+    private func endAllActivities() {
         Task {
             for activity in Activity<DamagoAttributes>.activities {
                 await activity.end(nil, dismissalPolicy: .immediate)
