@@ -27,7 +27,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     ) {
         let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
         let pushRepository = AppDIContainer.shared.resolve(PushRepositoryProtocol.self)
-        LiveActivityManager.shared.configure(userRepository: userRepository, pushRepository: pushRepository)
+        let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
+        LiveActivityManager.shared.configure(
+            userRepository: userRepository,
+            pushRepository: pushRepository,
+            globalStore: globalStore
+        )
 
         AppDependencyManager.shared.add(dependency: NetworkProviderImpl() as NetworkProvider)
         AppDependencyManager.shared.add(dependency: TokenProviderImpl() as TokenProvider)
@@ -113,28 +118,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     // 사용자가 Foreground에 돌아왔을 때 서버와 동기화
     func sceneDidBecomeActive(_ scene: UIScene) {
         LiveActivityManager.shared.synchronizeActivity()
-        syncPermissions()
     }
 
     private func startGlobalMonitoring() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
         globalStore.startMonitoring(uid: uid)
-    }
-
-    private func syncPermissions() {
-        Task {
-            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
-            let notiSettings = await UNUserNotificationCenter.current().notificationSettings()
-            let isNotiAuthorized = (notiSettings.authorizationStatus == .authorized)
-            let isActivityAuthorized = ActivityAuthorizationInfo().areActivitiesEnabled
-
-            try await updateUserUseCase.execute(
-                nickname: nil,
-                anniversaryDate: nil,
-                useFCM: isNotiAuthorized,
-                useActivity: isActivityAuthorized
-            )
-        }
     }
 }

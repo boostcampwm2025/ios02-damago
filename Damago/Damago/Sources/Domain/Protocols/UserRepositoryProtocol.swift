@@ -17,6 +17,6 @@ protocol UserRepositoryProtocol {
     func fcmToken() async throws -> String
     func observeCoupleSnapshot(coupleID: String) -> AnyPublisher<Result<CoupleSnapshotDTO, Error>, Never>
     func observeUserSnapshot(uid: String) -> AnyPublisher<Result<UserSnapshotDTO, Error>, Never>
-    func updateUserInfo(nickname: String?, anniversaryDate: Date?, useFCM: Bool?, useActivity: Bool?) async throws
+    func updateUserInfo(nickname: String?, anniversaryDate: Date?, useFCM: Bool?, useLiveActivity: Bool?) async throws
     func signOut() throws
 }
