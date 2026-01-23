@@ -205,9 +205,9 @@ final class SettingsViewModel: ViewModel {
         do {
             switch type {
             case .notification:
-                try await updateUserUseCase.execute(nickname: nil, anniversaryDate: nil, useFCM: isOn, useActivity: nil)
+                try await updateUserUseCase.execute(nickname: nil, anniversaryDate: nil, useFCM: isOn, useLiveActivity: nil)
             case .liveActivity:
-                try await updateUserUseCase.execute(nickname: nil, anniversaryDate: nil, useFCM: nil, useActivity: isOn)
+                try await updateUserUseCase.execute(nickname: nil, anniversaryDate: nil, useFCM: nil, useLiveActivity: isOn)
             }
         } catch {
             self.revertToggle(type: type, targetState: !isOn)
