@@ -309,13 +309,3 @@ extension ConnectionView {
         connectButton.isEnabled = isEnabled
     }
 }
-
-final class ConnectionVC: UIViewController {
-    override func loadView() {
-        view = ConnectionView()
-    }
-}
-
-#Preview {
-    ConnectionVC()
-}

@@ -173,5 +173,16 @@ final class HomeViewModel: ViewModel {
             .compactMapForUI { $0.totalCoin }
             .sink { [weak self] in self?.state.totalCoin = $0 }
             .store(in: &cancellables)
+
+        globalStore.globalState
+            .mapForUI { $0.anniversaryDate }
+            .sink { [weak self] anniversaryDate in
+                if let anniversaryDate = anniversaryDate {
+                    self?.state.dDay = anniversaryDate.daysBetween(to: Date()) ?? 0
+                } else {
+                    self?.state.dDay = 0
+                }
+            }
+            .store(in: &cancellables)
     }
 }
