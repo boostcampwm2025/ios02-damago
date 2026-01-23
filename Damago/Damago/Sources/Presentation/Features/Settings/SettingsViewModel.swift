@@ -205,9 +205,24 @@ final class SettingsViewModel: ViewModel {
         do {
             switch type {
             case .notification:
-                try await updateUserUseCase.execute(nickname: nil, anniversaryDate: nil, useFCM: isOn, useLiveActivity: nil)
+                try await updateUserUseCase.execute(
+                    nickname: nil,
+                    anniversaryDate: nil,
+                    useFCM: isOn,
+                    useLiveActivity: nil
+                )
             case .liveActivity:
-                try await updateUserUseCase.execute(nickname: nil, anniversaryDate: nil, useFCM: nil, useLiveActivity: isOn)
+                try await updateUserUseCase.execute(
+                    nickname: nil,
+                    anniversaryDate: nil,
+                    useFCM: nil,
+                    useLiveActivity: isOn
+                )
+                if isOn {
+                    LiveActivityManager.shared.synchronizeActivity()
+                } else {
+                    LiveActivityManager.shared.endAllActivities()
+                }
             }
         } catch {
             self.revertToggle(type: type, targetState: !isOn)

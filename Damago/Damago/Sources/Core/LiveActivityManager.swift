@@ -128,7 +128,7 @@ final class LiveActivityManager {
         }
     }
 
-    private func endAllActivities() {
+    func endAllActivities() {
         Task {
             for activity in Activity<DamagoAttributes>.activities {
                 await activity.end(nil, dismissalPolicy: .immediate)
