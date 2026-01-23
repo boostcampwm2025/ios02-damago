@@ -49,6 +49,10 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     if not target_fcm_token:
         return https_fn.Response("Opponent's FCM token not found", status=404)
 
+    # 알림 설정 확인
+    if not target_user_data.get("useFCM", True):
+        return https_fn.Response("Opponent has disabled push notifications", status=200)
+
     # --- [Step 2] FCM 전송 ---
     try:
         nickname = my_user_data.get('nickname') or '상대방'
