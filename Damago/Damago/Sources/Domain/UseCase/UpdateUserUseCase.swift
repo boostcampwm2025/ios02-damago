@@ -8,7 +8,7 @@
 import Foundation
 
 protocol UpdateUserUseCase {
-    func execute(nickname: String?, anniversaryDate: Date?, useFCM: Bool?, useActivity: Bool?) async throws
+    func execute(nickname: String?, anniversaryDate: Date?, useFCM: Bool?, useLiveActivity: Bool?) async throws
 }
 
 final class UpdateUserUseCaseImpl: UpdateUserUseCase {
@@ -18,12 +18,12 @@ final class UpdateUserUseCaseImpl: UpdateUserUseCase {
         self.userRepository = userRepository
     }
     
-    func execute(nickname: String?, anniversaryDate: Date?, useFCM: Bool?, useActivity: Bool?) async throws {
+    func execute(nickname: String?, anniversaryDate: Date?, useFCM: Bool?, useLiveActivity: Bool?) async throws {
         try await userRepository.updateUserInfo(
             nickname: nickname,
             anniversaryDate: anniversaryDate,
             useFCM: useFCM,
-            useActivity: useActivity
+            useLiveActivity: useLiveActivity
         )
     }
 }

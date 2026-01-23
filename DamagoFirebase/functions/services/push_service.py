@@ -49,6 +49,10 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     if not target_fcm_token:
         return https_fn.Response("Opponent's FCM token not found", status=404)
 
+    # 알림 설정 확인
+    if not target_user_data.get("useFCM", True):
+        return https_fn.Response("Opponent has disabled push notifications", status=200)
+
     # --- [Step 2] FCM 전송 ---
     try:
         nickname = my_user_data.get('nickname') or '상대방'
@@ -134,9 +138,9 @@ def update_live_activity_internal(target_uid: str, content_state: dict) -> bool:
     user_data = user_doc.to_dict()
     fcm_token = user_data.get("fcmToken")
     la_token = user_data.get("laUpdateToken")
-    use_la = user_data.get("useLiveActivity", True)
+    use_live_activity = user_data.get("useLiveActivity", True)
 
-    if not fcm_token or not la_token or not use_la:
+    if not fcm_token or not la_token or not use_live_activity:
         print(f"Live Activity not active for {target_uid}")
         return False
 
@@ -196,9 +200,9 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
     user_data = user_doc.to_dict()
     fcm_token = user_data.get("fcmToken")
     la_start_token = user_data.get("laStartToken")
-    use_la = user_data.get("useLiveActivity", True)
+    use_live_activity = user_data.get("useLiveActivity", True)
 
-    if not fcm_token or not la_start_token or not use_la:
+    if not fcm_token or not la_start_token or not use_live_activity:
         return https_fn.Response("Start Token not found or Live Activity disabled", status=400)
 
     try:

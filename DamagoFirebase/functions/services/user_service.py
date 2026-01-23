@@ -36,10 +36,10 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
     nickname = body.get("nickname")
     anniversary_date_str = body.get("anniversaryDate")
     use_fcm = body.get("useFCM")
-    use_activity = body.get("useActivity")
+    use_live_activity = body.get("useLiveActivity")
     
     # 파라미터가 모두 없으면 400 Bad Request 리턴
-    if all(param is None for param in [nickname, anniversary_date_str, use_fcm, use_activity]):
+    if all(param is None for param in [nickname, anniversary_date_str, use_fcm, use_live_activity]):
         return https_fn.Response("At least one parameter is required", status=400)
         
     db = get_db()
@@ -55,8 +55,8 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
     if use_fcm is not None:
         updates["useFCM"] = use_fcm
         
-    if use_activity is not None:
-        updates["useActivity"] = use_activity
+    if use_live_activity is not None:
+        updates["useLiveActivity"] = use_live_activity
         
     if updates:
         user_ref.update(updates)
