@@ -5,13 +5,16 @@
 //  Created by 박현수 on 1/21/26.
 //
 
+import Combine
 import UIKit
 
 final class EditProfileView: UIView {
-    private let scrollView: UIScrollView = {
+    private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.showsVerticalScrollIndicator = false
         scrollView.alwaysBounceVertical = true
+        scrollView.keyboardDismissMode = .onDrag
+        scrollView.adjustContentInsetForKeyboard().store(in: &cancellables)
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         return scrollView
     }()
@@ -49,12 +52,13 @@ final class EditProfileView: UIView {
         return view
     }()
     
-    let nicknameTextField: UITextField = {
+    lazy var nicknameTextField: UITextField = {
         let textField = UITextField()
         textField.font = .body1
         textField.textColor = .textPrimary
         textField.placeholder = "닉네임을 입력해 주세요"
         textField.returnKeyType = .done
+        textField.delegate = self
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }()
@@ -109,7 +113,9 @@ final class EditProfileView: UIView {
     }()
 
     private let progressView = ProgressView()
-    
+
+    private var cancellables = Set<AnyCancellable>()
+
     init() {
         super.init(frame: .zero)
         setupUI()
@@ -124,6 +130,7 @@ final class EditProfileView: UIView {
         backgroundColor = .background
         setupHierarchy()
         setupConstraints()
+        setupKeyboardDismissOnTap()
     }
     
     private func setupHierarchy() {
@@ -279,6 +286,13 @@ final class EditProfileView: UIView {
                     )
             ]
         )
+    }
+}
+
+extension EditProfileView: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
 }
 
