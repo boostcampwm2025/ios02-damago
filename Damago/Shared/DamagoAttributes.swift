@@ -42,8 +42,8 @@ struct DamagoAttributes: ActivityAttributes {
 
 public enum DamagoType: String, CaseIterable, Codable {
     case bunny = "Bunny"
-    case bear = "Bear"
-    case cat = "Cat"
+    case siamese = "CatSiamese"
+    case tiger = "CatTiger"
     case dog = "Dog"
     case fish = "Fish"
     case lizard = "Lizard"
@@ -57,7 +57,7 @@ public enum DamagoType: String, CaseIterable, Codable {
 
     public var isAvailable: Bool {
         switch self {
-        case .bunny: return true
+        case .bunny, .siamese, .tiger: return true
         default: return false
         }
     }
