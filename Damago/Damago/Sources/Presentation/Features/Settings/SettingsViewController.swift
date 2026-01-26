@@ -123,6 +123,16 @@ final class SettingsViewController: UIViewController {
             let vc = EditProfileViewController(viewModel: viewModel)
             navigationController?.pushViewController(vc, animated: true)
 
+        case .connection:
+            let fetchCodeUseCase = AppDIContainer.shared.resolve(FetchCodeUseCase.self)
+            let connectCoupleUseCase = AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
+            let viewModel = ConnectionViewModel(
+                fetchCodeUseCase: fetchCodeUseCase,
+                connectCoupleUseCase: connectCoupleUseCase
+            )
+            let vc = ConnectionViewController(viewModel: viewModel)
+            navigationController?.pushViewController(vc, animated: true)
+
         case .webLink(let url):
             guard let url else { return }
             UIApplication.shared.open(url)
@@ -177,14 +187,14 @@ extension SettingsViewController: UITableViewDelegate {
 
                 content.image = UIImage(systemName: "heart.fill")
                 content.imageProperties.tintColor = .systemPink
-                content.text = "커플 연결"
+                content.text = "커플 연결 다시하기"
                 content.textProperties.color = .textPrimary
                 content.secondaryText = opponentName.isEmpty ? "상대방의 닉네임이 없어요!" : "\(opponentName)님과 연결됨"
                 content.secondaryTextProperties.color = .textSecondary
 
                 cell.contentConfiguration = content
                 cell.accessoryType = .disclosureIndicator
-                cell.selectionStyle = .none
+                cell.selectionStyle = .default
                 return cell
 
             case .toggle(let type, let isOn):

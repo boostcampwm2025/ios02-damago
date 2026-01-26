@@ -59,6 +59,7 @@ final class SettingsViewModel: ViewModel {
 
     enum Route {
         case editProfile
+        case connection
         case webLink(url: URL?)
         case alert(type: AlertActionType)
         case error(message: String)
@@ -238,6 +239,8 @@ final class SettingsViewModel: ViewModel {
         switch item {
         case .profile:
             state.route = Pulse(.editProfile)
+        case .relationship:
+            state.route = Pulse(.connection)
         case .link(_, let url):
             state.route = Pulse(.webLink(url: url))
         case .action(let type):
