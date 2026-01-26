@@ -36,6 +36,8 @@ final class SettingsProfileCell: UITableViewCell {
         let label = UILabel()
         label.font = .caption
         label.textColor = .textSecondary
+        label.setContentCompressionResistancePriority(.required, for: .vertical)
+        label.setContentHuggingPriority(.defaultLow, for: .vertical)
         return label
     }()
 
