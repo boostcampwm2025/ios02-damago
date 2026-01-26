@@ -143,9 +143,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             window?.rootViewController = tabBarController
         } else {
             let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
+            let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
             let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
             let vm = ProfileSettingViewModel(
                 updateUserUseCase: updateUserUseCase,
+                userRepository: userRepository,
                 globalStore: globalStore
             )
             let vc = ProfileSettingViewController(viewModel: vm)

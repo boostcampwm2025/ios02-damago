@@ -29,6 +29,7 @@ final class ProfileSettingViewModel: ViewModel {
     
     enum Route {
         case petSetup
+        case partnerAlreadySelected
         case error(message: String)
     }
     
@@ -36,10 +37,16 @@ final class ProfileSettingViewModel: ViewModel {
     private var cancellables = Set<AnyCancellable>()
     
     private let updateUserUseCase: UpdateUserUseCase
+    private let userRepository: UserRepositoryProtocol
     private let globalStore: GlobalStoreProtocol
     
-    init(updateUserUseCase: UpdateUserUseCase, globalStore: GlobalStoreProtocol) {
+    init(
+        updateUserUseCase: UpdateUserUseCase,
+        userRepository: UserRepositoryProtocol,
+        globalStore: GlobalStoreProtocol
+    ) {
         self.updateUserUseCase = updateUserUseCase
+        self.userRepository = userRepository
         self.globalStore = globalStore
     }
     
@@ -96,7 +103,15 @@ final class ProfileSettingViewModel: ViewModel {
                     petName: nil,
                     petType: nil
                 )
-                state.route = Pulse(.petSetup)
+                
+                // 최신 정보를 직접 조회하여 파트너가 펫을 결정했는지 확인
+                let userInfo = try await userRepository.getUserInfo()
+                
+                if userInfo.damagoID != nil {
+                    state.route = Pulse(.partnerAlreadySelected)
+                } else {
+                    state.route = Pulse(.petSetup)
+                }
             } catch {
                 state.route = Pulse(.error(message: error.localizedDescription))
             }

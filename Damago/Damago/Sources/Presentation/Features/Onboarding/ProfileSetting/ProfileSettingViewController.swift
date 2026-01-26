@@ -100,6 +100,8 @@ final class ProfileSettingViewController: UIViewController {
                 switch route {
                 case .petSetup:
                     self?.navigateToPetSetup()
+                case .partnerAlreadySelected:
+                    self?.showPartnerSelectedAlert()
                 case .error(let message):
                     self?.presentAlert(message: message)
                 }
@@ -117,6 +119,19 @@ final class ProfileSettingViewController: UIViewController {
         let vm = PetSetupViewModel(updateUserUseCase: updateUserUseCase)
         let vc = PetSetupViewController(viewModel: vm)
         navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    private func showPartnerSelectedAlert() {
+        let alert = UIAlertController(
+            title: "다마고 탄생!",
+            message: "상대방이 이미 다마고를 결정했습니다.\n함께 다마고를 키워보세요!",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "시작하기", style: .default) { _ in
+            UserDefaults.standard.set(true, forKey: "isOnboardingCompleted")
+            NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
+        })
+        present(alert, animated: true)
     }
     
     private func showConfirmAlert() {
