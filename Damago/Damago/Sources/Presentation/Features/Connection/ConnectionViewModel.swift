@@ -31,7 +31,7 @@ final class ConnectionViewModel: ViewModel {
     enum Route {
         case alert(message: String)
         case activity(url: URL)
-        case home
+        case editProfile
     }
 
     @Published private var state: State
@@ -126,15 +126,12 @@ final class ConnectionViewModel: ViewModel {
     private func connect() async {
         state.loadingMessage = "연결 중..."
         state.isLoading = true
+        defer { state.isLoading = false }
         
         do {
             try await connectCoupleUseCase.execute(code: state.opponentCode)
-            // 커플 연결 성공 시 Live Activity 시작
-            LiveActivityManager.shared.synchronizeActivity()
-            state.isLoading = false
-            state.route = .init(.home)
+            state.route = .init(.editProfile)
         } catch {
-            state.isLoading = false
             state.route = .init(.alert(message: error.userFriendlyMessage))
         }
     }
