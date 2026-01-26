@@ -46,6 +46,8 @@ final class LiveActivityManager {
     private var monitoredActivityIDs: Set<String> = []
 
     func synchronizeActivity() {
+        SharedLogger.liveActivityManger.info("✅ LiveActivity 동기화 시작")
+        
         guard isLiveActivityEnabled else {
             SharedLogger.liveActivityManger.info("Live Activity가 비활성화되어 있어 동기화를 중단합니다.")
             endAllActivities()
