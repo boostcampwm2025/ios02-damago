@@ -16,13 +16,15 @@ final class HomeViewModel: ViewModel {
         let pokeMessageSelected: AnyPublisher<String, Never>
     }
 
-    struct State {
+    struct State: Equatable {
         var isLoading = true
         var isFeeding = false
         var coinAmount = 0
         var foodAmount = 0
         var dDay = 0
         var petName = ""
+        var petType = "Bunny"
+        var isHungry: Bool = true
         var level = 0
         var currentExp = 0
         var maxExp = 0
@@ -96,6 +98,8 @@ final class HomeViewModel: ViewModel {
                     state.currentExp = petStatus.currentExp
                     state.maxExp = petStatus.maxExp
                     state.petName = petStatus.petName
+                    state.petType = petStatus.petType
+                    state.isHungry = petStatus.isHungry
                     state.lastFedAt = petStatus.lastFedAt
                 }
             } catch {
@@ -136,6 +140,16 @@ final class HomeViewModel: ViewModel {
     }
 
     private func bindGlobalState() {
+        globalStore.globalState
+            .compactMapForUI { $0 }
+            .sink { [weak self] state in
+                guard let self, let petType = state.petType, let isHungry = state.isHungry else { return }
+                
+                self.state.petType = petType
+                self.state.isHungry = isHungry
+            }
+            .store(in: &cancellables)
+
         globalStore.globalState
             .compactMapForUI { $0.petName }
             .sink { [weak self] in self?.state.petName = $0 }
