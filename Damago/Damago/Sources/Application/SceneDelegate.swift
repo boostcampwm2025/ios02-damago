@@ -134,8 +134,6 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             opponentCode: code
         )
         let connectionVC = ConnectionViewController(viewModel: connectionVM)
-        let navigationController = UINavigationController(rootViewController: connectionVC)
-        navigationController.setNavigationBarHidden(true, animated: false)
-        window?.rootViewController = navigationController
+        window?.rootViewController = connectionVC
     }
 }

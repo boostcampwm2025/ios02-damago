@@ -44,16 +44,6 @@ final class ConnectionViewController: UIViewController {
         viewDidLoadPublisher.send()
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: animated)
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: animated)
-    }
-    
     private func setupKeyboard() {
         mainView.setupKeyboardDismissOnTap()
         mainView.opponentCodeTextField.delegate = self
@@ -101,7 +91,8 @@ final class ConnectionViewController: UIViewController {
                         globalStore: globalStore
                     )
                     let vc = ProfileSettingViewController(viewModel: vm)
-                    self.navigationController?.pushViewController(vc, animated: true)
+                    let navigationController = UINavigationController(rootViewController: vc)
+                    self.view.window?.replaceRootViewController(with: navigationController)
                 }
             }
             .store(in: &cancellables)
