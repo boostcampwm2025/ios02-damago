@@ -48,7 +48,6 @@ final class ProfileSettingViewController: UIViewController {
     
     private func bind() {
         let input = ProfileSettingViewModel.Input(
-            viewDidLoad: Just(()).eraseToAnyPublisher(),
             nicknameChanged: mainView.nicknameTextField.textPublisher,
             dateChanged: mainView.datePicker.datePublisher,
             nextButtonDidTap: confirmNextPublisher.eraseToAnyPublisher()

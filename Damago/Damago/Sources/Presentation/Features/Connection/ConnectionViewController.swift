@@ -84,13 +84,11 @@ final class ConnectionViewController: UIViewController {
                 case let .activity(url):
                     presentActivity(with: url)
                 case .editProfile:
-                    let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
                     let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
                     let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
                     let vm = ProfileSettingViewModel(
                         updateUserUseCase: updateUserUseCase,
-                        userRepository: userRepository,
-                        globalStore: globalStore
+                        userRepository: userRepository
                     )
                     let vc = ProfileSettingViewController(viewModel: vm)
                     let navigationController = UINavigationController(rootViewController: vc)

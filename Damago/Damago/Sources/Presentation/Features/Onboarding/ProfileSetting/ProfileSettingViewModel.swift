@@ -10,7 +10,6 @@ import Foundation
 
 final class ProfileSettingViewModel: ViewModel {
     struct Input {
-        let viewDidLoad: AnyPublisher<Void, Never>
         let nicknameChanged: AnyPublisher<String, Never>
         let dateChanged: AnyPublisher<Date, Never>
         let nextButtonDidTap: AnyPublisher<Void, Never>
@@ -38,25 +37,16 @@ final class ProfileSettingViewModel: ViewModel {
     
     private let updateUserUseCase: UpdateUserUseCase
     private let userRepository: UserRepositoryProtocol
-    private let globalStore: GlobalStoreProtocol
     
     init(
         updateUserUseCase: UpdateUserUseCase,
-        userRepository: UserRepositoryProtocol,
-        globalStore: GlobalStoreProtocol
+        userRepository: UserRepositoryProtocol
     ) {
         self.updateUserUseCase = updateUserUseCase
         self.userRepository = userRepository
-        self.globalStore = globalStore
     }
     
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
-        input.viewDidLoad
-            .sink { [weak self] in
-                self?.bindGlobalState()
-            }
-            .store(in: &cancellables)
-            
         input.nicknameChanged
             .sink { [weak self] nickname in
                 self?.state.nickname = nickname
@@ -76,17 +66,6 @@ final class ProfileSettingViewModel: ViewModel {
             .store(in: &cancellables)
             
         return $state.eraseToAnyPublisher()
-    }
-    
-    private func bindGlobalState() {
-        globalStore.globalState
-            .compactMapForUI { $0.nickname }
-            .sink { [weak self] nickname in
-                if self?.state.nickname.isEmpty == true {
-                    self?.state.nickname = nickname
-                }
-            }
-            .store(in: &cancellables)
     }
     
     private func saveAndNext() {
