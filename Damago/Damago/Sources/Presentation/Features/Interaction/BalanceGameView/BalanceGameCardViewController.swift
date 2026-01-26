@@ -15,6 +15,7 @@ final class BalanceGameCardViewController: UIViewController {
 
     // ViewModel의 Input으로 되돌려보내기 위해 설정
     private let confirmResultSubject = PassthroughSubject<(BalanceGameChoice, Bool), Never>()
+    private let resetSubject = PassthroughSubject<Void, Never>()
 
     // ViewModel이 같은 pendingConfirm을 연속으로 방출할 때 중복 알럿 방지용
     private var lastPresentedPending: BalanceGameChoice?
@@ -74,8 +75,13 @@ final class BalanceGameCardViewController: UIViewController {
             .eraseToAnyPublisher()
 
         let input = BalanceGameCardViewModel.Input(
+
             choiceTapped: choiceTapped,
-            confirmResult: confirmResultSubject.eraseToAnyPublisher()
+
+            confirmResult: confirmResultSubject.eraseToAnyPublisher(),
+
+            reset: resetSubject.eraseToAnyPublisher()
+
         )
 
         let output = viewModel.transform(input)
@@ -91,23 +97,46 @@ final class BalanceGameCardViewController: UIViewController {
     }
 
     private func render(_ state: BalanceGameCardViewModel.State) {
-        let previousSelectedChoice = self.lastSelectedChoice
+        let currentSelectedChoice = state.selectedChoice
 
-        let renderChoice = state.pendingConfirm ?? state.selectedChoice
-        self.cardView.render(selectedChoice: renderChoice)
+        let viewState: BalanceGameCardUIState
 
-        self.presentConfirmIfNeeded(pending: state.pendingConfirm)
+        // ViewModel의 State에 결과 데이터가 포함되어 있으면 .result 상태, 아니면 .choosing 상태
+        if let myChoice = currentSelectedChoice,
+           let opponentChoice = state.opponentChoice,
+           let matchResult = state.matchResult {
 
-        if let confirmed = state.showLockedAlert?.value {
-            self.presentWaitingAlertIfNeeded(confirmed: confirmed)
+            viewState = .result(
+                myChoice: myChoice,
+                opponentChoice: opponentChoice,
+                matchResult: matchResult,
+                isOpponentAnswered: state.isOpponentAnswered,
+                headerStatus: state.headerStatus,
+                targetDate: state.targetDate
+            )
+        } else {
+            // 결과 데이터가 없거나 불완전하면 선택 중 상태로 간주
+            let choiceToRender = state.pendingConfirm ?? currentSelectedChoice
+            viewState = .choosing(
+                selected: choiceToRender,
+                headerStatus: state.headerStatus,
+                targetDate: state.targetDate
+            )
         }
 
-        // 확정 직후 1회 알림
-        if previousSelectedChoice == nil, let confirmed = state.selectedChoice {
-            self.presentWaitingAlertIfNeeded(confirmed: confirmed)
+        // 최종적으로 View에 상태를 전달하여 화면을 업데이트합니다.
+        cardView.render(state: viewState)
+
+        // 1. "선택 후 변경할 수 없습니다!" 알럿 (pendingConfirm)
+        presentConfirmIfNeeded(pending: state.pendingConfirm)
+
+        // 2. "상대방 답변 대기 중" 알럿 (showLockedAlert)
+        if let choice = state.showLockedAlert?.value {
+            presentWaitingAlertIfNeeded(confirmed: choice)
         }
 
-        self.lastSelectedChoice = state.selectedChoice
+        // 마지막 선택 상태를 업데이트합니다. (항상 마지막에)
+        self.lastSelectedChoice = currentSelectedChoice
     }
 
     private func presentConfirmIfNeeded(pending: BalanceGameChoice?) {
@@ -131,12 +160,16 @@ final class BalanceGameCardViewController: UIViewController {
         let message = "\n선택 후 변경할 수 없습니다!"
         let alert = UIAlertController(title: "\"\(choiceText)\"", message: message, preferredStyle: .alert)
 
-        alert.addAction(UIAlertAction(title: "더 고민하기", style: .cancel) { [weak self] _ in
-            self?.confirmResultSubject.send((pending, false))
+        alert.addAction(UIAlertAction(title: "더 고민하기", style: .cancel) { [weak self, alert] _ in
+            alert.dismiss(animated: true) {
+                self?.confirmResultSubject.send((pending, false))
+            }
         })
 
-        alert.addAction(UIAlertAction(title: "확정하기", style: .default) { [weak self] _ in
-            self?.confirmResultSubject.send((pending, true))
+        alert.addAction(UIAlertAction(title: "확정하기", style: .default) { [weak self, alert] _ in
+            alert.dismiss(animated: true) {
+                self?.confirmResultSubject.send((pending, true))
+            }
         })
 
         present(alert, animated: true)
