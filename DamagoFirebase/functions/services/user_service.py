@@ -89,16 +89,51 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
 
         # 4. 펫 정보 업데이트 (이름, 타입)
         if pet_name is not None or pet_type is not None:
-            damago_id = user_data.get("damagoID")
-            if damago_id:
-                damago_ref = db.collection("damagos").document(damago_id)
-                pet_updates = {}
+            couple_id = user_data.get("coupleID")
+            if not couple_id:
+                 return https_fn.Response("Couple not found", status=404)
+
+            # pet_type에 따라 고유한 damagoID 생성 (예: coupleID_Bunny)
+            current_damago_id = user_data.get("damagoID")
+            if pet_type is not None:
+                target_damago_id = f"{couple_id}_{pet_type}"
+                # 유저, 파트너 및 커플의 활성 펫 ID 업데이트
+                user_ref.update({"damagoID": target_damago_id})
+                db.collection("couples").document(couple_id).update({"damagoID": target_damago_id})
+                
+                partner_uid = user_data.get("partnerUID")
+                if partner_uid:
+                    db.collection("users").document(partner_uid).update({"damagoID": target_damago_id})
+            else:
+                target_damago_id = current_damago_id
+
+            if target_damago_id:
+                damago_ref = db.collection("damagos").document(target_damago_id)
+                pet_snap = damago_ref.get()
+                
+                pet_updates = {"lastUpdatedAt": firestore.SERVER_TIMESTAMP}
                 if pet_name is not None:
                     pet_updates["petName"] = pet_name
                 if pet_type is not None:
                     pet_updates["petType"] = pet_type
                 
-                if pet_updates:
+                if not pet_snap.exists:
+                    # 해당 타입의 펫이 처음인 경우 초기화
+                    from utils.constants import XP_TABLE
+                    pet_updates.update({
+                        "id": target_damago_id,
+                        "level": 1,
+                        "currentExp": 0,
+                        "maxExp": XP_TABLE[0],
+                        "isHungry": False,
+                        "statusMessage": "반가워요! 새로 태어났어요.",
+                        "coupleID": couple_id,
+                        "createdAt": firestore.SERVER_TIMESTAMP,
+                        "lastFedAt": None,
+                        "endedAt": None
+                    })
+                    damago_ref.set(pet_updates)
+                else:
                     damago_ref.update(pet_updates)
 
     return https_fn.Response("Updated successfully", status=200)

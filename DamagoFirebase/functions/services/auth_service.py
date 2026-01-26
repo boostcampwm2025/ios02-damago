@@ -133,7 +133,6 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     codes = sorted([my_code, target_code])
     couple_doc_id = f"{codes[0]}_{codes[1]}"
     couple_ref = db.collection("couples").document(couple_doc_id)
-    damago_ref = db.collection("damagos").document()
 
     # 첫 번째 질문 ID 가져오기 (order=1)
     first_question_id = None
@@ -141,39 +140,20 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     if questions_query:
         first_question_id = questions_query[0].id
 
-    from utils.constants import XP_TABLE # 초기 경험치 참조
-
     # --- [Step 3] 트랜잭션 실행 ---
     @google.cloud.firestore.transactional
-    def run_transaction(transaction, couple_ref, damago_ref, my_ref, target_ref, my_uid, target_uid, question_id):
+    def run_transaction(transaction, couple_ref, my_ref, target_ref, my_uid, target_uid, question_id):
         snapshot = couple_ref.get(transaction=transaction)
 
         if snapshot.exists:
             return "ok" # 이미 연결됨
-
-        # 펫 생성
-        transaction.set(damago_ref, {
-            "id": damago_ref.id,
-            "coupleID": couple_ref.id,
-            "petName": "이름 없는 펫",
-            "petType": "Bunny",
-            "level": 1,
-            "currentExp": 0,
-            "maxExp": XP_TABLE[0],
-            "isHungry": False,
-            "statusMessage": "반가워요! 우리 잘 지내봐요.",
-            "lastFedAt": None,
-            "lastUpdatedAt": firestore.SERVER_TIMESTAMP,
-            "createdAt": firestore.SERVER_TIMESTAMP,
-            "endedAt": None
-        })
 
         # 커플 생성 (UDID -> UID)
         transaction.set(couple_ref, {
             "id": couple_ref.id,
             "user1UID": my_uid,
             "user2UID": target_uid,
-            "damagoID": damago_ref.id,
+            "damagoID": None,
             "anniversaryDate": None,
             "createdAt": firestore.SERVER_TIMESTAMP,
             "totalCoin": 0,
@@ -184,13 +164,11 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
         # 유저 정보 업데이트 (상호 참조, UDID -> UID)
         transaction.update(my_ref, {
             "coupleID": couple_ref.id,
-            "damagoID": damago_ref.id,
             "partnerUID": target_uid,
             "updatedAt": firestore.SERVER_TIMESTAMP
         })
         transaction.update(target_ref, {
             "coupleID": couple_ref.id,
-            "damagoID": damago_ref.id,
             "partnerUID": my_uid,
             "updatedAt": firestore.SERVER_TIMESTAMP
         })
@@ -201,7 +179,6 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
         result_message = run_transaction(
             db.transaction(),
             couple_ref,
-            damago_ref,
             my_doc.reference,
             target_doc.reference,
             my_uid,
