@@ -48,6 +48,12 @@ final class DailyQuestionInputViewController: UIViewController {
         navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // 뷰를 나갈 때 작성 중인 답변 저장
+        viewModel.saveDraftAnswer()
+    }
+    
     private func setupNavigation() {
         title = "오늘의 질문"
         navigationItem.largeTitleDisplayMode = .never

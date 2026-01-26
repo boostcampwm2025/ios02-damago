@@ -14,6 +14,10 @@ protocol DailyQuestionLocalDataSourceProtocol {
     func fetchLatestQuestion() async throws -> DailyQuestionEntity?
     func saveQuestion(_ entity: DailyQuestionEntity) async throws
     func updateAnswer(questionID: String, user1Answer: String?, user2Answer: String?) async throws
+    
+    func saveDraftAnswer(questionID: String, draftAnswer: String?) async throws
+    func loadDraftAnswer(questionID: String) async throws -> String?
+    func deleteDraftAnswer(questionID: String) async throws
 }
 
 @MainActor
@@ -59,6 +63,46 @@ final class DailyQuestionLocalDataSource: DailyQuestionLocalDataSourceProtocol {
             existingEntity.user2Answer = user2Answer
             existingEntity.lastUpdated = Date()
 
+            try storage.context.save()
+        }
+    }
+    
+    func saveDraftAnswer(questionID: String, draftAnswer: String?) async throws {
+        let descriptor = FetchDescriptor<DailyQuestionEntity>(
+            predicate: #Predicate { $0.questionID == questionID }
+        )
+        
+        if let existingEntity = try storage.context.fetch(descriptor).first {
+            existingEntity.draftAnswer = draftAnswer
+            existingEntity.lastUpdated = Date()
+            try storage.context.save()
+        } else {
+            // 질문 엔티티가 없으면 생성 (나중에 질문 정보가 채워질 수 있음)
+            let entity = DailyQuestionEntity(
+                questionID: questionID,
+                questionContent: "",
+                draftAnswer: draftAnswer
+            )
+            storage.context.insert(entity)
+            try storage.context.save()
+        }
+    }
+    
+    func loadDraftAnswer(questionID: String) async throws -> String? {
+        let descriptor = FetchDescriptor<DailyQuestionEntity>(
+            predicate: #Predicate { $0.questionID == questionID }
+        )
+        return try storage.context.fetch(descriptor).first?.draftAnswer
+    }
+    
+    func deleteDraftAnswer(questionID: String) async throws {
+        let descriptor = FetchDescriptor<DailyQuestionEntity>(
+            predicate: #Predicate { $0.questionID == questionID }
+        )
+        
+        if let existingEntity = try storage.context.fetch(descriptor).first {
+            existingEntity.draftAnswer = nil
+            existingEntity.lastUpdated = Date()
             try storage.context.save()
         }
     }

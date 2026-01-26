@@ -17,19 +17,22 @@ final class DailyQuestionEntity {
     var user2Answer: String?
     var isUser1: Bool
     var lastUpdated: Date?
+    var draftAnswer: String?
     
     init(
         questionID: String,
         questionContent: String,
         user1Answer: String? = nil,
         user2Answer: String? = nil,
-        isUser1: Bool = true
+        isUser1: Bool = true,
+        draftAnswer: String? = nil
     ) {
         self.questionID = questionID
         self.questionContent = questionContent
         self.user1Answer = user1Answer
         self.user2Answer = user2Answer
         self.isUser1 = isUser1
+        self.draftAnswer = draftAnswer
         self.lastUpdated = Date()
     }
 }

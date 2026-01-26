@@ -118,11 +118,13 @@ final class InteractionViewController: UIViewController {
                 switch route {
                 case .questionInput(let uiModel):
                     let submitUseCase = AppDIContainer.shared.resolve(SubmitDailyQuestionAnswerUseCase.self)
+                    let manageDraftUseCase = AppDIContainer.shared.resolve(ManageDailyQuestionDraftAnswerUseCase.self)
                     
                     let vm = DailyQuestionInputViewModel(
                         uiModel: uiModel,
                         uiModelPublisher: self.viewModel.uiModelPublisher,
-                        submitDailyQuestionAnswerUseCase: submitUseCase
+                        submitDailyQuestionAnswerUseCase: submitUseCase,
+                        manageDraftAnswerUseCase: manageDraftUseCase
                     )
                     let vc = DailyQuestionInputViewController(viewModel: vm)
                     vc.hidesBottomBarWhenPushed = true
