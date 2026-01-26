@@ -165,8 +165,8 @@ def _fetch_balance_game_history(db, couple_ref, limit, uid):
             "question": game_data.get("questionText"),
             "optionA": game_data.get("option1"), 
             "optionB": game_data.get("option2"),
-            "user1Choice": ans_data.get("user1Choice"), # 0: Left, 1: Right (가정)
-            "user2Choice": ans_data.get("user2Choice"),
+            "user1Answer": ans_data.get("user1Answer"), # 1: Left, 2: Right (가정)
+            "user2Answer": ans_data.get("user2Answer"),
             "isUser1": is_user1
         })
         

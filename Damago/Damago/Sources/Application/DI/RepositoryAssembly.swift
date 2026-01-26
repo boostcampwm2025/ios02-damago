@@ -50,5 +50,12 @@ final class RepositoryAssembly: Assembly {
                 localDataSource: container.resolve(DailyQuestionLocalDataSourceProtocol.self)
             )
         }
+        
+        container.register(HistoryRepositoryProtocol.self) {
+            HistoryRepository(
+                networkProvider: container.resolve(NetworkProvider.self),
+                tokenProvider: container.resolve(TokenProvider.self)
+            )
+        }
     }
 }

@@ -64,5 +64,11 @@ final class UseCaseAssembly: Assembly {
                 localDataSource: container.resolve(DailyQuestionLocalDataSourceProtocol.self)
             )
         }
+        container.register(FetchDailyQuestionsHistoryUseCase.self) {
+            FetchDailyQuestionsHistoryUseCaseImpl(repository: container.resolve(HistoryRepositoryProtocol.self))
+        }
+        container.register(FetchBalanceGamesHistoryUseCase.self) {
+            FetchBalanceGamesHistoryUseCaseImpl(repository: container.resolve(HistoryRepositoryProtocol.self))
+        }
     }
 }
