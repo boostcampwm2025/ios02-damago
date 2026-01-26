@@ -105,7 +105,7 @@ final class EditProfileViewModel: ViewModel {
                 )
                 state.route = Pulse(.back)
             } catch {
-                state.route = Pulse(.error(message: error.localizedDescription))
+                state.route = Pulse(.error(message: error.userFriendlyMessage))
             }
         }
     }

@@ -110,7 +110,7 @@ final class ConnectionViewModel: ViewModel {
             let code = try await fetchCodeUseCase.execute()
             state.myCode = code
         } catch {
-            state.route = .init(.alert(message: error.localizedDescription))
+            state.route = .init(.alert(message: error.userFriendlyMessage))
         }
     }
 
@@ -128,7 +128,7 @@ final class ConnectionViewModel: ViewModel {
             state.route = .init(.home)
         } catch {
             state.isLoading = false
-            state.route = .init(.alert(message: error.localizedDescription))
+            state.route = .init(.alert(message: error.userFriendlyMessage))
         }
     }
 
