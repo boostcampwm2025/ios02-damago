@@ -264,6 +264,7 @@ final class SettingsViewModel: ViewModel {
             do {
                 try signOutUseCase.execute()
                 // 로그아웃 시 커플 연결 상태 초기화 및 Live Activity 종료
+                UserDefaults.standard.set(false, forKey: "isOnboardingCompleted")
                 LiveActivityManager.shared.synchronizeActivity()
                 NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
             } catch {
@@ -273,6 +274,7 @@ final class SettingsViewModel: ViewModel {
             Task {
                 do {
                     try await withdrawUseCase.execute()
+                    UserDefaults.standard.set(false, forKey: "isOnboardingCompleted")
                     NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
                 } catch {
                     state.route = Pulse(.error(message: error.localizedDescription))

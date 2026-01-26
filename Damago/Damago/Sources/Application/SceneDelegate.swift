@@ -85,9 +85,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 do {
                     let isConnected = try await checkConnectionUseCase.execute()
                     if isConnected {
-                        startGlobalMonitoring()
-                        let tabBarController = TabBarViewController()
-                        window?.rootViewController = tabBarController
+                        navigateToProfileSettingIfNeeded()
                     } else {
                         navigateToConnection()
                     }
@@ -135,5 +133,24 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         )
         let connectionVC = ConnectionViewController(viewModel: connectionVM)
         window?.rootViewController = connectionVC
+    }
+    
+    private func navigateToProfileSettingIfNeeded() {
+        let isOnboardingCompleted = UserDefaults.standard.bool(forKey: "isOnboardingCompleted")
+        if isOnboardingCompleted {
+            startGlobalMonitoring()
+            let tabBarController = TabBarViewController()
+            window?.rootViewController = tabBarController
+        } else {
+            let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
+            let vm = ProfileSettingViewModel(
+                updateUserUseCase: updateUserUseCase,
+                globalStore: globalStore
+            )
+            let vc = ProfileSettingViewController(viewModel: vm)
+            let navigationController = UINavigationController(rootViewController: vc)
+            window?.rootViewController = navigationController
+        }
     }
 }

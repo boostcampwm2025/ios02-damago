@@ -74,6 +74,7 @@ final class PetSetupViewModel: ViewModel {
                     petName: name,
                     petType: selectedPet.rawValue
                 )
+                UserDefaults.standard.set(true, forKey: "isOnboardingCompleted")
                 state.route = Pulse(.home)
             } catch {
                 state.route = Pulse(.error(title: "오류", message: error.localizedDescription))
