@@ -112,10 +112,10 @@ final class ConnectionViewModel: ViewModel {
         defer { state.isLoading = false }
 
         do {
-            let (myCode, partnerCode) = try await fetchCodeUseCase.execute()
-            state.myCode = myCode
-            
-            if let partnerCode = partnerCode {
+            let codes = try await fetchCodeUseCase.execute()
+            state.myCode = codes.myCode
+
+            if let partnerCode = codes.partnerCode {
                 state.opponentCode = partnerCode
             }
         } catch {

@@ -30,10 +30,10 @@ final class UserRepository: UserRepositoryProtocol {
         self.firestoreService = firestoreService
     }
     
-    func generateCode() async throws -> (myCode: String, partnerCode: String?) {
+    func generateCode() async throws -> ConnectionCodes {
         let token = try await tokenProvider.idToken()
         let response: UserCodeDTO = try await networkProvider.request(UserAPI.generateCode(accessToken: token))
-        return (response.myCode, response.partnerCode)
+        return .init(myCode: response.myCode, partnerCode: response.partnerCode)
     }
     
     func connectCouple(targetCode: String) async throws {
