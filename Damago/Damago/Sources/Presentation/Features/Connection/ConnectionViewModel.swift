@@ -22,7 +22,7 @@ final class ConnectionViewModel: ViewModel {
         var opponentCode = ""
         var route: Pulse<Route>?
         var pasteboardCode: Pulse<String>?
-        var isLoading = false
+        var isLoading = true
         var loadingMessage = ""
 
         var isConnectButtonEnabled: Bool { !opponentCode.isEmpty && !isLoading }

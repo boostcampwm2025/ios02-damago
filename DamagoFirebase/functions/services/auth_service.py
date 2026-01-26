@@ -2,6 +2,7 @@ from firebase_functions import https_fn
 from firebase_admin import firestore
 from nanoid import generate
 import google.cloud.firestore
+import json
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
 import json
@@ -41,8 +42,9 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
                 partner_code = partner_doc.to_dict().get("code")
 
         return https_fn.Response(
-            {"myCode": existing_code, "partnerCode": partner_code}, 
-            status=200
+            json.dumps({"myCode": existing_code, "partnerCode": partner_code}), 
+            status=200,
+            mimetype='application/json'
         )
 
     # --- [Step 2] 고유 코드 생성 (NanoID) ---
@@ -79,8 +81,9 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
     })
 
     return https_fn.Response(
-        {"myCode": unique_code, "partnerCode": None}, 
-        status=200
+        json.dumps({"myCode": unique_code, "partnerCode": None}), 
+        status=200,
+        mimetype='application/json'
     )
 
 def connect_couple(req: https_fn.Request) -> https_fn.Response:

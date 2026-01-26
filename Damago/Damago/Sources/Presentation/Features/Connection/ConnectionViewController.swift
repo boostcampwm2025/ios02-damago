@@ -98,11 +98,11 @@ final class ConnectionViewController: UIViewController {
             .store(in: &cancellables)
 
         output
-            .mapForUI { ($0.isLoading, $0.loadingMessage) }
-            .sink { [weak self] isLoading, message in
+            .mapForUI { LoadingState(isLoading: $0.isLoading, message: $0.loadingMessage) }
+            .sink { [weak self] state in
                 guard let self else { return }
-                if isLoading {
-                    progressView.show(in: view, message: message)
+                if state.isLoading {
+                    progressView.show(in: view, message: state.message)
                 } else {
                     progressView.hide()
                 }
@@ -172,5 +172,12 @@ extension ConnectionViewController: UITextFieldDelegate {
         textField.sendActions(for: .editingChanged)
         
         return false
+    }
+}
+
+private extension ConnectionViewController {
+    struct LoadingState: Equatable {
+        let isLoading: Bool
+        let message: String
     }
 }
