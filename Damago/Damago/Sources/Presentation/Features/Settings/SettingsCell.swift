@@ -115,7 +115,6 @@ final class SettingsToggleCell: UITableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         cancellables.removeAll()
-        toggleSwitch.isOn = false
     }
 
     func configure(type: ToggleType, isOn: Bool) {
@@ -127,7 +126,10 @@ final class SettingsToggleCell: UITableViewCell {
         content.secondaryTextProperties.color = .gray
         contentConfiguration = content
 
-        toggleSwitch.isOn = isOn
+        // iOS 26에서 애니메이션 깨짐 방지: 값이 다를 때만 애니메이션 없이 업데이트
+        if toggleSwitch.isOn != isOn {
+            toggleSwitch.setOn(isOn, animated: false)
+        }
         accessoryView = toggleSwitch
     }
 }
