@@ -52,14 +52,6 @@ final class LiveActivityManager {
             return
         }
         
-        // 커플 연결 상태 확인
-        guard UserDefaults.standard.bool(forKey: "isConnected") else {
-            // 커플 연결이 안 되어 있으면 모든 Live Activity 종료
-            SharedLogger.liveActivityManger.info("커플 연결이 되어있지 않아 Live Activity를 종료합니다.")
-            endAllActivities()
-            return
-        }
-        
         fetchActivityData { petStatus in
             guard let petStatus else {
                 // 서버로 받은 데이터가 없으면 실행 중인 모든 Live Activity를 종료합니다.
