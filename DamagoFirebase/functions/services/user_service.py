@@ -38,9 +38,11 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
     anniversary_date_str = body.get("anniversaryDate")
     use_fcm = body.get("useFCM")
     use_live_activity = body.get("useLiveActivity")
+    pet_name = body.get("petName")
+    pet_type = body.get("petType")
     
     # 파라미터가 모두 없으면 400 Bad Request 리턴
-    if all(param is None for param in [nickname, anniversary_date_str, use_fcm, use_live_activity]):
+    if all(param is None for param in [nickname, anniversary_date_str, use_fcm, use_live_activity, pet_name, pet_type]):
         return https_fn.Response("At least one parameter is required", status=400)
         
     db = get_db()
@@ -62,28 +64,42 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
     if updates:
         user_ref.update(updates)
 
-    # 3. 기념일 업데이트 (커플인 경우에만)
-    if anniversary_date_str is not None:
-        try:
-            # ISO 8601 문자열 파싱 (Python 3.11+의 datetime.fromisoformat은 Z 지원하지만 
-            # 구버전 호환성이나 타임존 처리를 위해 replace('Z', '+00:00') 등을 고려)
-            if anniversary_date_str.endswith('Z'):
-                 anniversary_date_str = anniversary_date_str.replace('Z', '+00:00')
-            anniversary_date = datetime.fromisoformat(anniversary_date_str)
-        except ValueError:
-             return https_fn.Response("Invalid date format. Use ISO 8601.", status=400)
-
-        # coupleID 확인을 위해 유저 문서 조회
+    # 기념일 또는 펫 정보 업데이트가 필요한 경우 유저 정보를 조회해야 함
+    if any(param is not None for param in [anniversary_date_str, pet_name, pet_type]):
         user_snap = user_ref.get()
         if not user_snap.exists:
              return https_fn.Response("User not found", status=404)
-             
-        couple_id = user_snap.to_dict().get("coupleID")
-        if couple_id:
-            couple_ref = db.collection("couples").document(couple_id)
-            couple_ref.update({"anniversaryDate": anniversary_date})
-        # 커플이 아닌 경우 기념일 업데이트 요청은 무시하거나 에러 처리할 수 있으나, 
-        # 여기서는 조용히 넘어감(혹은 404 리턴도 가능). 요구사항은 '둘 다 빼먹었을 때만 바로 리턴'이었음.
+        user_data = user_snap.to_dict()
+
+        # 3. 기념일 업데이트 (커플인 경우에만)
+        if anniversary_date_str is not None:
+            try:
+                # ISO 8601 문자열 파싱 (Python 3.11+의 datetime.fromisoformat은 Z 지원하지만 
+                # 구버전 호환성이나 타임존 처리를 위해 replace('Z', '+00:00') 등을 고려)
+                if anniversary_date_str.endswith('Z'):
+                     anniversary_date_str = anniversary_date_str.replace('Z', '+00:00')
+                anniversary_date = datetime.fromisoformat(anniversary_date_str)
+            except ValueError:
+                 return https_fn.Response("Invalid date format. Use ISO 8601.", status=400)
+
+            couple_id = user_data.get("coupleID")
+            if couple_id:
+                couple_ref = db.collection("couples").document(couple_id)
+                couple_ref.update({"anniversaryDate": anniversary_date})
+
+        # 4. 펫 정보 업데이트 (이름, 타입)
+        if pet_name is not None or pet_type is not None:
+            damago_id = user_data.get("damagoID")
+            if damago_id:
+                damago_ref = db.collection("damagos").document(damago_id)
+                pet_updates = {}
+                if pet_name is not None:
+                    pet_updates["petName"] = pet_name
+                if pet_type is not None:
+                    pet_updates["petType"] = pet_type
+                
+                if pet_updates:
+                    damago_ref.update(pet_updates)
 
     return https_fn.Response("Updated successfully", status=200)
 

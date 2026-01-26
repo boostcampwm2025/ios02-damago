@@ -213,14 +213,18 @@ final class SettingsViewModel: ViewModel {
                     nickname: nil,
                     anniversaryDate: nil,
                     useFCM: isOn,
-                    useLiveActivity: nil
+                    useLiveActivity: nil,
+                    petName: nil,
+                    petType: nil
                 )
             case .liveActivity:
                 try await updateUserUseCase.execute(
                     nickname: nil,
                     anniversaryDate: nil,
                     useFCM: nil,
-                    useLiveActivity: isOn
+                    useLiveActivity: isOn,
+                    petName: nil,
+                    petType: nil
                 )
             }
         } catch {
