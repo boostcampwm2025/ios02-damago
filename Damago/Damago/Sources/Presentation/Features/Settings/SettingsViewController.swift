@@ -187,7 +187,7 @@ extension SettingsViewController: UITableViewDelegate {
 
                 content.image = UIImage(systemName: "heart.fill")
                 content.imageProperties.tintColor = .systemPink
-                content.text = "커플 연결"
+                content.text = "커플 연결 다시하기"
                 content.textProperties.color = .textPrimary
                 content.secondaryText = opponentName.isEmpty ? "상대방의 닉네임이 없어요!" : "\(opponentName)님과 연결됨"
                 content.secondaryTextProperties.color = .textSecondary
