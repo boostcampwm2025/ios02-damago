@@ -103,6 +103,26 @@ final class UserRepository: UserRepositoryProtocol {
     func signOut() throws {
         try authService.signOut()
     }
+
+    func withdraw() async throws {
+        let rawNonce = try cryptoService.randomNonceString()
+        let hashedNonce = cryptoService.sha256(rawNonce)
+        let credential = try await authService.request(hashedNonce: hashedNonce)
+
+        let token = try await tokenProvider.idToken()
+
+        try await networkProvider.requestSuccess(UserAPI.withdrawUser(accessToken: token))
+
+        try await authService.deleteAccount(credential: credential)
+    }
+    
+    func checkCoupleConnection() async throws -> Bool {
+        let token = try await tokenProvider.idToken()
+        let response: CheckCoupleConnectionResponse = try await networkProvider.request(
+            UserAPI.checkCoupleConnection(accessToken: token)
+        )
+        return response.isConnected
+    }
 }
 
 // MARK: - DTO Mapping

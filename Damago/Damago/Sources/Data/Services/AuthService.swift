@@ -10,14 +10,20 @@ import FirebaseAuth
 
 enum AuthError: LocalizedError {
     case identityTokenNotExists
-    case tokenSerializationFailed
+    case tokenSerializationDidFail
+    case fetchAuthorizationCodeDidFail
+    case authorizationCodeSerializationDidFail
 
     var errorDescription: String? {
         switch self {
         case .identityTokenNotExists:
             return "identityToken이 존재하지 않습니다."
-        case .tokenSerializationFailed:
+        case .tokenSerializationDidFail:
             return "토큰 직렬화에 실패했습니다."
+        case .fetchAuthorizationCodeDidFail:
+            return "인증 코드 획득에 실패했습니다."
+        case .authorizationCodeSerializationDidFail:
+            return "인증 코드 직렬화에 실패했습니다."
         }
     }
 }
@@ -26,6 +32,7 @@ protocol AuthService {
     func request(hashedNonce: String) async throws -> AppleCredential
     func signIn(credential: AppleCredential, rawNonce: String) async throws
     func signOut() throws
+    func deleteAccount(credential: AppleCredential) async throws
 }
 
 final class AuthServiceImpl: NSObject, AuthService {
@@ -66,6 +73,12 @@ final class AuthServiceImpl: NSObject, AuthService {
         let firebaseAuth = Auth.auth()
         try firebaseAuth.signOut()
     }
+    
+    func deleteAccount(credential: AppleCredential) async throws {
+        guard let user = Auth.auth().currentUser else { return }
+        try await Auth.auth().revokeToken(withAuthorizationCode: credential.authorizationCode)
+        try await user.delete()
+    }
 }
 
 extension AuthServiceImpl: ASAuthorizationControllerDelegate {
@@ -81,12 +94,21 @@ extension AuthServiceImpl: ASAuthorizationControllerDelegate {
             return
         }
         guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
-            requestContinuation?.resume(throwing: AuthError.tokenSerializationFailed)
+            requestContinuation?.resume(throwing: AuthError.tokenSerializationDidFail)
+            return
+        }
+        guard let appleAuthCode = appleIDCredential.authorizationCode else {
+            requestContinuation?.resume(throwing: AuthError.fetchAuthorizationCodeDidFail)
+            return
+        }
+        guard let authCodeString = String(data: appleAuthCode, encoding: .utf8) else {
+            requestContinuation?.resume(throwing: AuthError.authorizationCodeSerializationDidFail)
             return
         }
         requestContinuation?.resume(
             returning: AppleCredential(
                 idToken: idTokenString,
+                authorizationCode: authCodeString,
                 fullName: appleIDCredential.fullName
             )
         )

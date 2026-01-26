@@ -1,4 +1,5 @@
 from firebase_functions import https_fn
+from firebase_admin import firestore
 from utils.firestore import get_db
 from utils.constants import get_required_exp
 from utils.middleware import get_uid_from_request
@@ -202,5 +203,36 @@ def update_fcm_token(req: https_fn.Request) -> https_fn.Response:
     
     return https_fn.Response(
         json.dumps({"message": "FCM token updated successfully"}),
+        mimetype="application/json"
+    )
+
+def check_couple_connection(req: https_fn.Request) -> https_fn.Response:
+    """
+    커플 연결 상태를 확인합니다.
+    
+    Args:
+        req (https_fn.Request): Header Authorization Bearer Token
+        
+    Returns:
+        JSON Response: { "isConnected": bool }
+    """
+    try:
+        uid = get_uid_from_request(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+        
+    db = get_db()
+    user_ref = db.collection("users").document(uid)
+    user_doc = user_ref.get()
+    
+    is_connected = False
+    
+    if user_doc.exists:
+        user_data = user_doc.to_dict()
+        if user_data.get("coupleID"):
+            is_connected = True
+            
+    return https_fn.Response(
+        json.dumps({"isConnected": is_connected}),
         mimetype="application/json"
     )

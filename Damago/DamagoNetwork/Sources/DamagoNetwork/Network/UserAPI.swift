@@ -13,6 +13,8 @@ public enum UserAPI {
     case getUserInfo(accessToken: String)
     case updateUserInfo(accessToken: String, nickname: String?, anniversaryDate: String?, useFCM: Bool?, useLiveActivity: Bool?)
     case updateFCMToken(accessToken: String, fcmToken: String)
+    case withdrawUser(accessToken: String)
+    case checkCoupleConnection(accessToken: String)
 }
 
 extension UserAPI: EndPoint {
@@ -27,6 +29,8 @@ extension UserAPI: EndPoint {
         case .getUserInfo: "/get_user_info"
         case .updateFCMToken: "/update_fcm_token"
         case .updateUserInfo: "/update_user_info"
+        case .withdrawUser: "/withdraw_user"
+        case .checkCoupleConnection: "/check_couple_connection"
         }
     }
     
@@ -41,6 +45,8 @@ extension UserAPI: EndPoint {
              .connectCouple(let token, _),
              .getUserInfo(let token),
              .updateFCMToken(let token, _),
+             .withdrawUser(let token),
+             .checkCoupleConnection(let token),
              .updateUserInfo(let token, _, _, _, _):
             headers["Authorization"] = "Bearer \(token)"
         }
@@ -51,7 +57,7 @@ extension UserAPI: EndPoint {
         let parameters: [String: Any?]
         
         switch self {
-        case .generateCode, .getUserInfo:
+        case .generateCode, .getUserInfo, .checkCoupleConnection:
             parameters = [:]
             
         case .connectCouple(_, let targetCode):
@@ -67,6 +73,9 @@ extension UserAPI: EndPoint {
                 "useFCM": useFCM,
                 "useLiveActivity": useLiveActivity
             ]
+            
+        case .withdrawUser:
+            parameters = [:]
         }
         
         let validParameters = parameters.compactMapValues { $0 }

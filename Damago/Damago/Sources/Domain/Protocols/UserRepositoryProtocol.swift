@@ -19,4 +19,6 @@ protocol UserRepositoryProtocol {
     func observeUserSnapshot(uid: String) -> AnyPublisher<Result<UserSnapshotDTO, Error>, Never>
     func updateUserInfo(nickname: String?, anniversaryDate: Date?, useFCM: Bool?, useLiveActivity: Bool?) async throws
     func signOut() throws
+    func withdraw() async throws
+    func checkCoupleConnection() async throws -> Bool
 }

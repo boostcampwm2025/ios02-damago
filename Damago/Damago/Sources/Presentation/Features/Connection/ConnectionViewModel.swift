@@ -119,11 +119,8 @@ final class ConnectionViewModel: ViewModel {
         
         do {
             try await connectCoupleUseCase.execute(code: state.opponentCode)
-            UserDefaults.standard.setValue(true, forKey: "isConnected")
-            
             // 커플 연결 성공 시 Live Activity 시작
             LiveActivityManager.shared.synchronizeActivity()
-            
             state.isLoading = false
             state.route = .init(.home)
         } catch {

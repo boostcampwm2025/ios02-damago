@@ -69,16 +69,19 @@ final class SettingsViewModel: ViewModel {
     private var cancellables = Set<AnyCancellable>()
     private let globalStore: GlobalStoreProtocol
     private let signOutUseCase: SignOutUseCase
+    private let withdrawUseCase: WithdrawUseCase
     private let updateUserUseCase: UpdateUserUseCase
 
     init(
         globalStore: GlobalStoreProtocol,
         signOutUseCase: SignOutUseCase,
+        withdrawUseCase: WithdrawUseCase,
         updateUserUseCase: UpdateUserUseCase
     ) {
         self.globalStore = globalStore
         self.signOutUseCase = signOutUseCase
         self.updateUserUseCase = updateUserUseCase
+        self.withdrawUseCase = withdrawUseCase
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
@@ -254,14 +257,20 @@ final class SettingsViewModel: ViewModel {
             do {
                 try signOutUseCase.execute()
                 // 로그아웃 시 커플 연결 상태 초기화 및 Live Activity 종료
-                UserDefaults.standard.setValue(false, forKey: "isConnected")
                 LiveActivityManager.shared.synchronizeActivity()
                 NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
             } catch {
                 state.route = Pulse(.error(message: error.localizedDescription))
             }
         case .deleteAccount:
-            break
+            Task {
+                do {
+                    try await withdrawUseCase.execute()
+                    NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
+                } catch {
+                    state.route = Pulse(.error(message: error.localizedDescription))
+                }
+            }
         case .openSettings:
             state.route = Pulse(.openSettings)
         }
