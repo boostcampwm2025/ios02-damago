@@ -72,6 +72,10 @@ def fetch_daily_question(req: https_fn.Request) -> https_fn.Response:
     return couple_interaction_service.fetch_daily_question(req)
 
 @https_fn.on_request()
+def fetch_history(req: https_fn.Request) -> https_fn.Response:
+    return couple_interaction_service.fetch_history(req)
+
+@https_fn.on_request()
 def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
     return couple_interaction_service.submit_daily_question(req)
 
