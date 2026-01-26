@@ -6,7 +6,7 @@
 //
 
 protocol FetchCodeUseCase {
-    func execute() async throws -> String
+    func execute() async throws -> (myCode: String, partnerCode: String?)
 }
 
 final class FetchCodeUseCaseImpl: FetchCodeUseCase {
@@ -16,7 +16,7 @@ final class FetchCodeUseCaseImpl: FetchCodeUseCase {
         self.userRepository = userRepository
     }
 
-    func execute() async throws -> String {
+    func execute() async throws -> (myCode: String, partnerCode: String?) {
         try await userRepository.generateCode()
     }
 }

@@ -23,6 +23,7 @@ final class ConnectionViewModel: ViewModel {
         var route: Pulse<Route>?
         var pasteboardCode: Pulse<String>?
         var isLoading = false
+        var loadingMessage = ""
 
         var isConnectButtonEnabled: Bool { !opponentCode.isEmpty && !isLoading }
     }
@@ -106,15 +107,24 @@ final class ConnectionViewModel: ViewModel {
     }
 
     private func resolveMyCode() async {
+        state.loadingMessage = "코드 불러오는 중..."
+        state.isLoading = true
+        defer { state.isLoading = false }
+
         do {
-            let code = try await fetchCodeUseCase.execute()
-            state.myCode = code
+            let (myCode, partnerCode) = try await fetchCodeUseCase.execute()
+            state.myCode = myCode
+            
+            if let partnerCode = partnerCode {
+                state.opponentCode = partnerCode
+            }
         } catch {
             state.route = .init(.alert(message: error.localizedDescription))
         }
     }
 
     private func connect() async {
+        state.loadingMessage = "연결 중..."
         state.isLoading = true
         
         do {

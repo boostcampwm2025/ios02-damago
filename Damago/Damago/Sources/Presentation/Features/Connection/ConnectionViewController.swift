@@ -98,11 +98,11 @@ final class ConnectionViewController: UIViewController {
             .store(in: &cancellables)
 
         output
-            .mapForUI { $0.isLoading }
-            .sink { [weak self] isLoading in
+            .mapForUI { ($0.isLoading, $0.loadingMessage) }
+            .sink { [weak self] isLoading, message in
                 guard let self else { return }
                 if isLoading {
-                    progressView.show(in: view, message: "연결 중...")
+                    progressView.show(in: view, message: message)
                 } else {
                     progressView.hide()
                 }
