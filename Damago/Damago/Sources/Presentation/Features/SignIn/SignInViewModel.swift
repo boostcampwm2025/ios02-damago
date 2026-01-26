@@ -59,7 +59,7 @@ final class SignInViewModel: ViewModel {
             try await signInUseCase.signIn()
             self.state.route = .init(.connection(opponentCode: opponentCode))
         } catch {
-            self.state.route = .init(.alert(errorMessage: error.localizedDescription))
+            self.state.route = .init(.alert(errorMessage: error.userFriendlyMessage))
         }
     }
 }

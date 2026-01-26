@@ -89,7 +89,7 @@ final class EditProfileViewController: UIViewController {
     }
 
     private func presentAlert(message: String) {
-        let alert = UIAlertController(title: "에러", message: message, preferredStyle: .alert)
+        let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "확인", style: .default))
         present(alert, animated: true)
     }

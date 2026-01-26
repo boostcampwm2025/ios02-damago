@@ -16,7 +16,7 @@ final class SpriteAnimationView: UIView {
     private let spriteSheetName: String
     private let spriteSheetColumns: Int
     
-    var animationDuration: TimeInterval = 1.0
+    var frameDuration: TimeInterval = 0.2
     
     /// 포커스 시스템 지원 여부
     override var canBecomeFocused: Bool { false }
@@ -188,7 +188,7 @@ private extension SpriteAnimationView {
     func createAnimationAction(with textures: [SKTexture], repeatCount: Int?) -> SKAction {
         let baseAnimation = SKAction.animate(
             with: textures,
-            timePerFrame: animationDuration / Double(textures.count)
+            timePerFrame: frameDuration
         )
         return repeatCount.map { SKAction.repeat(baseAnimation, count: $0) }
             ?? SKAction.repeatForever(baseAnimation)

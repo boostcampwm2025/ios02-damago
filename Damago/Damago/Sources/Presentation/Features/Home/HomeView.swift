@@ -75,7 +75,6 @@ final class HomeView: UIView {
     let characterView: SpriteAnimationView = {
         let view = SpriteAnimationView(spriteSheetName: "BunnyBase")
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.animationDuration = 1.0
         return view
     }()
 

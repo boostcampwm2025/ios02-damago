@@ -111,7 +111,7 @@ final class ConnectionViewController: UIViewController {
     }
 
     private func presentAlert(with message: String) {
-        let alert = UIAlertController(title: "에러", message: message, preferredStyle: .alert)
+        let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
         let confirmAction = UIAlertAction(title: "확인", style: .default)
         alert.addAction(confirmAction)
         present(alert, animated: true)

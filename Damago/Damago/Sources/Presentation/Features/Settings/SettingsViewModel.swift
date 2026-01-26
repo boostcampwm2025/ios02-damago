@@ -263,7 +263,7 @@ final class SettingsViewModel: ViewModel {
                 LiveActivityManager.shared.synchronizeActivity()
                 NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
             } catch {
-                state.route = Pulse(.error(message: error.localizedDescription))
+                state.route = Pulse(.error(message: error.userFriendlyMessage))
             }
         case .deleteAccount:
             Task {
