@@ -14,6 +14,23 @@ final class CTAButton: UIButton {
         let image: UIImage?
         let title: String
         let subtitle: String?
+        let font: UIFont?
+
+        init(
+            backgroundColor: UIColor,
+            foregroundColor: UIColor,
+            image: UIImage? = nil,
+            title: String,
+            subtitle: String? = nil,
+            font: UIFont? = nil
+        ) {
+            self.backgroundColor = backgroundColor
+            self.foregroundColor = foregroundColor
+            self.image = image
+            self.title = title
+            self.subtitle = subtitle
+            self.font = font
+        }
     }
 
     private var activeConfig: Configuration?
@@ -55,7 +72,8 @@ final class CTAButton: UIButton {
                 foregroundColor: active.foregroundColor,
                 image: active.image,
                 title: title,
-                subtitle: active.subtitle
+                subtitle: active.subtitle,
+                font: active.font
             )
         }
         
@@ -65,7 +83,8 @@ final class CTAButton: UIButton {
                 foregroundColor: disabled.foregroundColor,
                 image: disabled.image,
                 title: title,
-                subtitle: disabled.subtitle
+                subtitle: disabled.subtitle,
+                font: disabled.font
             )
         }
         
@@ -85,7 +104,7 @@ final class CTAButton: UIButton {
         updatedConfig?.baseForegroundColor = style.foregroundColor
 
         var titleContainer = AttributeContainer()
-        titleContainer.font = .title3
+        titleContainer.font = style.font ?? .title3
         titleContainer.foregroundColor = style.foregroundColor
         updatedConfig?.attributedTitle = AttributedString(style.title, attributes: titleContainer)
 
