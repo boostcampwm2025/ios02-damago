@@ -119,7 +119,7 @@ final class TabBarViewController: UITabBarController {
             let vc = InteractionViewController(viewModel: vm)
             return vc
         case .game:
-            return UIViewController()
+            return MiniGameViewController()
         case .setting:
             let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
             let signOutUseCase = AppDIContainer.shared.resolve(SignOutUseCase.self)
