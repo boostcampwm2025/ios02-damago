@@ -83,8 +83,16 @@ final class ConnectionViewController: UIViewController {
                     presentAlert(with: message)
                 case let .activity(url):
                     presentActivity(with: url)
-                case .home:
-                    replaceRootVC()
+                case .editProfile:
+                    let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+                    let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
+                    let vm = ProfileSettingViewModel(
+                        updateUserUseCase: updateUserUseCase,
+                        userRepository: userRepository
+                    )
+                    let vc = ProfileSettingViewController(viewModel: vm)
+                    let navigationController = UINavigationController(rootViewController: vc)
+                    self.view.window?.replaceRootViewController(with: navigationController)
                 }
             }
             .store(in: &cancellables)

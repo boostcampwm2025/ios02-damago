@@ -40,6 +40,29 @@ struct DamagoAttributes: ActivityAttributes {
     var petName: String
 }
 
+public enum DamagoType: String, CaseIterable, Codable {
+    case bunny = "Bunny"
+    case siamese = "CatSiamese"
+    case tiger = "CatTiger"
+    case dog = "Dog"
+    case fish = "Fish"
+    case lizard = "Lizard"
+    case owl = "Owl"
+    case parrot = "Parrot"
+    case rabbit = "Rabbit"
+
+    public var imageName: String {
+        "\(self.rawValue)Base"
+    }
+
+    public var isAvailable: Bool {
+        switch self {
+        case .bunny, .siamese, .tiger: return true
+        default: return false
+        }
+    }
+}
+
 extension DamagoAttributes {
     public enum Screen: String, Codable, Hashable {
         case idle

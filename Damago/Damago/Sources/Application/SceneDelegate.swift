@@ -64,15 +64,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         else { return }
 
         if Auth.auth().currentUser != nil {
-            let fetchCodeUseCase = AppDIContainer.shared.resolve(FetchCodeUseCase.self)
-            let connectCoupleUseCase = AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
-            let connectionVM = ConnectionViewModel(
-                fetchCodeUseCase: fetchCodeUseCase,
-                connectCoupleUseCase: connectCoupleUseCase,
-                opponentCode: code
-            )
-            let connectionVC = ConnectionViewController(viewModel: connectionVM)
-            window?.rootViewController = connectionVC
+            navigateToConnection(with: code)
         } else {
             let signInVM = SignInViewModel(
                 signInUseCase: AppDIContainer.shared.resolve(SignInUseCase.self),
@@ -93,25 +85,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 do {
                     let isConnected = try await checkConnectionUseCase.execute()
                     if isConnected {
-                        startGlobalMonitoring()
-                        let tabBarController = TabBarViewController()
-                        window?.rootViewController = tabBarController
+                        navigateToProfileSettingIfNeeded()
                     } else {
-                        let connectionVM = ConnectionViewModel(
-                            fetchCodeUseCase: AppDIContainer.shared.resolve(FetchCodeUseCase.self),
-                            connectCoupleUseCase: AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
-                        )
-                        let connectionVC = ConnectionViewController(viewModel: connectionVM)
-                        window?.rootViewController = connectionVC
+                        navigateToConnection()
                     }
                 } catch {
-                    let connectionVM = ConnectionViewModel(
-                        fetchCodeUseCase: AppDIContainer.shared.resolve(FetchCodeUseCase.self),
-                        connectCoupleUseCase: AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
-                    )
-                    let connectionVC = ConnectionViewController(viewModel: connectionVM)
-                    window?.rootViewController = connectionVC
-                    fatalError(error.localizedDescription)
+                    navigateToConnection()
                 }
             }
         } else {
@@ -142,5 +121,36 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
         globalStore.startMonitoring(uid: uid)
+    }
+    
+    private func navigateToConnection(with code: String? = nil) {
+        let fetchCodeUseCase = AppDIContainer.shared.resolve(FetchCodeUseCase.self)
+        let connectCoupleUseCase = AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
+        let connectionVM = ConnectionViewModel(
+            fetchCodeUseCase: fetchCodeUseCase,
+            connectCoupleUseCase: connectCoupleUseCase,
+            opponentCode: code
+        )
+        let connectionVC = ConnectionViewController(viewModel: connectionVM)
+        window?.rootViewController = connectionVC
+    }
+    
+    private func navigateToProfileSettingIfNeeded() {
+        let isOnboardingCompleted = UserDefaults.standard.bool(forKey: "isOnboardingCompleted")
+        if isOnboardingCompleted {
+            startGlobalMonitoring()
+            let tabBarController = TabBarViewController()
+            window?.rootViewController = tabBarController
+        } else {
+            let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
+            let vm = ProfileSettingViewModel(
+                updateUserUseCase: updateUserUseCase,
+                userRepository: userRepository
+            )
+            let vc = ProfileSettingViewController(viewModel: vm)
+            let navigationController = UINavigationController(rootViewController: vc)
+            window?.rootViewController = navigationController
+        }
     }
 }

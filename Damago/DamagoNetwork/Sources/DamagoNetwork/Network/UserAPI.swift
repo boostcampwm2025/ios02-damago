@@ -11,7 +11,7 @@ public enum UserAPI {
     case generateCode(accessToken: String)
     case connectCouple(accessToken: String, targetCode: String)
     case getUserInfo(accessToken: String)
-    case updateUserInfo(accessToken: String, nickname: String?, anniversaryDate: String?, useFCM: Bool?, useLiveActivity: Bool?)
+    case updateUserInfo(accessToken: String, nickname: String?, anniversaryDate: String?, useFCM: Bool?, useLiveActivity: Bool?, petName: String?, petType: String?)
     case updateFCMToken(accessToken: String, fcmToken: String)
     case withdrawUser(accessToken: String)
     case checkCoupleConnection(accessToken: String)
@@ -47,7 +47,7 @@ extension UserAPI: EndPoint {
              .updateFCMToken(let token, _),
              .withdrawUser(let token),
              .checkCoupleConnection(let token),
-             .updateUserInfo(let token, _, _, _, _):
+             .updateUserInfo(let token, _, _, _, _, _, _):
             headers["Authorization"] = "Bearer \(token)"
         }
         return headers
@@ -66,12 +66,14 @@ extension UserAPI: EndPoint {
         case .updateFCMToken(_, let fcmToken):
             parameters = ["fcmToken": fcmToken]
             
-        case .updateUserInfo(_, let nickname, let anniversaryDate, let useFCM, let useLiveActivity):
+        case .updateUserInfo(_, let nickname, let anniversaryDate, let useFCM, let useLiveActivity, let petName, let petType):
             parameters = [
                 "nickname": nickname,
                 "anniversaryDate": anniversaryDate,
                 "useFCM": useFCM,
-                "useLiveActivity": useLiveActivity
+                "useLiveActivity": useLiveActivity,
+                "petName": petName,
+                "petType": petType
             ]
             
         case .withdrawUser:

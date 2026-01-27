@@ -32,6 +32,7 @@ final class HomeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        LiveActivityManager.shared.synchronizeActivity()
 
         let output = viewModel.transform(
             HomeViewModel.Input(
@@ -117,6 +118,13 @@ final class HomeViewController: UIViewController {
         output
             .mapForUI { $0.petName }
             .sink { [weak self] in self?.mainView.nameLabel.text = $0 }
+            .store(in: &cancellables)
+
+        output
+            .mapForUI { $0 }
+            .sink { [weak self] state in
+                self?.mainView.updateCharacter(petType: state.petType, isHungry: state.isHungry)
+            }
             .store(in: &cancellables)
 
         output

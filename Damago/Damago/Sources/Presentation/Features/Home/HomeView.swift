@@ -231,4 +231,9 @@ extension HomeView {
         feedButton.configure(active: activeConfig, disabled: disabledConfig)
         feedButton.isEnabled = state.isEnabled
     }
+    
+    func updateCharacter(petType: String, isHungry: Bool) {
+        let imageName = isHungry ? "\(petType)Hungry" : "\(petType)Base"
+        characterView.animate(spriteSheetName: imageName)
+    }
 }

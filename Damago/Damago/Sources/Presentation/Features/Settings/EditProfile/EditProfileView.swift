@@ -155,7 +155,7 @@ final class EditProfileView: UIView {
         NSLayoutConstraint.activate(
             [
                 // ScrollView & Main Button
-                scrollView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
+                scrollView.topAnchor.constraint(equalTo: topAnchor),
                 scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
                 scrollView.bottomAnchor.constraint(equalTo: saveButton.topAnchor, constant: -.spacingM),
