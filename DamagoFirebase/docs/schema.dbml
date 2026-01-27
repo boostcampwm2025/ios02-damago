@@ -155,6 +155,7 @@ Table dailyQuestionAnswers {
   user2AnsweredAt timestamp [note: "사용자2 답변 시각"]
   
   bothAnswered boolean [default: false, note: "두 사용자 모두 답변 완료 여부"]
+  lastAnsweredAt timestamp [note: "두 명 모두 답변을 완료한 시각 (bothAnswered=true 시점)"]
   
   Note: '''
   커플의 일일 응답 답변을 저장합니다.

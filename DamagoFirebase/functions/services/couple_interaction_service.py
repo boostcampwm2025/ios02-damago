@@ -206,20 +206,20 @@ def fetch_daily_question(req: https_fn.Request) -> https_fn.Response:
     # 현재 진행해야 할 질문 순서 계산
     stats = couple_data.get("dailyQuestionStats", {})
     total_answered = stats.get("totalAnswered", 0)
-    last_answered_at = stats.get("lastAnsweredAt") # datetime 객체 or None
+    last_answered_at_from_stats = stats.get("lastAnsweredAt") # datetime 객체 or None
     
     # 기본적으로 다음 질문(total_answered + 1)을 타겟으로 함
     target_order = total_answered + 1
     
     # 만약 답변이 완료된 기록이 있다면 시간 체크
-    if last_answered_at:        
+    if last_answered_at_from_stats:        
         # 12시간 대기 로직
         # 마지막 답변 완료 시각으로부터 12시간이 지나지 않았으면, 
         # 새로운 질문 대신 '방금 완료한 질문(total_answered)'을 다시 보여줌
         
         # 주의: total_answered가 0이면 이전 질문이 없으므로 무조건 1번 질문
         if total_answered > 0:
-            elapsed_time = datetime.now(last_answered_at.tzinfo) - last_answered_at
+            elapsed_time = datetime.now(last_answered_at_from_stats.tzinfo) - last_answered_at_from_stats
             hours_passed = elapsed_time.total_seconds() / 3600
             
             if hours_passed < 12:
@@ -248,17 +248,31 @@ def fetch_daily_question(req: https_fn.Request) -> https_fn.Response:
     
     user1_answer = None
     user2_answer = None
+    both_answered = False
+    current_last_answered_at = None
     
     if answer_doc.exists:
         answer_data = answer_doc.to_dict()
         user1_answer = answer_data.get("user1Answer")
         user2_answer = answer_data.get("user2Answer")
+        both_answered = answer_data.get("bothAnswered", False)
+        current_last_answered_at = answer_data.get("lastAnsweredAt")
     
+    # 문서에 없더라도 12시간 대기 중인 질문이라면 통계에서 가져옴
+    if not current_last_answered_at and target_order == total_answered:
+        current_last_answered_at = last_answered_at_from_stats
+    
+    formatted_last_answered_at = None
+    if current_last_answered_at:
+        formatted_last_answered_at = current_last_answered_at.isoformat(timespec="seconds")
+
     response_data = {
         "questionID": question_id,
         "questionContent": question_content,
         "user1Answer": user1_answer,
         "user2Answer": user2_answer,
+        "bothAnswered": both_answered,
+        "lastAnsweredAt": formatted_last_answered_at,
         "isUser1": is_user1
     }
     
@@ -351,6 +365,7 @@ def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
         
         if is_completing_now:
             answer_update["bothAnswered"] = True
+            answer_update["lastAnsweredAt"] = now # 답변 문서 자체에 저장하여 Observer가 읽을 수 있게 함
             
             # 커플 스탯 업데이트 (보상 지급 및 진행도 업데이트)
             current_stats = couple_data.get("dailyQuestionStats", {})
@@ -369,12 +384,26 @@ def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
         # 리턴을 위한 데이터 구성
         user1_answer = answer_text if is_user1 else answer_data.get("user1Answer")
         user2_answer = answer_text if not is_user1 else answer_data.get("user2Answer")
+        is_both_answered = answer_update.get("bothAnswered", answer_data.get("bothAnswered", False))
         
+        # 만약 이번에 완료되었다면 now를 사용하고, 아니면 기존 stats의 lastAnsweredAt 사용
+        final_last_answered_at = None
+        if is_both_answered:
+            if is_completing_now:
+                final_last_answered_at = now.isoformat(timespec="seconds")
+            else:
+                stats = couple_data.get("dailyQuestionStats", {})
+                last_at = stats.get("lastAnsweredAt")
+                if last_at:
+                    final_last_answered_at = last_at.isoformat(timespec="seconds")
+
         return {
             "questionID": question_id,
             "questionContent": question_content,
             "user1Answer": user1_answer,
             "user2Answer": user2_answer,
+            "bothAnswered": is_both_answered,
+            "lastAnsweredAt": final_last_answered_at,
             "isUser1": is_user1
         }
 

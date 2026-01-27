@@ -5,11 +5,15 @@
 //  Created by 김재영 on 1/20/26.
 //
 
+import Foundation
+
 struct DailyQuestionDTO: Decodable {
     let questionID: String
     let questionContent: String
     let user1Answer: String?
     let user2Answer: String?
+    let bothAnswered: Bool?
+    let lastAnsweredAt: Date?
     let isUser1: Bool
 }
 
@@ -17,6 +21,7 @@ extension DailyQuestionDTO {
     func toDomain() -> DailyQuestionUIModel {
         let myAnswerContent = isUser1 ? user1Answer : user2Answer
         let opponentAnswerContent = isUser1 ? user2Answer : user1Answer
+        let isBothAnswered = bothAnswered ?? false
         
         if let myAnswerContent {
             return .result(.init(
@@ -29,9 +34,11 @@ extension DailyQuestionDTO {
                     placeholderText: nil,
                     iconName: nil
                 ),
-                opponentAnswer: mapOpponentAnswer(content: opponentAnswerContent),
+                opponentAnswer: mapOpponentAnswer(content: opponentAnswerContent, bothAnswered: isBothAnswered),
                 buttonTitle: "답변 확인",
-                isUser1: isUser1
+                isUser1: isUser1,
+                bothAnswered: isBothAnswered,
+                lastAnsweredAt: lastAnsweredAt
             ))
         } else {
             return .input(.init(
@@ -43,8 +50,8 @@ extension DailyQuestionDTO {
         }
     }
     
-    private func mapOpponentAnswer(content: String?) -> AnswerCardUIModel {
-        if let content {
+    private func mapOpponentAnswer(content: String?, bothAnswered: Bool) -> AnswerCardUIModel {
+        if bothAnswered, let content {
             return .init(
                 type: .unlocked,
                 title: "상대의 답변",

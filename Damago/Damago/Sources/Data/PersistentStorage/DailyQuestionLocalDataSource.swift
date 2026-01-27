@@ -13,8 +13,13 @@ protocol DailyQuestionLocalDataSourceProtocol {
     func fetchQuestion(id: String) async throws -> DailyQuestionEntity?
     func fetchLatestQuestion() async throws -> DailyQuestionEntity?
     func saveQuestion(_ entity: DailyQuestionEntity) async throws
-    func updateAnswer(questionID: String, user1Answer: String?, user2Answer: String?) async throws
-    
+    func updateAnswer(
+        questionID: String,
+        user1Answer: String?,
+        user2Answer: String?,
+        bothAnswered: Bool,
+        lastAnsweredAt: Date?
+    ) async throws
     func saveDraftAnswer(questionID: String, draftAnswer: String?) async throws
     func loadDraftAnswer(questionID: String) async throws -> String?
     func deleteDraftAnswer(questionID: String) async throws
@@ -53,7 +58,13 @@ final class DailyQuestionLocalDataSource: DailyQuestionLocalDataSourceProtocol {
         try storage.context.save()
     }
 
-    func updateAnswer(questionID: String, user1Answer: String?, user2Answer: String?) async throws {
+    func updateAnswer(
+        questionID: String,
+        user1Answer: String?,
+        user2Answer: String?,
+        bothAnswered: Bool,
+        lastAnsweredAt: Date?
+    ) async throws {
         let descriptor = FetchDescriptor<DailyQuestionEntity>(
             predicate: #Predicate { $0.questionID == questionID }
         )
@@ -61,6 +72,8 @@ final class DailyQuestionLocalDataSource: DailyQuestionLocalDataSourceProtocol {
         if let existingEntity = try storage.context.fetch(descriptor).first {
             existingEntity.user1Answer = user1Answer
             existingEntity.user2Answer = user2Answer
+            existingEntity.bothAnswered = bothAnswered
+            existingEntity.lastAnsweredAt = lastAnsweredAt
             existingEntity.lastUpdated = Date()
 
             try storage.context.save()
