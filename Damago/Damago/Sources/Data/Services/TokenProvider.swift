@@ -54,14 +54,15 @@ final class TokenProviderImpl: TokenProvider {
 
     /// Firebase `INVALID_REFRESH_TOKEN` (또는 내부 에러 17999에 포함된 경우) 감지
     private static func isInvalidRefreshTokenError(_ error: Error) -> Bool {
-        var e: Error? = error
-        while let err = e {
-            let ne = err as NSError
-            if let resp = ne.userInfo["FIRAuthErrorUserInfoDeserializedResponseKey"] as? [String: Any],
-               (resp["message"] as? String) == "INVALID_REFRESH_TOKEN" {
+        // NSUnderlyingError 체인을 따라가며, 매 반복에 `as? Error`(nil 가능)를 대입하므로 Error? 사용
+        var currentError: Error? = error
+        while let errorToInspect = currentError {
+            let nsError = errorToInspect as NSError
+            if let deserializedResponse = nsError.userInfo["FIRAuthErrorUserInfoDeserializedResponseKey"] as? [String: Any],
+               (deserializedResponse["message"] as? String) == "INVALID_REFRESH_TOKEN" {
                 return true
             }
-            e = ne.userInfo[NSUnderlyingErrorKey] as? Error
+            currentError = nsError.userInfo[NSUnderlyingErrorKey] as? Error
         }
         return false
     }
