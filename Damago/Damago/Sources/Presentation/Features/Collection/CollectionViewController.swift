@@ -10,7 +10,6 @@ import UIKit
 final class CollectionViewController: UIViewController {
     private let mainView = CollectionView()
     private let viewModel: CollectionViewModel
-    private var isNavigationBarHidden = true
 
     init(viewModel: CollectionViewModel) {
         self.viewModel = viewModel
@@ -33,11 +32,11 @@ final class CollectionViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
     }
 
     private func setupNavigation() {
-        navigationItem.title = ""
+        navigationItem.title = viewModel.title
         navigationController?.navigationBar.prefersLargeTitles = false
         navigationController?.navigationBar.tintColor = .damagoPrimary
         navigationItem.backButtonDisplayMode = .minimal
@@ -68,23 +67,6 @@ extension CollectionViewController: UICollectionViewDataSource, UICollectionView
 
     func collectionView(
         _ collectionView: UICollectionView,
-        viewForSupplementaryElementOfKind kind: String,
-        at indexPath: IndexPath
-    ) -> UICollectionReusableView {
-        guard kind == UICollectionView.elementKindSectionHeader,
-              let header = collectionView.dequeueReusableSupplementaryView(
-                ofKind: kind,
-                withReuseIdentifier: CollectionTitleHeaderView.reuseIdentifier,
-                for: indexPath
-              ) as? CollectionTitleHeaderView else {
-            return UICollectionReusableView()
-        }
-        header.configure(title: viewModel.title)
-        return header
-    }
-
-    func collectionView(
-        _ collectionView: UICollectionView,
         cellForItemAt indexPath: IndexPath
     ) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(
@@ -111,16 +93,5 @@ extension CollectionViewController: UICollectionViewDataSource, UICollectionView
             alert.addAction(UIAlertAction(title: "확인", style: .default))
             present(alert, animated: true)
         }
-    }
-}
-
-// MARK: - UIScrollViewDelegate
-extension CollectionViewController: UIScrollViewDelegate {
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let shouldShowNav = scrollView.contentOffset.y + scrollView.adjustedContentInset.top > 40
-        guard shouldShowNav != !isNavigationBarHidden else { return }
-        isNavigationBarHidden = !shouldShowNav
-        navigationController?.setNavigationBarHidden(!shouldShowNav, animated: true)
-        navigationItem.title = shouldShowNav ? viewModel.title : ""
     }
 }

@@ -25,7 +25,7 @@ final class InteractionView: UIView {
         stackView.distribution = .fill
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.isLayoutMarginsRelativeArrangement = true
-        stackView.layoutMargins = UIEdgeInsets(top: 0, left: .spacingM, bottom: .spacingXL, right: .spacingM)
+        stackView.layoutMargins = UIEdgeInsets(top: .spacingS, left: .spacingM, bottom: .spacingXL, right: .spacingM)
         return stackView
     }()
     
