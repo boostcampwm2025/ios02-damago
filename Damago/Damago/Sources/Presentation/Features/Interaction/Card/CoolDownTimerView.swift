@@ -13,6 +13,7 @@ struct CoolDownTimerView: View {
     
     var body: some View {
         HStack(spacing: .spacingXS) {
+            Spacer()
             Text(message)
             if let target = targetDate {
                 Image(systemName: "clock")
@@ -22,7 +23,6 @@ struct CoolDownTimerView: View {
         }
         .font(.system(size: 14)) // body3 equivalent
         .foregroundColor(Color(uiColor: .textSecondary))
-        .frame(maxWidth: .infinity, alignment: .trailing)
         .lineLimit(1)
     }
 }
