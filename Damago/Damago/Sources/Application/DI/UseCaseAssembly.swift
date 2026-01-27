@@ -53,6 +53,25 @@ final class UseCaseAssembly: Assembly {
                 userRepository: container.resolve(UserRepositoryProtocol.self)
             )
         }
+        
+        container.register(FetchBalanceGameUseCase.self) {
+            FetchBalanceGameUseCaseImpl(
+                repository: container.resolve(BalanceGameRepositoryProtocol.self)
+            )
+        }
+        
+        container.register(SubmitBalanceGameChoiceUseCase.self) {
+            SubmitBalanceGameChoiceUseCaseImpl(
+                repository: container.resolve(BalanceGameRepositoryProtocol.self)
+            )
+        }
+        
+        container.register(ObserveBalanceGameAnswerUseCase.self) {
+            ObserveBalanceGameAnswerUseCaseImpl(
+                repository: container.resolve(BalanceGameRepositoryProtocol.self)
+            )
+        }
+
         container.register(WithdrawUseCase.self) {
             WithdrawUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }

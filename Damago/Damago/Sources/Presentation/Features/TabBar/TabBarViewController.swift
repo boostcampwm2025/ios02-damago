@@ -124,14 +124,22 @@ final class TabBarViewController: UITabBarController {
             let vc = HomeViewController(viewModel: vm)
             return vc
         case .interaction:
-            let fetchUseCase = AppDIContainer.shared.resolve(FetchDailyQuestionUseCase.self)
-            let observeUseCase = AppDIContainer.shared.resolve(ObserveDailyQuestionAnswerUseCase.self)
+            let fetchDailyQuestionUseCase = AppDIContainer.shared.resolve(FetchDailyQuestionUseCase.self)
+            let observeDailyQuestionAnswerUseCase = AppDIContainer.shared.resolve(
+                ObserveDailyQuestionAnswerUseCase.self
+            )
+            let fetchBalanceGameUseCase = AppDIContainer.shared.resolve(FetchBalanceGameUseCase.self)
+            let observeBalanceGameAnswerUseCase = AppDIContainer.shared.resolve(ObserveBalanceGameAnswerUseCase.self)
+            let submitBalanceGameChoiceUseCase = AppDIContainer.shared.resolve(SubmitBalanceGameChoiceUseCase.self)
             let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
             let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
-            
+
             let vm = InteractionViewModel(
-                fetchDailyQuestionUseCase: fetchUseCase,
-                observeDailyQuestionAnswerUseCase: observeUseCase,
+                fetchDailyQuestionUseCase: fetchDailyQuestionUseCase,
+                observeDailyQuestionAnswerUseCase: observeDailyQuestionAnswerUseCase,
+                fetchBalanceGameUseCase: fetchBalanceGameUseCase,
+                observeBalanceGameAnswerUseCase: observeBalanceGameAnswerUseCase,
+                submitBalanceGameChoiceUseCase: submitBalanceGameChoiceUseCase,
                 userRepository: userRepository,
                 globalStore: globalStore
             )
