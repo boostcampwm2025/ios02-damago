@@ -18,7 +18,7 @@ final class RepositoryAssembly: Assembly {
                 firestoreService: container.resolve(FirestoreService.self)
             )
         }
-        
+
         container.register(PetRepositoryProtocol.self) {
             PetRepository(
                 networkProvider: container.resolve(NetworkProvider.self),
@@ -26,22 +26,22 @@ final class RepositoryAssembly: Assembly {
                 firestoreService: container.resolve(FirestoreService.self)
             )
         }
-        
+
         container.register(PushRepositoryProtocol.self) {
             PushRepository(
                 networkProvider: container.resolve(NetworkProvider.self),
                 tokenProvider: container.resolve(TokenProvider.self)
             )
         }
-        
+
         container.register(PokeShortcutRepositoryProtocol.self) {
             PokeShortcutRepository()
         }
-        
+
         container.register(DailyQuestionLocalDataSourceProtocol.self) {
             DailyQuestionLocalDataSource(storage: container.resolve(SwiftDataStorage.self))
         }
-        
+
         container.register(DailyQuestionRepositoryProtocol.self) {
             DailyQuestionRepository(
                 networkProvider: container.resolve(NetworkProvider.self),
@@ -50,7 +50,17 @@ final class RepositoryAssembly: Assembly {
                 localDataSource: container.resolve(DailyQuestionLocalDataSourceProtocol.self)
             )
         }
-        
+
+        container.register(BalanceGameRepositoryProtocol.self) {
+            BalanceGameRepository(
+                networkProvider: container.resolve(NetworkProvider.self),
+                tokenProvider: container.resolve(TokenProvider.self),
+                firestoreService: container.resolve(FirestoreService.self)
+            )
+            // 테스트를 위해 MockRepository
+//          MockBalanceGameRepository()
+        }
+
         container.register(HistoryRepositoryProtocol.self) {
             HistoryRepository(
                 networkProvider: container.resolve(NetworkProvider.self),
