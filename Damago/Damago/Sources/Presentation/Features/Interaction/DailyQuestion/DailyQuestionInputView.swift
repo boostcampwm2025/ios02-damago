@@ -73,7 +73,7 @@ final class DailyQuestionInputView: UIView {
         let textView = UITextView()
         textView.font = .body1
         textView.textColor = .textPrimary
-        textView.isScrollEnabled = false
+        textView.isScrollEnabled = true
         textView.backgroundColor = .clear
         textView.translatesAutoresizingMaskIntoConstraints = false
         return textView
@@ -248,7 +248,7 @@ final class DailyQuestionInputView: UIView {
             textView.topAnchor.constraint(equalTo: inputCardView.topAnchor, constant: .spacingL),
             textView.leadingAnchor.constraint(equalTo: inputCardView.leadingAnchor, constant: .spacingL),
             textView.trailingAnchor.constraint(equalTo: inputCardView.trailingAnchor, constant: -.spacingL),
-            textView.heightAnchor.constraint(greaterThanOrEqualToConstant: 120),
+            textView.heightAnchor.constraint(equalToConstant: 120),
             
             placeholderLabel.topAnchor.constraint(equalTo: textView.topAnchor, constant: .spacingS),
             placeholderLabel.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: 5),
