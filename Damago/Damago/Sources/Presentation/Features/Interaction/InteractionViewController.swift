@@ -97,6 +97,8 @@ final class InteractionViewController: UIViewController {
             .sink { [weak self] uiModel in
                 let questionContent: String
                 let buttonTitle: String
+                var rightTitle: String = ""
+                var targetDate: Date?
                 
                 switch uiModel {
                 case .input(let inputState):
@@ -105,9 +107,23 @@ final class InteractionViewController: UIViewController {
                 case .result(let resultState):
                     questionContent = resultState.questionContent
                     buttonTitle = resultState.buttonTitle
+                    
+                    if resultState.bothAnswered {
+                        rightTitle = "다음 질문"
+                        if let lastAnsweredAt = resultState.lastAnsweredAt {
+                            targetDate = lastAnsweredAt.addingTimeInterval(12 * 3600)
+                        }
+                    } else {
+                        rightTitle = "상대방을 기다리는 중"
+                    }
                 }
                 
-                self?.mainView.questionCardView.configure(question: questionContent, buttonTitle: buttonTitle)
+                self?.mainView.questionCardView.configure(
+                    question: questionContent,
+                    buttonTitle: buttonTitle,
+                    rightTitle: rightTitle,
+                    targetDate: targetDate
+                )
             }
             .store(in: &cancellables)
         
