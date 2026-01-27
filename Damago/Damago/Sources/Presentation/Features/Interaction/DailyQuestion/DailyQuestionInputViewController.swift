@@ -48,6 +48,12 @@ final class DailyQuestionInputViewController: UIViewController {
         navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // 뷰를 나갈 때 작성 중인 답변 저장
+        viewModel.saveDraftAnswer()
+    }
+    
     private func setupNavigation() {
         title = "오늘의 질문"
         navigationItem.largeTitleDisplayMode = .never
@@ -110,7 +116,28 @@ extension DailyQuestionInputViewController: UITextViewDelegate {
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
         guard let currentText = textView.text else { return true }
         guard let stringRange = Range(range, in: currentText) else { return false }
+        
         let updatedText = currentText.replacingCharacters(in: stringRange, with: text)
-        return updatedText.count <= 200
+        
+        // 제한을 초과하는 경우
+        if updatedText.count > 200 {
+            // 붙여넣기로 보이는 경우(텍스트가 길거나 범위가 큰 경우) 알럿 표시
+            if text.count > 10 || range.length > 0 {
+                showTextLimitAlert()
+            }
+            return false
+        }
+        
+        return true
+    }
+    
+    private func showTextLimitAlert() {
+        let alert = UIAlertController(
+            title: "글자 수 제한",
+            message: "답변은 최대 200자까지 입력할 수 있습니다.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        present(alert, animated: true)
     }
 }

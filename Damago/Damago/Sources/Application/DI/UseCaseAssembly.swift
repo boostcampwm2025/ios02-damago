@@ -59,5 +59,10 @@ final class UseCaseAssembly: Assembly {
         container.register(CheckConnectionUseCase.self) {
             CheckConnectionUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }
+        container.register(ManageDailyQuestionDraftAnswerUseCase.self) {
+            ManageDailyQuestionDraftAnswerUseCaseImpl(
+                localDataSource: container.resolve(DailyQuestionLocalDataSourceProtocol.self)
+            )
+        }
     }
 }
