@@ -8,13 +8,13 @@
 import UIKit
 
 enum BalanceGameCardUIState {
-    case choosing(selected: BalanceGameChoice?, headerStatus: String?, targetDate: Date?)
+    case choosing(selected: BalanceGameChoice?, headerStatus: String, targetDate: Date?)
     case result(
         myChoice: BalanceGameChoice,
         opponentChoice: BalanceGameChoice,
         matchResult: BalanceGameCardViewModel.MatchResult?,
         isOpponentAnswered: Bool,
-        headerStatus: String?,
+        headerStatus: String,
         targetDate: Date?
     )
 }
@@ -148,6 +148,6 @@ final class BalanceGameCardView: UIView {
         questionLabel.text = question
         choiceView.setChoiceTitles(left: leftChoice, right: rightChoice)
 
-        render(state: .choosing(selected: nil, headerStatus: nil, targetDate: nil))
+        render(state: .choosing(selected: nil, headerStatus: "", targetDate: nil))
     }
 }
