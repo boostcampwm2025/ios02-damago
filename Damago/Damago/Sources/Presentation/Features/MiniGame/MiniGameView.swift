@@ -30,11 +30,8 @@ final class MiniGameView: UIView {
     }()
     
     private let titleLabel: UILabel = {
-        let label = UILabel()
+        let label = UILabel.makeScreenTitle()
         label.text = "미니게임"
-        label.font = .systemFont(ofSize: 34, weight: .bold)
-        label.textColor = .textPrimary
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     

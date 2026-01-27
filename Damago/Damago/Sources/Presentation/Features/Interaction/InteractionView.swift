@@ -29,22 +29,9 @@ final class InteractionView: UIView {
         return stackView
     }()
     
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 34, weight: .bold)
-        label.textColor = .textPrimary
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let subtitleLabel: UILabel = {
-        let label = UILabel()
-        label.font = .body3
-        label.textColor = .textTertiary
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
+    private let titleLabel: UILabel = .makeScreenTitle()
+
+    private let subtitleLabel: UILabel = .makeScreenSubtitle()
 
     lazy var questionCardView = DailyQuestionCardView()
     lazy var balanceGameCardView: UIView = makeCardView()
