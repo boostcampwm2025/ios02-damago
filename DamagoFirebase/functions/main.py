@@ -79,6 +79,14 @@ def fetch_history(req: https_fn.Request) -> https_fn.Response:
 def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
     return couple_interaction_service.submit_daily_question(req)
 
+@https_fn.on_request()
+def fetch_balance_game(req: https_fn.Request) -> https_fn.Response:
+    return couple_interaction_service.fetch_balance_game(req)
+
+@https_fn.on_request()
+def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
+    return couple_interaction_service.submit_balance_game(req)
+
 # ========================================
 # 시드 데이터 관리 (관리자 전용)
 # ========================================

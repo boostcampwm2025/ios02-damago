@@ -434,3 +434,168 @@ def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response(str(e), status=400)
     except Exception as e:
         return https_fn.Response(f"Internal Error: {str(e)}", status=500)
+
+def fetch_balance_game(req: https_fn.Request) -> https_fn.Response:
+    """
+    사용자의 커플 정보에 기반한 오늘의 밸런스 게임을 조회합니다.
+    """
+    try:
+        uid = get_uid_from_request(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+
+    db = get_db()
+    
+    # 1. 사용자 정보 조회
+    user_doc = db.collection("users").document(uid).get()
+    if not user_doc.exists:
+        return https_fn.Response("User not found", status=404)
+        
+    user_data = user_doc.to_dict()
+    couple_id = user_data.get("coupleID")
+    
+    if not couple_id:
+        return https_fn.Response("Couple not found", status=404)
+        
+    # 2. 커플 정보 및 진행도 조회
+    couple_doc = db.collection("couples").document(couple_id).get()
+    if not couple_doc.exists:
+        return https_fn.Response("Couple document not found", status=404)
+        
+    couple_data = couple_doc.to_dict()
+    is_user1 = (couple_data.get("user1UID") == uid)
+    
+    stats = couple_data.get("balanceGameStats", {})
+    total_answered = stats.get("totalAnswered", 0)
+    last_answered_at = stats.get("lastAnsweredAt")
+    
+    target_order = total_answered + 1
+    
+    # 12시간 쿨타임 로직
+    if last_answered_at and total_answered > 0:
+        elapsed_time = datetime.now(last_answered_at.tzinfo) - last_answered_at
+        if (elapsed_time.total_seconds() / 3600) < 12:
+            target_order = total_answered
+    
+    # 3. 질문 조회 (balanceGames 컬렉션)
+    games_query = db.collection("balanceGames").where("order", "==", target_order).limit(1).stream()
+    game_doc = next(games_query, None)
+    
+    if not game_doc:
+        return https_fn.Response("No more balance games available", status=404)
+        
+    game_data = game_doc.to_dict()
+    game_id = game_doc.id
+    
+    # 4. 답변 내역 조회
+    answer_ref = db.collection("couples").document(couple_id).collection("balanceGameAnswers").document(game_id)
+    answer_doc = answer_ref.get()
+    
+    user1_choice = None
+    user2_choice = None
+    
+    if answer_doc.exists:
+        answer_data = answer_doc.to_dict()
+        user1_choice = answer_data.get("user1Answer")
+        user2_choice = answer_data.get("user2Answer")
+    
+    my_choice = user1_choice if is_user1 else user2_choice
+    opponent_choice = user2_choice if is_user1 else user1_choice
+    
+    response_data = {
+        "gameID": game_id,
+        "questionContent": game_data.get("questionText", ""),
+        "option1": game_data.get("option1", ""),
+        "option2": game_data.get("option2", ""),
+        "myChoice": my_choice,
+        "opponentChoice": opponent_choice,
+        "isUser1": is_user1,
+        "lastAnsweredAt": last_answered_at.isoformat() if last_answered_at else None
+    }
+    
+    return https_fn.Response(json.dumps(response_data), mimetype="application/json")
+
+def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
+    """
+    밸런스 게임 선택지를 제출합니다.
+    """
+    try:
+        uid = get_uid_from_request(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+        
+    try:
+        body = req.get_json()
+        game_id = body.get("gameID")
+        choice = body.get("choice") # 1 또는 2
+    except Exception:
+        return https_fn.Response("Invalid JSON", status=400)
+        
+    if not game_id or choice not in [1, 2]:
+        return https_fn.Response("Invalid fields", status=400)
+
+    db = get_db()
+
+    @firestore.transactional
+    def submit_in_transaction(transaction):
+        user_ref = db.collection("users").document(uid)
+        user_snapshot = next(transaction.get(user_ref))
+        if not user_snapshot.exists: raise ValueError("User not found")
+        
+        user_data = user_snapshot.to_dict()
+        couple_id = user_data.get("coupleID")
+        if not couple_id: raise ValueError("Couple not found")
+            
+        couple_ref = db.collection("couples").document(couple_id)
+        couple_snapshot = next(transaction.get(couple_ref))
+        if not couple_snapshot.exists: raise ValueError("Couple not found")
+        
+        couple_data = couple_snapshot.to_dict()
+        is_user1 = (couple_data.get("user1UID") == uid)
+        
+        answer_ref = couple_ref.collection("balanceGameAnswers").document(game_id)
+        answer_snapshot = next(transaction.get(answer_ref))
+        answer_data = answer_snapshot.to_dict() if answer_snapshot.exists else {}
+        
+        now = datetime.now()
+        answer_update = {}
+        
+        if is_user1:
+            answer_update["user1Answer"] = choice
+            answer_update["user1AnsweredAt"] = now
+            opponent_choice = answer_data.get("user2Answer")
+        else:
+            answer_update["user2Answer"] = choice
+            answer_update["user2AnsweredAt"] = now
+            opponent_choice = answer_data.get("user1Answer")
+            
+        is_completing_now = (opponent_choice is not None) and not answer_data.get("bothAnswered", False)
+        
+        if is_completing_now:
+            answer_update["bothAnswered"] = True
+            current_stats = couple_data.get("balanceGameStats", {})
+            current_total = current_stats.get("totalAnswered", 0)
+            
+            transaction.update(couple_ref, {
+                "balanceGameStats.totalAnswered": current_total + 1,
+                "balanceGameStats.lastAnsweredAt": now,
+                "totalCoin": firestore.Increment(20),
+                "foodCount": firestore.Increment(2)
+            })
+            
+        transaction.set(answer_ref, answer_update, merge=True)
+        
+        return {
+            "gameID": game_id,
+            "myChoice": choice,
+            "opponentChoice": opponent_choice,
+            "bothAnswered": is_completing_now or answer_data.get("bothAnswered", False)
+        }
+
+    try:
+        result = submit_in_transaction(db.transaction())
+        return https_fn.Response(json.dumps(result), mimetype="application/json")
+    except ValueError as e:
+        return https_fn.Response(str(e), status=400)
+    except Exception as e:
+        return https_fn.Response(f"Internal Error: {str(e)}", status=500)
