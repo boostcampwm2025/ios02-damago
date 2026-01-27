@@ -46,16 +46,10 @@ final class LiveActivityManager {
     private var monitoredActivityIDs: Set<String> = []
 
     func synchronizeActivity() {
+        SharedLogger.liveActivityManger.info("✅ LiveActivity 동기화 시작")
+        
         guard isLiveActivityEnabled else {
             SharedLogger.liveActivityManger.info("Live Activity가 비활성화되어 있어 동기화를 중단합니다.")
-            endAllActivities()
-            return
-        }
-        
-        // 커플 연결 상태 확인
-        guard UserDefaults.standard.bool(forKey: "isConnected") else {
-            // 커플 연결이 안 되어 있으면 모든 Live Activity 종료
-            SharedLogger.liveActivityManger.info("커플 연결이 되어있지 않아 Live Activity를 종료합니다.")
             endAllActivities()
             return
         }

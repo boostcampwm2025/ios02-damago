@@ -112,11 +112,6 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    // 사용자가 Foreground에 돌아왔을 때 서버와 동기화
-    func sceneDidBecomeActive(_ scene: UIScene) {
-        LiveActivityManager.shared.synchronizeActivity()
-    }
-
     private func startGlobalMonitoring() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)

@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Combine
 import DamagoNetwork
 
 enum TabItem: String, CaseIterable {
@@ -50,11 +51,29 @@ enum TabItem: String, CaseIterable {
 
 final class TabBarViewController: UITabBarController {
     private var tabItems: [TabItem] = TabItem.allCases
-
+    private var cancellables = Set<AnyCancellable>()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViewControllers()
         setupTabBar()
+        setupForegroundNotification()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        LiveActivityManager.shared.synchronizeActivity()
+    }
+
+    private func setupForegroundNotification() {
+        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                if self.view.window != nil {
+                    LiveActivityManager.shared.synchronizeActivity()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private func setupTabBar() {
