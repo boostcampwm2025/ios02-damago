@@ -9,8 +9,9 @@ import UIKit
 import Combine
 
 final class PetSetupView: UIView {
-    lazy var collectionView: UICollectionView = {
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: createLayout())
+    let collectionView: UICollectionView = {
+        let layout = PetSetupView.createLayout()
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .background
         collectionView.register(PetCell.self, forCellWithReuseIdentifier: PetCell.reuseIdentifier)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
@@ -26,7 +27,7 @@ final class PetSetupView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private func createLayout() -> UICollectionViewLayout {
+    private static func createLayout() -> UICollectionViewLayout {
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1 / 3),
             heightDimension: .fractionalHeight(1.0)
