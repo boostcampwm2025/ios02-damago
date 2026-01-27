@@ -15,7 +15,6 @@ final class BalanceGameCardViewController: UIViewController {
 
     // ViewModel의 Input으로 되돌려보내기 위해 설정
     private let confirmResultSubject = PassthroughSubject<(BalanceGameChoice, Bool), Never>()
-    private let resetSubject = PassthroughSubject<Void, Never>()
 
     // ViewModel이 같은 pendingConfirm을 연속으로 방출할 때 중복 알럿 방지용
     private var lastPresentedPending: BalanceGameChoice?
@@ -41,20 +40,6 @@ final class BalanceGameCardViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .clear
-
-        // TODO: 네트워크 결과에 따라 아래 값을 바인딩하도록 교체
-        self.leftChoiceText = "설레고 두근거리는 연애"
-        self.rightChoiceText = "편하고 안정적인 연애"
-
-        cardView.configure(
-            category: "미니 미션",
-            question: "Q: 연애할 때 어떤 분위기를 선호하나요?",
-            leftChoice: "설레고 두근거리는 연애",
-            rightChoice: "편하고 안정적인 연애",
-            foods: 2,
-            coins: 20
-        )
-
         bindViewModel()
     }
 
@@ -75,13 +60,8 @@ final class BalanceGameCardViewController: UIViewController {
             .eraseToAnyPublisher()
 
         let input = BalanceGameCardViewModel.Input(
-
             choiceTapped: choiceTapped,
-
-            confirmResult: confirmResultSubject.eraseToAnyPublisher(),
-
-            reset: resetSubject.eraseToAnyPublisher()
-
+            confirmResult: confirmResultSubject.eraseToAnyPublisher()
         )
 
         let output = viewModel.transform(input)
@@ -97,26 +77,53 @@ final class BalanceGameCardViewController: UIViewController {
     }
 
     private func render(_ state: BalanceGameCardViewModel.State) {
-        let currentSelectedChoice = state.selectedChoice
+        guard let uiModel = state.uiModel else { return }
+
+        // 질문 텍스트 및 보상 정보 업데이트
+        let question: String
+        let option1: String
+        let option2: String
+        
+        switch uiModel {
+        case .input(let inputState):
+            question = inputState.questionContent
+            option1 = inputState.option1
+            option2 = inputState.option2
+        case .result(let resultState):
+            question = resultState.questionContent
+            option1 = resultState.option1
+            option2 = resultState.option2
+        }
+
+        self.leftChoiceText = option1
+        self.rightChoiceText = option2
+
+        cardView.configure(
+            category: "미니 미션",
+            question: "Q: \(question)",
+            leftChoice: option1,
+            rightChoice: option2,
+            foods: 2,
+            coins: 20
+        )
 
         let viewState: BalanceGameCardUIState
 
         // ViewModel의 State에 결과 데이터가 포함되어 있으면 .result 상태, 아니면 .choosing 상태
-        if let myChoice = currentSelectedChoice,
-           let opponentChoice = state.opponentChoice,
-           let matchResult = state.matchResult {
+        if let myChoice = state.myChoice,
+           let opponentChoice = state.opponentChoice {
 
             viewState = .result(
                 myChoice: myChoice,
                 opponentChoice: opponentChoice,
-                matchResult: matchResult,
+                matchResult: state.matchResult,
                 isOpponentAnswered: state.isOpponentAnswered,
                 headerStatus: state.headerStatus,
                 targetDate: state.targetDate
             )
         } else {
             // 결과 데이터가 없거나 불완전하면 선택 중 상태로 간주
-            let choiceToRender = state.pendingConfirm ?? currentSelectedChoice
+            let choiceToRender = state.pendingConfirm ?? state.myChoice
             viewState = .choosing(
                 selected: choiceToRender,
                 headerStatus: state.headerStatus,
@@ -136,7 +143,7 @@ final class BalanceGameCardViewController: UIViewController {
         }
 
         // 마지막 선택 상태를 업데이트합니다. (항상 마지막에)
-        self.lastSelectedChoice = currentSelectedChoice
+        self.lastSelectedChoice = state.myChoice
     }
 
     private func presentConfirmIfNeeded(pending: BalanceGameChoice?) {

@@ -5,7 +5,7 @@
 //  Created by Eden Landelyse on 1/22/26.
 //
 
-enum BalanceGameChoice: Equatable {
-    case left
-    case right
+enum BalanceGameChoice: Int, Equatable {
+    case left = 1
+    case right = 2
 }

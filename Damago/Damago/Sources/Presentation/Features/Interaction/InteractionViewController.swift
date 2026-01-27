@@ -16,11 +16,7 @@ final class InteractionViewController: UIViewController {
     private var isNavigationBarHidden = true
     private var cancellables = Set<AnyCancellable>()
 
-    private lazy var balanceGameCardChildViewController: BalanceGameCardViewController = {
-        let vm = BalanceGameCardViewModel()
-        let vc = BalanceGameCardViewController(viewModel: vm)
-        return vc
-    }()
+    private var balanceGameCardChildViewController: BalanceGameCardViewController?
 
     init(viewModel: InteractionViewModel) {
         self.viewModel = viewModel
@@ -40,7 +36,6 @@ final class InteractionViewController: UIViewController {
         setupNavigation()
         setupDelegate()
         mainView.configure(title: viewModel.title, subtitle: viewModel.subtitle)
-        embedBalanceGameCardChildViewControllerIfNeeded()
         
         let output = viewModel.transform(
             InteractionViewModel.Input(
@@ -51,7 +46,6 @@ final class InteractionViewController: UIViewController {
         )
         
         bind(output)
-        
         viewDidLoadPublisher.send()
     }
     
@@ -70,25 +64,32 @@ final class InteractionViewController: UIViewController {
         mainView.scrollView.delegate = self
     }
 
-    private func embedBalanceGameCardChildViewControllerIfNeeded() {
-        guard balanceGameCardChildViewController.parent == nil else { return }
+    private func setupBalanceGameCard(uiModel: BalanceGameUIModel) {
+        guard balanceGameCardChildViewController == nil else { return }
 
+        let vm = BalanceGameCardViewModel(
+            uiModel: uiModel,
+            uiModelPublisher: viewModel.balanceGameUIModelPublisher
+        ) { [weak self] choice in
+            try await self?.viewModel.submitBalanceGameChoice(choice: choice)
+        }
+
+        let vc = BalanceGameCardViewController(viewModel: vm)
+        self.balanceGameCardChildViewController = vc
         let containerView = mainView.balanceGameCardView
 
-        addChild(balanceGameCardChildViewController)
-
-        let childView = balanceGameCardChildViewController.view!
-        childView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(childView)
+        addChild(vc)
+        vc.view.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(vc.view)
 
         NSLayoutConstraint.activate([
-            childView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            childView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            childView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            childView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+            vc.view.topAnchor.constraint(equalTo: containerView.topAnchor),
+            vc.view.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            vc.view.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            vc.view.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
         ])
 
-        balanceGameCardChildViewController.didMove(toParent: self)
+        vc.didMove(toParent: self)
     }
     
     private func bind(_ output: InteractionViewModel.Output) {
@@ -111,6 +112,15 @@ final class InteractionViewController: UIViewController {
                 self?.mainView.questionCardView.configure(question: questionContent, buttonTitle: buttonTitle)
             }
             .store(in: &cancellables)
+
+        output
+            .mapForUI { $0.balanceGameUIModel }
+            .compactMap { $0 }
+            .first()
+            .sink { [weak self] uiModel in
+                self?.setupBalanceGameCard(uiModel: uiModel)
+            }
+            .store(in: &cancellables)
         
         output
             .pulse(\.route)
@@ -125,7 +135,7 @@ final class InteractionViewController: UIViewController {
                     
                     let vm = DailyQuestionInputViewModel(
                         uiModel: uiModel,
-                        uiModelPublisher: self.viewModel.uiModelPublisher,
+                        uiModelPublisher: self.viewModel.dailyQuestionUIModelPublisher,
                         submitDailyQuestionAnswerUseCase: submitUseCase,
                         manageDraftAnswerUseCase: manageDraftUseCase
                     )
