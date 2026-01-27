@@ -43,6 +43,8 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
                     questionContent: entity.questionContent,
                     user1Answer: entity.user1Answer,
                     user2Answer: entity.user2Answer,
+                    bothAnswered: entity.bothAnswered,
+                    lastAnsweredAt: entity.lastAnsweredAt,
                     isUser1: entity.isUser1
                 )
             }
@@ -90,6 +92,8 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
                     questionContent: questionContent,
                     user1Answer: dto.user1Answer,
                     user2Answer: dto.user2Answer,
+                    bothAnswered: dto.bothAnswered,
+                    lastAnsweredAt: dto.lastAnsweredAt,
                     isUser1: isUser1
                 )
                 return .success(combinedDTO)
@@ -111,6 +115,8 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
                 questionContent: dto.questionContent,
                 user1Answer: dto.user1Answer,
                 user2Answer: dto.user2Answer,
+                bothAnswered: dto.bothAnswered ?? false,
+                lastAnsweredAt: dto.lastAnsweredAt,
                 isUser1: dto.isUser1
             )
             try await localDataSource.saveQuestion(entity)
@@ -125,7 +131,9 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
             try await localDataSource.updateAnswer(
                 questionID: questionID,
                 user1Answer: response.user1Answer,
-                user2Answer: response.user2Answer
+                user2Answer: response.user2Answer,
+                bothAnswered: response.bothAnswered ?? false,
+                lastAnsweredAt: response.lastAnsweredAt
             )
         } catch {
             SharedLogger.interaction.error("Local update failed: \(error)")
@@ -137,4 +145,5 @@ private struct FirestoreAnswerDTO: Decodable {
     let user1Answer: String?
     let user2Answer: String?
     let bothAnswered: Bool?
+    let lastAnsweredAt: Date?
 }

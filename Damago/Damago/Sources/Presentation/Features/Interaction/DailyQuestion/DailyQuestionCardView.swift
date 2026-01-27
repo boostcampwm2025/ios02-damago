@@ -14,9 +14,8 @@ final class DailyQuestionCardView: UIView {
         return view
     }()
     
-    private let headerView: CardHeaderView = {
-        let view = CardHeaderView()
-        view.configure(title: "오늘의 질문", foods: 3, coins: 30)
+    private let headerView: TimerCardHeaderView = {
+        let view = TimerCardHeaderView()
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -60,9 +59,15 @@ final class DailyQuestionCardView: UIView {
         setupUI()
     }
     
-    func configure(question: String, buttonTitle: String = "답변 제출") {
+    func configure(
+        question: String,
+        buttonTitle: String = "답변 제출",
+        rightTitle: String = "",
+        targetDate: Date? = nil
+    ) {
         questionLabel.text = question
         submitButton.setTitle(buttonTitle)
+        headerView.configure(title: "오늘의 질문", rightTitle: rightTitle, targetDate: targetDate, foods: 3, coins: 30)
     }
     
     private func setupUI() {

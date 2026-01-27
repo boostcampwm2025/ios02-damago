@@ -32,8 +32,8 @@ final class TimerCardHeaderView: UIView {
         label.font = .title2
         label.textColor = .textPrimary
         label.numberOfLines = 1
-        label.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -45,7 +45,12 @@ final class TimerCardHeaderView: UIView {
         return view
     }()
 
-    private var hostingController: UIHostingController<GameCoolDownTimerView>?
+    private let hostingController: UIHostingController<CoolDownTimerView> = {
+        let controller = UIHostingController(rootView: CoolDownTimerView(message: "", targetDate: nil))
+        controller.view.backgroundColor = .clear
+        controller.view.translatesAutoresizingMaskIntoConstraints = false
+        return controller
+    }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -59,7 +64,7 @@ final class TimerCardHeaderView: UIView {
 
     func configure(
         title: String,
-        rightTitle: String? = nil,
+        rightTitle: String = "",
         targetDate: Date? = nil,
         foods: Int? = nil,
         coins: Int? = nil,
@@ -68,27 +73,7 @@ final class TimerCardHeaderView: UIView {
         missionBadge.text = badge
         titleLabel.text = title
         setupRewards(foods: foods, coins: coins)
-        updateTimerView(staticStatus: rightTitle, targetDate: targetDate)
-    }
-
-    private func updateTimerView(staticStatus: String?, targetDate: Date?) {
-        let timerView = GameCoolDownTimerView(targetDate: targetDate, staticStatus: staticStatus)
-
-        if let hc = hostingController {
-            hc.rootView = timerView
-        } else {
-            let hc = UIHostingController(rootView: timerView)
-            hc.view.backgroundColor = .clear
-            timerContainerView.addSubview(hc.view)
-            hc.view.translatesAutoresizingMaskIntoConstraints = false
-            NSLayoutConstraint.activate([
-                hc.view.topAnchor.constraint(equalTo: timerContainerView.topAnchor),
-                hc.view.leadingAnchor.constraint(equalTo: timerContainerView.leadingAnchor),
-                hc.view.trailingAnchor.constraint(equalTo: timerContainerView.trailingAnchor),
-                hc.view.bottomAnchor.constraint(equalTo: timerContainerView.bottomAnchor)
-            ])
-            self.hostingController = hc
-        }
+        hostingController.rootView = CoolDownTimerView(message: rightTitle, targetDate: targetDate)
     }
 
     private func setupUI() {
@@ -100,6 +85,7 @@ final class TimerCardHeaderView: UIView {
         [missionBadge, rewardBadge, titleLabel, timerContainerView].forEach {
             addSubview($0)
         }
+        timerContainerView.addSubview(hostingController.view)
     }
 
     private func setupConstraints() {
@@ -113,10 +99,15 @@ final class TimerCardHeaderView: UIView {
             titleLabel.topAnchor.constraint(equalTo: missionBadge.bottomAnchor, constant: .spacingM),
             titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor),
             titleLabel.bottomAnchor.constraint(equalTo: bottomAnchor),
-
+            
             timerContainerView.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
             timerContainerView.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: .spacingS),
-            timerContainerView.trailingAnchor.constraint(equalTo: trailingAnchor)
+            timerContainerView.trailingAnchor.constraint(equalTo: rewardBadge.trailingAnchor, constant: -.spacingXS),
+
+            hostingController.view.topAnchor.constraint(equalTo: timerContainerView.topAnchor),
+            hostingController.view.leadingAnchor.constraint(equalTo: timerContainerView.leadingAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: timerContainerView.trailingAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: timerContainerView.bottomAnchor)
         ])
     }
 

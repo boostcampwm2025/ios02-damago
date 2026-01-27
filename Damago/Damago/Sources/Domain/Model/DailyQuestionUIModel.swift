@@ -5,6 +5,8 @@
 //  Created by 김재영 on 1/20/26.
 //
 
+import Foundation
+
 enum DailyQuestionUIModel: Equatable {
     case input(InputState)
     case result(ResultState)
@@ -23,6 +25,8 @@ enum DailyQuestionUIModel: Equatable {
         let opponentAnswer: AnswerCardUIModel
         let buttonTitle: String
         let isUser1: Bool
+        let bothAnswered: Bool
+        let lastAnsweredAt: Date?
     }
 }
 
