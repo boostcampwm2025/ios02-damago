@@ -1,17 +1,10 @@
 from firebase_functions import https_fn
 from firebase_admin import firestore
-from utils.firestore import get_db
-from utils.middleware import get_uid_from_request
-import json
-from datetime import datetime
-
-from firebase_functions import https_fn
-from firebase_admin import firestore
 from google.cloud.firestore import FieldFilter
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 def fetch_history(req: https_fn.Request) -> https_fn.Response:
     """
@@ -212,14 +205,35 @@ def fetch_daily_question(req: https_fn.Request) -> https_fn.Response:
     target_order = total_answered + 1
     
     # 만약 답변이 완료된 기록이 있다면 시간 체크
-    if last_answered_at_from_stats:        
-        # 12시간 대기 로직
-        # 마지막 답변 완료 시각으로부터 12시간이 지나지 않았으면, 
-        # 새로운 질문 대신 '방금 완료한 질문(total_answered)'을 다시 보여줌
+    # 통계 정보가 있거나, 통계는 없어도 답변한 적(total_answered > 0)이 있다면 확인
+    if total_answered > 0:
+        last_answered = last_answered_at_from_stats
         
-        # 주의: total_answered가 0이면 이전 질문이 없으므로 무조건 1번 질문
-        if total_answered > 0:
-            elapsed_time = datetime.now(last_answered_at_from_stats.tzinfo) - last_answered_at_from_stats
+        # [Fallback] 통계에 시간이 누락되었다면, 실제 마지막 답변 문서를 조회하여 시간 확인
+        if not last_answered:
+             last_q_query = db.collection("dailyQuestions").where("order", "==", total_answered).limit(1).stream()
+             last_q_doc = next(last_q_query, None)
+             
+             if last_q_doc:
+                 last_ans_doc = db.collection("couples").document(couple_id).collection("dailyQuestionAnswers").document(last_q_doc.id).get()
+                 if last_ans_doc.exists:
+                     l_data = last_ans_doc.to_dict()
+                     last_answered = l_data.get("lastAnsweredAt")
+                     if not last_answered:
+                         t1 = l_data.get("user1AnsweredAt")
+                         t2 = l_data.get("user2AnsweredAt")
+                         if t1 and t2: last_answered = max(t1, t2)
+                         elif t1: last_answered = t1
+                         elif t2: last_answered = t2
+
+        if last_answered:
+            # 안전한 시간 비교를 위해 UTC 기준 변환 (에뮬레이터/로컬 시간 차이 해결)
+            now = datetime.now(timezone.utc)
+            
+            if last_answered.tzinfo is None:
+                last_answered = last_answered.replace(tzinfo=timezone.utc)
+                
+            elapsed_time = now - last_answered
             hours_passed = elapsed_time.total_seconds() / 3600
             
             if hours_passed < 12:
@@ -264,7 +278,10 @@ def fetch_daily_question(req: https_fn.Request) -> https_fn.Response:
     
     formatted_last_answered_at = None
     if current_last_answered_at:
-        formatted_last_answered_at = current_last_answered_at.isoformat(timespec="seconds")
+        # UTC 시간임을 보장하고, Swift 호환성을 위해 +00:00을 Z로 치환
+        if current_last_answered_at.tzinfo is None:
+            current_last_answered_at = current_last_answered_at.replace(tzinfo=timezone.utc)
+        formatted_last_answered_at = current_last_answered_at.isoformat(timespec="seconds").replace("+00:00", "Z")
 
     response_data = {
         "questionID": question_id,
@@ -342,7 +359,7 @@ def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
         answer_ref = couple_ref.collection("dailyQuestionAnswers").document(question_id)
         answer_snapshot = next(transaction.get(answer_ref))
         
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         
         # 기존 답변 데이터 가져오기 (안전하게)
         answer_data = answer_snapshot.to_dict() if answer_snapshot.exists else {}
@@ -390,12 +407,15 @@ def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
         final_last_answered_at = None
         if is_both_answered:
             if is_completing_now:
-                final_last_answered_at = now.isoformat(timespec="seconds")
+                # now는 timezone.utc이므로 isoformat은 +00:00을 반환함 -> Z로 치환
+                final_last_answered_at = now.isoformat(timespec="seconds").replace("+00:00", "Z")
             else:
                 stats = couple_data.get("dailyQuestionStats", {})
                 last_at = stats.get("lastAnsweredAt")
                 if last_at:
-                    final_last_answered_at = last_at.isoformat(timespec="seconds")
+                    if last_at.tzinfo is None:
+                        last_at = last_at.replace(tzinfo=timezone.utc)
+                    final_last_answered_at = last_at.isoformat(timespec="seconds").replace("+00:00", "Z")
 
         return {
             "questionID": question_id,
