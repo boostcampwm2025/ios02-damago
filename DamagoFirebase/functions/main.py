@@ -12,7 +12,7 @@ from services import auth_service, pet_service, push_service, user_service, seed
 # traffic spikes by instead downgrading performance. This limit is a per-function
 # limit. You can override the limit for each function using the max_instances
 # parameter in the decorator, e.g. @https_fn.on_request(max_instances=5).
-set_global_options(max_instances=10)
+set_global_options(max_instances=10, region="asia-northeast3")
 initialize_app()
 
 @https_fn.on_request()

@@ -8,7 +8,7 @@ IS_EMULATOR = bool(os.environ.get("FUNCTIONS_EMULATOR"))
 PROJECT_ID = os.environ.get("GCLOUD_PROJECT", "damago-dev")
 
 # Cloud Tasks 설정
-LOCATION = "us-central1"
+LOCATION = "asia-northeast3"
 QUEUE_NAME = "make-hungry-queue"
 HUNGER_DELAY_SECONDS = 4 * 60 * 60 # 4시간
 
