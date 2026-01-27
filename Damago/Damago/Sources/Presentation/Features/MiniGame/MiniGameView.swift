@@ -25,16 +25,13 @@ final class MiniGameView: UIView {
         stackView.distribution = .fill
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.isLayoutMarginsRelativeArrangement = true
-        stackView.layoutMargins = UIEdgeInsets(top: 0, left: .spacingM, bottom: .spacingXL, right: .spacingM)
+        stackView.layoutMargins = UIEdgeInsets(top: .spacingS, left: .spacingM, bottom: .spacingXL, right: .spacingM)
         return stackView
     }()
     
     private let titleLabel: UILabel = {
-        let label = UILabel()
+        let label = UILabel.makeScreenTitle()
         label.text = "미니게임"
-        label.font = .systemFont(ofSize: 34, weight: .bold)
-        label.textColor = .textPrimary
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
