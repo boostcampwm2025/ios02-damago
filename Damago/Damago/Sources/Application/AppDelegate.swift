@@ -130,9 +130,9 @@ extension AppDelegate: MessagingDelegate {
         UserDefaults.standard.set(fcmToken, forKey: "fcmToken")
 
         NotificationCenter.default.post(name: .fcmTokenDidUpdate, object: nil)
-        
+
         guard let fcmToken else { return }
-        
+
         Task {
             let useCase = AppDIContainer.shared.resolve(UpdateFCMTokenUseCase.self)
             do {
@@ -147,17 +147,17 @@ extension AppDelegate: MessagingDelegate {
 
 extension AppDelegate {
     func setupFirebaseEmulators() {
-        #if DEBUG
+#if DEBUG
         guard let localIP = ProcessInfo.processInfo.environment["USE_LOCAL_EMULATOR"] else { return }
-        
+
         // Firestore Emulator
         Firestore.firestore().useEmulator(withHost: localIP, port: 8080)
         let settings = Firestore.firestore().settings
         settings.isSSLEnabled = false
         Firestore.firestore().settings = settings
-        
+
         // Auth Emulator
         Auth.auth().useEmulator(withHost: localIP, port: 9099)
-        #endif
+#endif
     }
 }

@@ -115,6 +115,8 @@ final class InteractionViewController: UIViewController {
             .pulse(\.route)
             .sink { [weak self] route in
                 guard let self else { return }
+                navigationController?.setNavigationBarHidden(false, animated: true)
+                isNavigationBarHidden = false
                 switch route {
                 case .questionInput(let uiModel):
                     let submitUseCase = AppDIContainer.shared.resolve(SubmitDailyQuestionAnswerUseCase.self)
@@ -131,7 +133,19 @@ final class InteractionViewController: UIViewController {
                     self.navigationController?.pushViewController(vc, animated: true)
                     
                 case .history:
-                    print("지난 내역 보기 클릭")
+                    let fetchDailyQuestionsHistoryUseCase = AppDIContainer.shared.resolve(
+                        FetchDailyQuestionsHistoryUseCase.self
+                    )
+                    let fetchBalanceGamesHistoryUseCase = AppDIContainer.shared.resolve(
+                        FetchBalanceGamesHistoryUseCase.self
+                    )
+                    let vm = HistoryViewModel(
+                        fetchDailyQuestionsHistoryUseCase: fetchDailyQuestionsHistoryUseCase,
+                        fetchBalanceGamesHistoryUseCase: fetchBalanceGamesHistoryUseCase
+                    )
+                    let vc = HistoryViewController(viewModel: vm)
+                    vc.hidesBottomBarWhenPushed = true
+                    self.navigationController?.pushViewController(vc, animated: true)
                     
                 }
             }

@@ -6,8 +6,8 @@
 //
 
 import ActivityKit
-import DamagoNetwork
 import AppIntents
+import DamagoNetwork
 import FirebaseAuth
 import OSLog
 import UIKit
