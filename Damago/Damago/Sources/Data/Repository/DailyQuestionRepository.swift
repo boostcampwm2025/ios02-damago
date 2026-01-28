@@ -27,12 +27,11 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
         self.localDataSource = localDataSource
     }
     
-    func fetchDailyQuestion() -> AnyPublisher<DailyQuestionDTO, Error> {
-        let local = Future<DailyQuestionDTO?, Never> { [weak self] promise in
+    func fetchDailyQuestion() -> AsyncStream<DailyQuestionDTO> {
+        AsyncStream { continuation in
             Task {
-                let entity = try? await self?.localDataSource.fetchLatestQuestion()
-                
-                if let entity,
+                // 1. 로컬 데이터 조회 및 즉시 방출 (오늘 데이터인 경우만)
+                if let entity = try? await localDataSource.fetchLatestQuestion(),
                    let lastUpdated = entity.lastUpdated,
                    Calendar.current.isDateInToday(lastUpdated) {
                     
@@ -45,32 +44,24 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
                         lastAnsweredAt: entity.lastAnsweredAt,
                         isUser1: entity.isUser1
                     )
-                    promise(.success(dto))
-                } else {
-                    promise(.success(nil))
+                    continuation.yield(dto)
                 }
-            }
-        }
-        .compactMap { $0 }
-        .setFailureType(to: Error.self)
 
-        let network = Future<DailyQuestionDTO, Error> { [weak self] promise in
-            Task {
-                guard let self = self else { return }
+                // 2. 네트워크 데이터 조회 및 방출
                 do {
-                    let token = try await self.tokenProvider.idToken()
-                    let dto: DailyQuestionDTO = try await self.networkProvider.request(
+                    let token = try await tokenProvider.idToken()
+                    let dto: DailyQuestionDTO = try await networkProvider.request(
                         DailyQuestionAPI.fetch(accessToken: token)
                     )
-                    await self.saveToLocalAnswer(dto: dto)
-                    promise(.success(dto))
+                    await saveToLocalAnswer(dto: dto)
+                    continuation.yield(dto)
                 } catch {
-                    promise(.failure(error))
+                    SharedLogger.interaction.error("Daily Question 네트워크 조회 실패: \(error.localizedDescription)")
                 }
+
+                continuation.finish()
             }
         }
-        
-        return local.merge(with: network).eraseToAnyPublisher()
     }
     
     func submitAnswer(questionID: String, answer: String, isUser1: Bool) async throws -> Bool {

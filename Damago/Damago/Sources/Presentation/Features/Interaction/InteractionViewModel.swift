@@ -120,17 +120,13 @@ final class InteractionViewModel: ViewModel {
 
     // MARK: - Daily Question
     private func fetchDailyQuestionData() {
-        fetchDailyQuestionUseCase.execute()
-            .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { completion in
-                if case .failure(let error) = completion {
-                    SharedLogger.interaction.error("오늘의 질문 가져오기 실패: \(error.localizedDescription)")
-                }
-            }, receiveValue: { [weak self] uiModel in
-                self?.state.dailyQuestionUIModel = uiModel
-                self?.startObservingDailyQuestion(uiModel: uiModel)
-            })
-            .store(in: &cancellables)
+        Task { [weak self] in
+            guard let self else { return }
+            for await uiModel in fetchDailyQuestionUseCase.execute() {
+                self.state.dailyQuestionUIModel = uiModel
+                self.startObservingDailyQuestion(uiModel: uiModel)
+            }
+        }
     }
 
     private func startObservingDailyQuestion(uiModel: DailyQuestionUIModel) {
