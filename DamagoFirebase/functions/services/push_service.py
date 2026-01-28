@@ -6,6 +6,46 @@ import time
 from utils.constants import BUNDLE_ID
 
 
+def send_push_notification(target_uid: str, title: str, body: str, data: dict = None) -> bool:
+    """
+    특정 사용자에게 푸시 알림을 전송합니다.
+    """
+    db = get_db()
+    target_user_doc = db.collection("users").document(target_uid).get()
+
+    if not target_user_doc.exists:
+        print(f"User {target_uid} not found")
+        return False
+
+    target_user_data = target_user_doc.to_dict()
+    target_fcm_token = target_user_data.get("fcmToken")
+
+    if not target_fcm_token:
+        print(f"User {target_uid} has no FCM token")
+        return False
+
+    # 알림 설정 확인
+    if not target_user_data.get("useFCM", True):
+        print(f"User {target_uid} has disabled push notifications")
+        return False
+
+    try:
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title=title,
+                body=body,
+            ),
+            data=data or {},
+            token=target_fcm_token
+        )
+        response = messaging.send(message)
+        print(f"Successfully sent message to {target_uid}: {response}")
+        return True
+    except Exception as e:
+        print(f"Error sending message to {target_uid}: {e}")
+        return False
+
+
 def poke(req: https_fn.Request) -> https_fn.Response:
     """
     상대방(partner)에게 '콕 찌르기' 푸시 알림을 전송합니다.
@@ -38,46 +78,25 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     if not partner_uid:
         return https_fn.Response("User is not in a couple", status=400)
 
-    target_user_doc = db.collection("users").document(partner_uid).get()
-
-    if not target_user_doc.exists:
-        return https_fn.Response("Opponent not found", status=404)
-
-    target_user_data = target_user_doc.to_dict()
-    target_fcm_token = target_user_data.get("fcmToken")
-
-    if not target_fcm_token:
-        return https_fn.Response("Opponent's FCM token not found", status=404)
-
-    # 알림 설정 확인
-    if not target_user_data.get("useFCM", True):
-        return https_fn.Response("Opponent has disabled push notifications", status=200)
-
     # --- [Step 2] FCM 전송 ---
-    try:
-        nickname = my_user_data.get('nickname') or '상대방'
+    nickname = my_user_data.get('nickname') or '상대방'
+    final_body = custom_message if custom_message else f"{nickname}님이 당신을 콕 찔렀어요!"
+    
+    success = send_push_notification(
+        target_uid=partner_uid,
+        title="콕!",
+        body=final_body,
+        data={
+            "type": "poke",
+            "fromUID": my_uid,
+            "message": custom_message or "",
+        }
+    )
 
-        final_body = custom_message if custom_message else f"{nickname}님이 당신을 콕 찔렀어요!"
-
-        message = messaging.Message(
-            notification=messaging.Notification(
-                title="콕!",
-                body=final_body,
-            ),
-            data={
-                "type": "poke",
-                "fromUID": my_uid,
-                "message": custom_message or "",
-            },
-            token=target_fcm_token
-        )
-        response = messaging.send(message)
-        print("Successfully sent message:", response)
+    if success:
         return https_fn.Response("Push notification sent successfully")
-
-    except Exception as e:
-        print("Error sending message:", e)
-        return https_fn.Response(f"Error sending push notification: {str(e)}", status=500)
+    else:
+        return https_fn.Response("Failed to send push notification", status=500)
 
 def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
     """
