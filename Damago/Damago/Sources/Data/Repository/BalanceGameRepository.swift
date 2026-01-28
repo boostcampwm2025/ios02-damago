@@ -8,25 +8,53 @@
 import Combine
 import DamagoNetwork
 import Foundation
+import OSLog
 
 final class BalanceGameRepository: BalanceGameRepositoryProtocol {
     private let networkProvider: NetworkProvider
     private let tokenProvider: TokenProvider
     private let firestoreService: FirestoreService
+    private let localDataSource: BalanceGameLocalDataSourceProtocol
     
     init(
         networkProvider: NetworkProvider,
         tokenProvider: TokenProvider,
-        firestoreService: FirestoreService
+        firestoreService: FirestoreService,
+        localDataSource: BalanceGameLocalDataSourceProtocol
     ) {
         self.networkProvider = networkProvider
         self.tokenProvider = tokenProvider
         self.firestoreService = firestoreService
+        self.localDataSource = localDataSource
     }
     
     func fetchBalanceGame() async throws -> BalanceGameDTO {
         let token = try await tokenProvider.idToken()
-        return try await networkProvider.request(BalanceGameAPI.fetch(accessToken: token))
+        do {
+            let dto: BalanceGameDTO = try await networkProvider.request(BalanceGameAPI.fetch(accessToken: token))
+            await saveToLocalGame(dto: dto)
+            return dto
+        } catch {
+            SharedLogger.interaction.error("API 조회 실패 로컬 캐시 조회: \(error.localizedDescription)")
+            
+            // Fallback: 로컬 캐시 조회
+            if let entity = try? await localDataSource.fetchLatestGame() {
+                let formatter = ISO8601DateFormatter()
+                let lastAnsweredAtString = entity.lastAnsweredAt.map { formatter.string(from: $0) }
+                
+                return BalanceGameDTO(
+                    gameID: entity.gameID,
+                    questionContent: entity.questionContent,
+                    option1: entity.option1,
+                    option2: entity.option2,
+                    myChoice: entity.isUser1 ? entity.user1Choice : entity.user2Choice,
+                    opponentChoice: entity.isUser1 ? entity.user2Choice : entity.user1Choice,
+                    isUser1: entity.isUser1,
+                    lastAnsweredAt: lastAnsweredAtString
+                )
+            }
+            throw error
+        }
     }
     
     func submitChoice(gameID: String, choice: Int) async throws -> Bool {
@@ -40,6 +68,7 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
         )
     }
     
+    // swiftlint:disable trailing_closure
     func observeAnswer(
         coupleID: String,
         gameID: String,
@@ -52,6 +81,16 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
             collection: "couples/\(coupleID)/balanceGameAnswers",
             document: gameID
         )
+        .handleEvents(receiveOutput: { [weak self] result in
+            if case .success(let response) = result {
+                Task {
+                    await self?.updateLocalChoice(
+                        gameID: gameID,
+                        response: response
+                    )
+                }
+            }
+        })
         .map { (result: Result<FirestoreBalanceGameAnswerDTO, Error>) in
             switch result {
             case .success(let dto):
@@ -71,6 +110,46 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
             }
         }
         .eraseToAnyPublisher()
+    }
+    // swiftlint:enable trailing_closure
+
+    @MainActor
+    private func saveToLocalGame(dto: BalanceGameDTO) async {
+        do {
+            let formatter = ISO8601DateFormatter()
+            let lastAnsweredAtDate = dto.lastAnsweredAt.flatMap { formatter.date(from: $0) }
+            
+            let entity = BalanceGameEntity(
+                gameID: dto.gameID,
+                questionContent: dto.questionContent,
+                option1: dto.option1,
+                option2: dto.option2,
+                user1Choice: dto.isUser1 ? dto.myChoice : dto.opponentChoice,
+                user2Choice: dto.isUser1 ? dto.opponentChoice : dto.myChoice,
+                isUser1: dto.isUser1,
+                lastAnsweredAt: lastAnsweredAtDate
+            )
+            try await localDataSource.saveGame(entity)
+        } catch {
+            SharedLogger.interaction.error("Local save failed: \(error)")
+        }
+    }
+
+    @MainActor
+    private func updateLocalChoice(gameID: String, response: FirestoreBalanceGameAnswerDTO) async {
+        do {
+            let formatter = ISO8601DateFormatter()
+            let lastAnsweredAtDate = response.lastAnsweredAt.flatMap { formatter.date(from: $0) }
+            
+            try await localDataSource.updateChoice(
+                gameID: gameID,
+                user1Choice: response.user1Answer,
+                user2Choice: response.user2Answer,
+                lastAnsweredAt: lastAnsweredAtDate
+            )
+        } catch {
+            SharedLogger.interaction.error("Local update failed: \(error)")
+        }
     }
 }
 
