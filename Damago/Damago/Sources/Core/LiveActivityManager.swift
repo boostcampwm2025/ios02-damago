@@ -61,8 +61,13 @@ final class LiveActivityManager {
                 return
             }
 
+            guard let petType = DamagoType(rawValue: petStatus.petType) else {
+                SharedLogger.liveActivityManger.error("Invalid petType from server: \(petStatus.petType)")
+                return
+            }
+
             let latestContentState = DamagoAttributes.ContentState(
-                petType: petStatus.petType,
+                petType: petType,
                 isHungry: petStatus.isHungry,
                 statusMessage: petStatus.statusMessage,
                 level: petStatus.level,

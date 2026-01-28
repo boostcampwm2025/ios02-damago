@@ -13,7 +13,7 @@ struct DamagoAttributes: ActivityAttributes {
 
     // MARK: - Dynamic State
     public struct ContentState: Codable, Hashable {
-        var petType: String
+        var petType: DamagoType
         var isHungry: Bool
         var statusMessage: String
 
@@ -28,7 +28,7 @@ struct DamagoAttributes: ActivityAttributes {
 
         var imageName: String {
             let stateName: String = isHungry ? "Hungry" : "Base"
-            return "\(petType)\(stateName)"
+            return "\(petType.rawValue)\(stateName)"
         }
 
         var statusImageName: String {
