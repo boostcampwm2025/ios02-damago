@@ -16,7 +16,7 @@ final class StoreViewModel: ViewModel {
     struct State {
         var coinAmount: Int = 1000
         var drawResult: DrawResult?
-        var error: String?
+        var error: Pulse<String>?
     }
     
     struct DrawResult: Equatable {
@@ -42,10 +42,7 @@ final class StoreViewModel: ViewModel {
     
     private func tryDraw() {
         guard state.coinAmount >= drawCost else {
-            state.error = "코인이 부족해요!"
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                self.state.error = nil
-            }
+            state.error = Pulse("코인이 부족해요!")
             return
         }
         

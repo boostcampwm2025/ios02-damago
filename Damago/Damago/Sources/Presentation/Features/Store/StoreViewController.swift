@@ -57,8 +57,7 @@ final class StoreViewController: UIViewController {
             .store(in: &cancellables)
         
         output
-            .compactMapForUI { $0.error }
-            .receive(on: DispatchQueue.main)
+            .pulse(\.error)
             .sink { [weak self] errorMessage in
                 self?.showErrorAlert(message: errorMessage)
             }
