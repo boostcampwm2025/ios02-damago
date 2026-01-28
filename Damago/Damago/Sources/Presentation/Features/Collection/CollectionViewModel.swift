@@ -83,15 +83,12 @@ final class CollectionViewModel: ViewModel {
             defer { state.isLoading = false }
 
             do {
-                let userInfo = try await fetchUserInfoUseCase.execute()
-                let currentPetName = userInfo.petStatus?.petName ?? "다마고"
-
                 try await updateUserUseCase.execute(
                     nickname: nil,
                     anniversaryDate: nil,
                     useFCM: nil,
                     useLiveActivity: nil,
-                    petName: currentPetName,
+                    petName: nil,
                     petType: selectedPet.rawValue
                 )
                 state.currentPetType = selectedPet
