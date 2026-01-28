@@ -15,6 +15,7 @@ public enum UserAPI {
     case updateFCMToken(accessToken: String, fcmToken: String)
     case withdrawUser(accessToken: String)
     case checkCoupleConnection(accessToken: String)
+    case adjustCoin(accessToken: String, amount: Int)
 }
 
 extension UserAPI: EndPoint {
@@ -31,6 +32,7 @@ extension UserAPI: EndPoint {
         case .updateUserInfo: "/update_user_info"
         case .withdrawUser: "/withdraw_user"
         case .checkCoupleConnection: "/check_couple_connection"
+        case .adjustCoin: "/adjust_coin"
         }
     }
     
@@ -47,7 +49,8 @@ extension UserAPI: EndPoint {
              .updateFCMToken(let token, _),
              .withdrawUser(let token),
              .checkCoupleConnection(let token),
-             .updateUserInfo(let token, _, _, _, _, _, _):
+             .updateUserInfo(let token, _, _, _, _, _, _),
+             .adjustCoin(let token, _):
             headers["Authorization"] = "Bearer \(token)"
         }
         return headers
@@ -78,6 +81,9 @@ extension UserAPI: EndPoint {
             
         case .withdrawUser:
             parameters = [:]
+            
+        case .adjustCoin(_, let amount):
+            parameters = ["amount": amount]
         }
         
         let validParameters = parameters.compactMapValues { $0 }

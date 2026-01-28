@@ -22,6 +22,7 @@ final class CardGameViewModel: ViewModel {
         var remainingTime: Double = 20.0
         var score: Int = 0
         var selectedIndices = [Int]()
+        var countdown: Int?
         let difficulty: CardGameDifficulty
         var route: Pulse<Route>?
     }
@@ -36,10 +37,13 @@ final class CardGameViewModel: ViewModel {
 
     private var timer: AnyCancellable?
 
-    init(configuration: CardGameConfiguration) {
+    private let adjustCoinAmountUseCase: AdjustCoinAmountUseCase
+
+    init(configuration: CardGameConfiguration, adjustCoinAmountUseCase: AdjustCoinAmountUseCase) {
         let difficulty = configuration.difficulty
         let items = Self.createItems(configuration: configuration)
         self.state = State(items: items, difficulty: difficulty)
+        self.adjustCoinAmountUseCase = adjustCoinAmountUseCase
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
@@ -61,7 +65,7 @@ final class CardGameViewModel: ViewModel {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in
                 // FIXME: 클라우드 펑션 호출로 수정
-                self?.state.route = .init(.back)
+                self?.adjustCoinAmount()
             }
             .store(in: &cancellables)
 
@@ -70,11 +74,22 @@ final class CardGameViewModel: ViewModel {
 
     private func startMemorization() {
         state.gameState = .memorizing
-
-        Just(())
-            .delay(for: .seconds(3), scheduler: DispatchQueue.main)
-            .sink { [weak self] in
-                self?.startGame()
+        state.countdown = 3
+        
+        Timer.publish(every: 1.0, on: .main, in: .common)
+            .autoconnect()
+            .prefix(3)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                if let currentCount = self.state.countdown {
+                    let nextCount = currentCount - 1
+                    if nextCount > 0 {
+                        self.state.countdown = nextCount
+                    } else {
+                        self.state.countdown = nil
+                        self.startGame()
+                    }
+                }
             }
             .store(in: &cancellables)
     }
@@ -130,7 +145,7 @@ final class CardGameViewModel: ViewModel {
             state.items[firstIndex].matchingState = .match
             state.items[secondIndex].isMatched = true
             state.items[secondIndex].matchingState = .match
-            state.score += 100
+            state.score += 2
         } else {
             state.items[firstIndex].matchingState = .mismatch
             state.items[secondIndex].matchingState = .mismatch
@@ -171,6 +186,17 @@ final class CardGameViewModel: ViewModel {
 
         let message = "\(reason.rawValue)\n획득 코인: \(state.score)"
         state.route = .init(.alert(title: "게임 종료", message: message))
+    }
+
+    private func adjustCoinAmount() {
+        Task {
+            do {
+                try await adjustCoinAmountUseCase.execute(amount: state.score)
+                state.route = .init(.back)
+            } catch {
+                state.route = .init(.alert(title: "에러", message: error.userFriendlyMessage))
+            }
+        }
     }
 
     private static func createItems(configuration: CardGameConfiguration) -> [CardItem] {
