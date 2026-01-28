@@ -57,7 +57,8 @@ final class DailyQuestionInputViewModel: ViewModel {
         // 저장된 임시 답변이 있으면 복원
         if case .input(let inputState) = uiModel {
             Task { @MainActor in
-                if let draftAnswer = try? await manageDraftAnswerUseCase.loadDraftAnswer(questionID: inputState.questionID),
+                if let draftAnswer =
+                    try? await manageDraftAnswerUseCase.loadDraftAnswer(questionID: inputState.questionID),
                    !draftAnswer.isEmpty {
                     self.state.currentText = draftAnswer
                     self.state.textCount = "\(draftAnswer.count) / 200"

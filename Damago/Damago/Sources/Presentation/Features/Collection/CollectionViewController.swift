@@ -138,7 +138,8 @@ final class CollectionViewController: UIViewController {
         }
     }
 
-    @objc private func shopButtonTapped() {
+    @objc
+    private func shopButtonTapped() {
         // TODO: 상점 화면 연결
     }
 }
