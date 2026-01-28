@@ -20,6 +20,7 @@ final class StoreViewModel: ViewModel {
     }
     
     struct DrawResult: Equatable {
+        let id = UUID()
         let itemName: String
         let petType: DamagoType
     }
