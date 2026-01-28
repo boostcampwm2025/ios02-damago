@@ -125,6 +125,22 @@ final class InteractionView: UIView {
         view.layer.shadowOffset = CGSize(width: 0, height: 10)
         view.layer.shadowRadius = 20
         view.translatesAutoresizingMaskIntoConstraints = false
+        
+        let label = UILabel()
+        label.text = "\"질문을 불러오는 중...\""
+        label.font = .body1
+        label.textColor = .textSecondary
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: .spacingL),
+            label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -.spacingL)
+        ])
+        
         return view
     }
 }
