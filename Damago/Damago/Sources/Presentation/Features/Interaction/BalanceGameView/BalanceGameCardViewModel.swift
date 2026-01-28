@@ -59,7 +59,7 @@ final class BalanceGameCardViewModel: ViewModel {
 
         var headerStatus: String {
             if myChoice != nil && !isOpponentAnswered {
-                return "상대방의 선택을 기다리고 있어요."
+                return "상대방을 기다리는 중"
             }
             return ""
         }
