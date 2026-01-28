@@ -5,8 +5,10 @@
 //  Created by 김재영 on 1/20/26.
 //
 
+import Combine
+
 protocol FetchDailyQuestionUseCase {
-    func execute() async throws -> DailyQuestionUIModel
+    func execute() -> AnyPublisher<DailyQuestionUIModel, Error>
 }
 
 final class FetchDailyQuestionUseCaseImpl: FetchDailyQuestionUseCase {
@@ -16,8 +18,9 @@ final class FetchDailyQuestionUseCaseImpl: FetchDailyQuestionUseCase {
         self.dailyQuestionRepository = dailyQuestionRepository
     }
     
-    func execute() async throws -> DailyQuestionUIModel {
-        let dto = try await dailyQuestionRepository.fetchDailyQuestion()
-        return dto.toDomain()
+    func execute() -> AnyPublisher<DailyQuestionUIModel, Error> {
+        dailyQuestionRepository.fetchDailyQuestion()
+            .map { $0.toDomain() }
+            .eraseToAnyPublisher()
     }
 }

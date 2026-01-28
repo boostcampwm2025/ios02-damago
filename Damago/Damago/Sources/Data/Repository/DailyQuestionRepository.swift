@@ -27,29 +27,50 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
         self.localDataSource = localDataSource
     }
     
-    func fetchDailyQuestion() async throws -> DailyQuestionDTO {
-        let token = try await tokenProvider.idToken()
-        do {
-            let dto: DailyQuestionDTO = try await networkProvider.request(DailyQuestionAPI.fetch(accessToken: token))
-            await saveToLocalAnswer(dto: dto)
-            return dto
-        } catch {
-            SharedLogger.interaction.error("API 조회 실패 로컬 캐시 조회: \(error.localizedDescription)")
-            
-            // Fallback: 로컬 캐시 조회
-            if let entity = try? await localDataSource.fetchLatestQuestion() {
-                return DailyQuestionDTO(
-                    questionID: entity.questionID,
-                    questionContent: entity.questionContent,
-                    user1Answer: entity.user1Answer,
-                    user2Answer: entity.user2Answer,
-                    bothAnswered: entity.bothAnswered,
-                    lastAnsweredAt: entity.lastAnsweredAt,
-                    isUser1: entity.isUser1
-                )
+    func fetchDailyQuestion() -> AnyPublisher<DailyQuestionDTO, Error> {
+        let local = Future<DailyQuestionDTO?, Never> { [weak self] promise in
+            Task {
+                let entity = try? await self?.localDataSource.fetchLatestQuestion()
+                
+                if let entity,
+                   let lastUpdated = entity.lastUpdated,
+                   Calendar.current.isDateInToday(lastUpdated) {
+                    
+                    let dto = DailyQuestionDTO(
+                        questionID: entity.questionID,
+                        questionContent: entity.questionContent,
+                        user1Answer: entity.user1Answer,
+                        user2Answer: entity.user2Answer,
+                        bothAnswered: entity.bothAnswered,
+                        lastAnsweredAt: entity.lastAnsweredAt,
+                        isUser1: entity.isUser1
+                    )
+                    promise(.success(dto))
+                } else {
+                    promise(.success(nil))
+                }
             }
-            throw error
         }
+        .compactMap { $0 }
+        .setFailureType(to: Error.self)
+
+        let network = Future<DailyQuestionDTO, Error> { [weak self] promise in
+            Task {
+                guard let self = self else { return }
+                do {
+                    let token = try await self.tokenProvider.idToken()
+                    let dto: DailyQuestionDTO = try await self.networkProvider.request(
+                        DailyQuestionAPI.fetch(accessToken: token)
+                    )
+                    await self.saveToLocalAnswer(dto: dto)
+                    promise(.success(dto))
+                } catch {
+                    promise(.failure(error))
+                }
+            }
+        }
+        
+        return local.merge(with: network).eraseToAnyPublisher()
     }
     
     func submitAnswer(questionID: String, answer: String) async throws -> Bool {
