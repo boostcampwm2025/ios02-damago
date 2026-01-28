@@ -54,7 +54,24 @@ final class DailyQuestionLocalDataSource: DailyQuestionLocalDataSourceProtocol {
     }
 
     func saveQuestion(_ entity: DailyQuestionEntity) async throws {
-        storage.context.insert(entity)
+        let targetID = entity.questionID
+        let descriptor = FetchDescriptor<DailyQuestionEntity>(
+            predicate: #Predicate { $0.questionID == targetID }
+        )
+        
+        if let existingEntity = try storage.context.fetch(descriptor).first {
+            existingEntity.questionContent = entity.questionContent
+            existingEntity.user1Answer = entity.user1Answer
+            existingEntity.user2Answer = entity.user2Answer
+            existingEntity.bothAnswered = entity.bothAnswered
+            existingEntity.lastAnsweredAt = entity.lastAnsweredAt
+            existingEntity.isUser1 = entity.isUser1
+            existingEntity.lastUpdated = Date()
+            return
+        } else {
+            storage.context.insert(entity)
+        }
+        
         try storage.context.save()
     }
 
