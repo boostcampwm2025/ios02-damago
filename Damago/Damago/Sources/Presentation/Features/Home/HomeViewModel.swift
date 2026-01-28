@@ -23,7 +23,7 @@ final class HomeViewModel: ViewModel {
         var foodAmount = 0
         var dDay = 0
         var petName = ""
-        var petType = "Bunny"
+        var petType = ""
         var isHungry: Bool = true
         var level = 0
         var currentExp = 0

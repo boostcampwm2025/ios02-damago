@@ -73,7 +73,7 @@ final class HomeView: UIView {
     }()
 
     let characterView: SpriteAnimationView = {
-        let view = SpriteAnimationView(spriteSheetName: "BunnyBase")
+        let view = SpriteAnimationView(spriteSheetName: "")
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
