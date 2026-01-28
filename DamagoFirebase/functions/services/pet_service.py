@@ -119,7 +119,8 @@ def feed(req: https_fn.Request) -> https_fn.Response:
             "user1UID": user1,
             "user2UID": user2,
             "petType": data.get("petType", "Bunny"),
-            "statusMessage": update_data["statusMessage"]
+            "statusMessage": update_data["statusMessage"],
+            "petName": data.get("petName", "이름 없는 펫")
         }
 
     try:
@@ -142,10 +143,14 @@ def feed(req: https_fn.Request) -> https_fn.Response:
                 "maxExp": result.get("maxExp"),
                 "lastFedAt": now_str
             }
+            
+            attributes = {
+                "petName": result.get("petName")
+            }
 
             for target_uid in users:
                 if target_uid:
-                    update_live_activity_internal(target_uid, content_state)
+                    update_live_activity_internal(target_uid, content_state, attributes)
                     
         except Exception as la_error:
             print(f"Failed to update Live Activity: {la_error}")
@@ -288,8 +293,12 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
                 "lastFedAt": last_fed_at_str
             }
             
+            attributes = {
+                "petName": pet_data.get("petName", "이름 없는 펫")
+            }
+            
             for uid in users:
                 if uid:
-                    update_live_activity_internal(uid, content_state)
+                    update_live_activity_internal(uid, content_state, attributes)
 
     return https_fn.Response("Made hungry and notified", status=200)
