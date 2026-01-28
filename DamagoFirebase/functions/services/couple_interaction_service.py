@@ -446,11 +446,11 @@ def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
                 is_completing_now = notif_info["isCompletingNow"]
                 
                 if is_completing_now:
-                    title = "질문 답변 완료!"
-                    body = f"{nickname}님이 답변을 완료하여 질문이 완성되었습니다! 확인해보세요."
+                    title = "오늘의 질문 답변 완료!"
+                    body = f"{nickname}님이 답변을 완료했습니다! 결과를 확인해보세요."
                 else:
-                    title = "상대방이 답변했어요!"
-                    body = f"{nickname}님이 오늘의 질문에 답변을 남겼습니다. 당신도 답변해보세요!"
+                    title = "상대방이 오늘의 질문에 답변했어요!"
+                    body = f"{nickname}님이 답변을 남겼습니다! 답변하고 결과를 확인해보세요."
                 
                 send_push_notification(
                     target_uid=partner_uid,
@@ -644,11 +644,11 @@ def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
                 is_completing_now = notif_info["isCompletingNow"]
                 
                 if is_completing_now:
-                    title = "밸런스 게임 완료!"
+                    title = "밸런스 게임 답변 완료!"
                     body = f"{nickname}님이 선택을 마쳤습니다. 결과를 확인해보세요!"
                 else:
-                    title = "상대방이 선택했어요!"
-                    body = f"{nickname}님이 밸런스 게임 선택을 마쳤습니다. 당신도 선택해보세요!"
+                    title = "상대방이 밸런스 게임에 답변했어요!"
+                    body = f"{nickname}님이 선택을 마쳤습니다. 선택하고 결과를 확인해보세요!"
                 
                 send_push_notification(
                     target_uid=partner_uid,
