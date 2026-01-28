@@ -28,9 +28,12 @@ final class DailyQuestionInputViewModel: ViewModel {
     private let manageDraftAnswerUseCase: ManageDailyQuestionDraftAnswerUseCase
     private var cancellables = Set<AnyCancellable>()
     
-    private var currentQuestionID: String? {
-        guard case .input(let inputState) = state.uiModel else { return nil }
-        return inputState.questionID
+    private var currentQuestionID: String {
+        state.uiModel.questionID
+    }
+    
+    private var isUser1: Bool {
+        state.uiModel.isUser1
     }
     
     init(
@@ -106,9 +109,9 @@ final class DailyQuestionInputViewModel: ViewModel {
     }
     
     private func handleSubmit() {
-        guard let questionID = currentQuestionID else { return }
         guard !state.isLoading else { return }
         
+        let questionID = currentQuestionID
         let answer = state.currentText
         
         state.isLoading = true
@@ -141,7 +144,7 @@ final class DailyQuestionInputViewModel: ViewModel {
     // MARK: - Draft Answer Management
     
     func saveDraftAnswer() {
-        guard let questionID = currentQuestionID else { return }
+        let questionID = currentQuestionID
         let trimmedText = state.currentText.trimmingCharacters(in: .whitespacesAndNewlines)
         
         Task { @MainActor in

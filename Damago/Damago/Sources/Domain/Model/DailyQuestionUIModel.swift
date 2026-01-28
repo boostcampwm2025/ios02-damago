@@ -11,6 +11,20 @@ enum DailyQuestionUIModel: Equatable {
     case input(InputState)
     case result(ResultState)
     
+    var questionID: String {
+        switch self {
+        case .input(let state): return state.questionID
+        case .result(let state): return state.questionID
+        }
+    }
+    
+    var isUser1: Bool {
+        switch self {
+        case .input(let state): return state.isUser1
+        case .result(let state): return state.isUser1
+        }
+    }
+    
     struct InputState: Equatable {
         let questionID: String
         let questionContent: String
