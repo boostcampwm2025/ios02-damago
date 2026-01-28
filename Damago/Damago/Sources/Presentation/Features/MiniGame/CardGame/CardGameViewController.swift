@@ -71,6 +71,14 @@ final class CardGameViewController: UIViewController {
                 self?.mainView.updateCoin(score)
             }
             .store(in: &cancellables)
+            
+        output
+            .mapForUI { $0.countdown }
+            .removeDuplicates()
+            .sink { [weak self] count in
+                self?.mainView.animateCountdown(count)
+            }
+            .store(in: &cancellables)
 
         output
             .mapForUI { $0.difficulty }
@@ -125,19 +133,4 @@ extension CardGameViewController: UICollectionViewDelegate {
     ) {
         cardDidTapSubject.send(indexPath.item)
     }
-}
-
-#Preview {
-    CardGameViewController(
-        viewModel: CardGameViewModel(
-            configuration: .easy(
-                [
-                    UIImage(systemName: "star")!,
-                    UIImage(systemName: "heart")!,
-                    UIImage(systemName: "person")!,
-                    UIImage(systemName: "carrot")!
-                ]
-            )
-        )
-    )
 }

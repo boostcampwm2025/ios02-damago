@@ -44,6 +44,16 @@ final class CardGameView: UIView {
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
+    
+    let countdownLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 100, weight: .black)
+        label.textColor = .damagoPrimary
+        label.textAlignment = .center
+        label.alpha = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -54,7 +64,6 @@ final class CardGameView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    
     private func setupUI() {
         backgroundColor = .background
 
@@ -62,6 +71,7 @@ final class CardGameView: UIView {
         addSubview(coinIconImageView)
         addSubview(coinLabel)
         addSubview(collectionView)
+        addSubview(countdownLabel)
         
         NSLayoutConstraint.activate([
             // Timer
@@ -82,7 +92,11 @@ final class CardGameView: UIView {
             collectionView.topAnchor.constraint(equalTo: coinLabel.bottomAnchor, constant: .spacingL),
             collectionView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
             collectionView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
-            collectionView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingM)
+            collectionView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingM),
+            
+            // Countdown Label
+            countdownLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+            countdownLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
     }
 
@@ -125,5 +139,33 @@ final class CardGameView: UIView {
     
     func updateTimer(_ progress: Float) {
         timerProgressView.setProgress(progress, animated: true)
+    }
+    
+    func animateCountdown(_ count: Int?) {
+        guard let count = count else {
+            countdownLabel.alpha = 0
+            return
+        }
+        
+        countdownLabel.text = "\(count)"
+        countdownLabel.alpha = 1
+        countdownLabel.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
+        
+        UIView.animate(
+            withDuration: 0.5,
+            delay: 0,
+            usingSpringWithDamping: 0.5,
+            initialSpringVelocity: 0.5,
+            options: .curveEaseOut,
+            animations: {
+                self.countdownLabel.transform = .identity
+            },
+            completion: { _ in
+                UIView.animate(withDuration: 0.2, delay: 0.3, options: .curveEaseIn) {
+                    self.countdownLabel.alpha = 0
+                    self.countdownLabel.transform = CGAffineTransform(scaleX: 1.5, y: 1.5)
+                }
+            }
+        )
     }
 }

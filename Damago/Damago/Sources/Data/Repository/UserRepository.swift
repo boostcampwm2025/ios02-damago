@@ -133,6 +133,14 @@ final class UserRepository: UserRepositoryProtocol {
         )
         return response.isConnected
     }
+    
+    func adjustCoin(amount: Int) async throws -> Int {
+        let token = try await tokenProvider.idToken()
+        let response: AdjustCoinResponse = try await networkProvider.request(
+            UserAPI.adjustCoin(accessToken: token, amount: amount)
+        )
+        return response.totalCoin
+    }
 }
 
 // MARK: - DTO Mapping

@@ -28,4 +28,5 @@ protocol UserRepositoryProtocol {
     func signOut() throws
     func withdraw() async throws
     func checkCoupleConnection() async throws -> Bool
+    func adjustCoin(amount: Int) async throws -> Int
 }
