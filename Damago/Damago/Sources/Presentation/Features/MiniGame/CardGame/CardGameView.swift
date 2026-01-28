@@ -66,34 +66,37 @@ final class CardGameView: UIView {
 
     private func setupUI() {
         backgroundColor = .background
+        setupHierarchy()
+        setupConstraints()
+    }
 
-        addSubview(timerProgressView)
-        addSubview(coinIconImageView)
-        addSubview(coinLabel)
-        addSubview(collectionView)
-        addSubview(countdownLabel)
-        
+    private func setupHierarchy() {
+        [timerProgressView, coinIconImageView, coinLabel, collectionView, countdownLabel]
+            .forEach(addSubview)
+    }
+
+    private func setupConstraints() {
         NSLayoutConstraint.activate([
             // Timer
             timerProgressView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
             timerProgressView.centerYAnchor.constraint(equalTo: coinIconImageView.centerYAnchor),
             timerProgressView.widthAnchor.constraint(equalToConstant: 120),
-            
+
             // Coin
             coinLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
             coinLabel.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: .spacingM),
-            
+
             coinIconImageView.trailingAnchor.constraint(equalTo: coinLabel.leadingAnchor, constant: -.spacingS),
             coinIconImageView.centerYAnchor.constraint(equalTo: coinLabel.centerYAnchor),
             coinIconImageView.widthAnchor.constraint(equalToConstant: 24),
             coinIconImageView.heightAnchor.constraint(equalToConstant: 24),
-            
+
             // CollectionView
             collectionView.topAnchor.constraint(equalTo: coinLabel.bottomAnchor, constant: .spacingL),
             collectionView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
             collectionView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
             collectionView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingM),
-            
+
             // Countdown Label
             countdownLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
             countdownLabel.centerYAnchor.constraint(equalTo: centerYAnchor)

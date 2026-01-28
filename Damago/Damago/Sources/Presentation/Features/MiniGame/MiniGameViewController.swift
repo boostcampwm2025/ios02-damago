@@ -17,6 +17,7 @@ final class MiniGameViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavigation()
+        setupGestures()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -28,5 +29,27 @@ final class MiniGameViewController: UIViewController {
         navigationController?.navigationBar.prefersLargeTitles = false
         navigationItem.title = ""
         navigationItem.backButtonDisplayMode = .minimal
+    }
+
+    private func setupGestures() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(cardGameDidTap))
+        mainView.cardGameCardView.addGestureRecognizer(tap)
+    }
+
+    @objc
+    private func cardGameDidTap() {
+        let adjustCoinUseCase = AppDIContainer.shared.resolve(AdjustCoinAmountUseCase.self)
+        let vm = CardGameViewModel(
+            configuration: .easy([
+                UIImage(systemName: "carrot")!,
+                UIImage(systemName: "person")!,
+                UIImage(systemName: "heart")!,
+                UIImage(systemName: "star")!
+            ]),
+            adjustCoinAmountUseCase: adjustCoinUseCase
+        )
+        let vc = CardGameViewController(viewModel: vm)
+        vc.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(vc, animated: true)
     }
 }

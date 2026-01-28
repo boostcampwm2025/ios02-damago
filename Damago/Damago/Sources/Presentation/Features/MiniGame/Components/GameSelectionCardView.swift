@@ -1,5 +1,5 @@
 //
-//  UpcomingFeatureCardView.swift
+//  GameSelectionCardView.swift
 //  Damago
 //
 //  Created by loyH on 1/26/26.
@@ -7,9 +7,7 @@
 
 import UIKit
 
-/// "추후 업데이트 예정입니다." 안내용 카드 뷰
-/// - 기존 `CardView`, 색상/타이포/spacing 시스템을 최대한 재사용합니다.
-final class UpcomingFeatureCardView: UIView {
+final class GameSelectionCardView: UIView {
     // MARK: - Subviews
 
     private let cardView: CardView = {
@@ -20,7 +18,6 @@ final class UpcomingFeatureCardView: UIView {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "추후 업데이트 예정입니다."
         label.font = .body1
         label.textColor = .textPrimary
         label.numberOfLines = 0
@@ -39,7 +36,6 @@ final class UpcomingFeatureCardView: UIView {
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "더 좋은 서비스로 찾아뵙겠습니다."
         label.font = .body3
         label.textColor = .textSecondary
         label.numberOfLines = 0
@@ -50,7 +46,7 @@ final class UpcomingFeatureCardView: UIView {
     private lazy var subtitleStack: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [iconImageView, subtitleLabel])
         stack.axis = .horizontal
-        stack.spacing = .spacingM
+        stack.spacing = .spacingS
         stack.alignment = .center
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack

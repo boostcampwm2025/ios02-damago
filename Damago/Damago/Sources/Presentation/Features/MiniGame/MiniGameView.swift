@@ -38,14 +38,8 @@ final class MiniGameView: UIView {
         return label
     }()
     
-    let upcomingFeatureCardView: UpcomingFeatureCardView = {
-        let view = UpcomingFeatureCardView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    let cardGameCardView: UpcomingFeatureCardView = {
-        let view = UpcomingFeatureCardView()
+    let cardGameCardView: GameSelectionCardView = {
+        let view = GameSelectionCardView()
         view.configure(title: "카드 뒤집기 게임", subtitle: "같은 그림을 찾아 코인을 획득하세요!")
         view.translatesAutoresizingMaskIntoConstraints = false
         view.isUserInteractionEnabled = true
@@ -74,7 +68,6 @@ final class MiniGameView: UIView {
         
         contentStackView.addArrangedSubview(titleLabel)
         contentStackView.addArrangedSubview(cardGameCardView)
-        contentStackView.addArrangedSubview(upcomingFeatureCardView)
     }
     
     private func setupConstraints() {
