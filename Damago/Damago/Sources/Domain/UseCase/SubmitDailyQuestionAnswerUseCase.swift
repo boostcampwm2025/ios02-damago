@@ -7,7 +7,7 @@
 
 protocol SubmitDailyQuestionAnswerUseCase {
     @discardableResult
-    func execute(questionID: String, answer: String) async throws -> Bool
+    func execute(questionID: String, answer: String, isUser1: Bool) async throws -> Bool
 }
 
 final class SubmitDailyQuestionAnswerUseCaseImpl: SubmitDailyQuestionAnswerUseCase {
@@ -18,7 +18,7 @@ final class SubmitDailyQuestionAnswerUseCaseImpl: SubmitDailyQuestionAnswerUseCa
     }
     
     @discardableResult
-    func execute(questionID: String, answer: String) async throws -> Bool {
-        try await dailyQuestionRepository.submitAnswer(questionID: questionID, answer: answer)
+    func execute(questionID: String, answer: String, isUser1: Bool) async throws -> Bool {
+        try await dailyQuestionRepository.submitAnswer(questionID: questionID, answer: answer, isUser1: isUser1)
     }
 }
