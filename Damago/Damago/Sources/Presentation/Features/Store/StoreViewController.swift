@@ -91,31 +91,37 @@ final class StoreViewController: UIViewController {
         mainView.drawButton.isEnabled = false
         mainView.exitButton.isHidden = true
         
-        var hostingController: UIHostingController<GachaAnimationView>?
-        
         let animationView = GachaAnimationView { [weak self] in
-            self?.showResultOverlay(result: result)
+            guard let self else { return }
             
-            hostingController?.willMove(toParent: nil)
-            hostingController?.view.removeFromSuperview()
-            hostingController?.removeFromParent()
-            hostingController = nil
+            self.showResultOverlay(result: result)
             
-            self?.mainView.machineImageView.isHidden = false
-            self?.mainView.drawButton.isEnabled = true
-            self?.mainView.exitButton.isHidden = false
+            if let hostingVC = self.children.first(where: { $0 is UIHostingController<GachaAnimationView> }) {
+                hostingVC.willMove(toParent: nil)
+                hostingVC.view.removeFromSuperview()
+                hostingVC.removeFromParent()
+            }
+            
+            self.mainView.machineImageView.isHidden = false
+            self.mainView.drawButton.isEnabled = true
+            self.mainView.exitButton.isHidden = false
         }
         
-        hostingController = UIHostingController(rootView: animationView)
-        guard let hostingView = hostingController?.view else { return }
+        let hostingController = UIHostingController(rootView: animationView)
+        hostingController.view.backgroundColor = .clear
         
-        hostingView.backgroundColor = .clear
-        hostingView.frame = mainView.bounds
+        addChild(hostingController)
+        mainView.addSubview(hostingController.view)
         
-        addChild(hostingController!)
-        mainView.addSubview(hostingView)
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            hostingController.view.topAnchor.constraint(equalTo: mainView.topAnchor),
+            hostingController.view.leadingAnchor.constraint(equalTo: mainView.leadingAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: mainView.trailingAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: mainView.bottomAnchor)
+        ])
         
-        hostingController?.didMove(toParent: self)
+        hostingController.didMove(toParent: self)
     }
     
     private func showResultOverlay(result: StoreViewModel.DrawResult) {
