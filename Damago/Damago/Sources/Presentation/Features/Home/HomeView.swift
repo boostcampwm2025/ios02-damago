@@ -51,6 +51,26 @@ final class HomeView: UIView {
         return label
     }()
 
+    let editNameButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(systemName: "pencil")
+        config.baseForegroundColor = .textSecondary
+        config.contentInsets = .init(top: 0, leading: .spacingS, bottom: 0, trailing: 0)
+        let button = UIButton(configuration: config)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.accessibilityLabel = "이름 변경"
+        return button
+    }()
+
+    private lazy var nameStackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [nameLabel, editNameButton])
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = .spacingXS
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+
     let cardShadowContainer: UIView = {
         let view = UIView()
         view.layer.shadowColor = UIColor.damagoPrimary.cgColor
@@ -128,7 +148,7 @@ final class HomeView: UIView {
     private func setupHierarchy() {
         cardContentContainer.addSubview(characterView)
         cardShadowContainer.addSubview(cardContentContainer)
-        [capsuleLabel, dDayLabel, nameLabel, cardShadowContainer, feedButton, pokeButton, expBar]
+        [capsuleLabel, dDayLabel, nameStackView, cardShadowContainer, feedButton, pokeButton, expBar]
             .forEach { addSubview($0) }
     }
 
@@ -142,10 +162,10 @@ final class HomeView: UIView {
 
             dDayLabel.topAnchor.constraint(equalTo: capsuleLabel.bottomAnchor, constant: .spacingXL),
             dDayLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-            nameLabel.topAnchor.constraint(equalTo: dDayLabel.bottomAnchor, constant: .spacingS),
-            nameLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+            nameStackView.topAnchor.constraint(equalTo: dDayLabel.bottomAnchor, constant: .spacingS),
+            nameStackView.centerXAnchor.constraint(equalTo: centerXAnchor),
 
-            cardShadowContainer.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: .spacingXL),
+            cardShadowContainer.topAnchor.constraint(equalTo: nameStackView.bottomAnchor, constant: .spacingXL),
             cardShadowContainer.centerXAnchor.constraint(equalTo: centerXAnchor),
             cardShadowContainer.widthAnchor.constraint(equalToConstant: 256),
             cardShadowContainer.heightAnchor.constraint(equalToConstant: 256),
