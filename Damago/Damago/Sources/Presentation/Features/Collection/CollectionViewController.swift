@@ -17,6 +17,7 @@ final class CollectionViewController: UIViewController {
     private let confirmChangeTappedPublisher = PassthroughSubject<Void, Never>()
 
     private var cancellables = Set<AnyCancellable>()
+    private var currentPetType: DamagoType?
 
     init(viewModel: CollectionViewModel) {
         self.viewModel = viewModel
@@ -77,6 +78,15 @@ final class CollectionViewController: UIViewController {
             .pulse(\.route)
             .sink { [weak self] route in
                 self?.handleRoute(route)
+            }
+            .store(in: &cancellables)
+
+        output
+            .map(\.currentPetType)
+            .removeDuplicates { $0?.rawValue == $1?.rawValue }
+            .sink { [weak self] ct in
+                self?.currentPetType = ct
+                self?.mainView.collectionView.reloadData()
             }
             .store(in: &cancellables)
     }
@@ -149,12 +159,13 @@ extension CollectionViewController: UICollectionViewDataSource, UICollectionView
             return UICollectionViewCell()
         }
         let petType = viewModel.pets[indexPath.item]
-        cell.configure(with: petType)
+        cell.configure(with: petType, isCurrentPet: currentPetType == petType)
         return cell
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let petType = viewModel.pets[indexPath.item]
+        if petType == currentPetType { return }
         petSelectedPublisher.send(petType)
     }
 }

@@ -20,6 +20,7 @@ final class CollectionViewModel: ViewModel {
     struct State {
         var pets: [DamagoType] = DamagoType.allCases
         var selectedPet: DamagoType?
+        var currentPetType: DamagoType?
         var isLoading: Bool = false
         var route: Pulse<Route>?
     }
@@ -44,8 +45,15 @@ final class CollectionViewModel: ViewModel {
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
+        input.viewDidLoad
+            .sink { [weak self] in
+                self?.loadCurrentPet()
+            }
+            .store(in: &cancellables)
+
         input.petSelected
             .sink { [weak self] petType in
+                if petType == self?.state.currentPetType { return }
                 if petType.isAvailable {
                     self?.state.selectedPet = petType
                     self?.state.route = Pulse(.showChangeConfirmPopup(petType: petType))
@@ -86,9 +94,21 @@ final class CollectionViewModel: ViewModel {
                     petName: currentPetName,
                     petType: selectedPet.rawValue
                 )
+                state.currentPetType = selectedPet
                 state.route = Pulse(.changeSuccess)
             } catch {
                 state.route = Pulse(.error(title: "오류", message: error.localizedDescription))
+            }
+        }
+    }
+
+    private func loadCurrentPet() {
+        Task {
+            do {
+                let userInfo = try await fetchUserInfoUseCase.execute()
+                state.currentPetType = userInfo.petStatus.flatMap { DamagoType(rawValue: $0.petType) }
+            } catch {
+                state.currentPetType = nil
             }
         }
     }
