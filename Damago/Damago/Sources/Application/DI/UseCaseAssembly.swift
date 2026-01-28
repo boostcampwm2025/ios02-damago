@@ -89,5 +89,8 @@ final class UseCaseAssembly: Assembly {
         container.register(FetchBalanceGamesHistoryUseCase.self) {
             FetchBalanceGamesHistoryUseCaseImpl(repository: container.resolve(HistoryRepositoryProtocol.self))
         }
+        container.register(AdjustCoinAmountUseCase.self) {
+            AdjustCoinAmountUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
     }
 }

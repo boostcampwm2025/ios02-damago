@@ -1,10 +1,81 @@
 from firebase_functions import https_fn
 from firebase_admin import firestore
+import google.cloud.firestore
 from utils.firestore import get_db
 from utils.constants import get_required_exp
 from utils.middleware import get_uid_from_request
 import json
 from datetime import datetime
+
+def adjust_coin(req: https_fn.Request) -> https_fn.Response:
+    """
+    사용자의 코인을 증가하거나 감소시킵니다.
+    
+    Args:
+        req (https_fn.Request): 
+            - Header: Authorization Bearer Token
+            - Body: { "amount": 100 } (음수면 감소)
+            
+    Returns:
+        JSON Response: { "totalCoin": updated_amount }
+    """
+    try:
+        uid = get_uid_from_request(req)
+        data = req.get_json()
+        amount = data.get("amount")
+        
+        if amount is None:
+             return https_fn.Response("Missing amount", status=400)
+        
+        try:
+            amount = int(amount)
+        except ValueError:
+            return https_fn.Response("Amount must be an integer", status=400)
+            
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+    except Exception as e:
+        return https_fn.Response(f"Invalid request: {str(e)}", status=400)
+
+    db = get_db()
+    
+    # User Lookup
+    user_ref = db.collection("users").document(uid)
+    user_doc = user_ref.get()
+    if not user_doc.exists:
+        return https_fn.Response("User not found", status=404)
+        
+    couple_id = user_doc.to_dict().get("coupleID")
+    if not couple_id:
+        return https_fn.Response("Couple not found", status=404)
+        
+    couple_ref = db.collection("couples").document(couple_id)
+
+    @google.cloud.firestore.transactional
+    def run_coin_transaction(transaction, doc_ref):
+        snapshot = doc_ref.get(transaction=transaction)
+        if not snapshot.exists:
+            raise ValueError("Couple doc not found")
+            
+        current_coin = snapshot.to_dict().get("totalCoin", 0)
+        new_coin = current_coin + amount
+        
+        if new_coin < 0:
+            raise ValueError("Not enough coins")
+            
+        transaction.update(doc_ref, {"totalCoin": new_coin})
+        return new_coin
+
+    try:
+        new_balance = run_coin_transaction(db.transaction(), couple_ref)
+        return https_fn.Response(
+            json.dumps({"totalCoin": new_balance}),
+            mimetype="application/json"
+        )
+    except ValueError as ve:
+         return https_fn.Response(str(ve), status=400)
+    except Exception as e:
+        return https_fn.Response(f"Transaction failed: {str(e)}", status=500)
 
 def update_user_info(req: https_fn.Request) -> https_fn.Response:
     """
