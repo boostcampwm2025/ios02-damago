@@ -73,15 +73,45 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
         return local.merge(with: network).eraseToAnyPublisher()
     }
     
-    func submitAnswer(questionID: String, answer: String) async throws -> Bool {
-        let token = try await tokenProvider.idToken()
-        return try await networkProvider.requestSuccess(
-            DailyQuestionAPI.submit(
-                accessToken: token,
-                questionID: questionID,
-                answer: answer
-            )
+    func submitAnswer(questionID: String, answer: String, isUser1: Bool) async throws -> Bool {
+        let previousEntity = try await localDataSource.fetchQuestion(id: questionID)
+        let previousUser1Answer = previousEntity?.user1Answer
+        let previousUser2Answer = previousEntity?.user2Answer
+        let previousBothAnswered = previousEntity?.bothAnswered ?? false
+        let previousLastAnsweredAt = previousEntity?.lastAnsweredAt
+        
+        // 로컬 업데이트 수행
+        try await localDataSource.updateAnswer(
+            questionID: questionID,
+            user1Answer: isUser1 ? answer : previousUser1Answer,
+            user2Answer: isUser1 ? previousUser2Answer : answer,
+            bothAnswered: previousBothAnswered,
+            lastAnsweredAt: Date()
         )
+        
+        do {
+            let token = try await tokenProvider.idToken()
+            let success = try await networkProvider.requestSuccess(
+                DailyQuestionAPI.submit(
+                    accessToken: token,
+                    questionID: questionID,
+                    answer: answer
+                )
+            )
+            return success
+        } catch {
+            SharedLogger.interaction.error("API 제출 실패, 로컬 데이터 롤백: \(error.localizedDescription)")
+            
+            // 실패 시 롤백: 이전 상태로 복구
+            try await localDataSource.updateAnswer(
+                questionID: questionID,
+                user1Answer: previousUser1Answer,
+                user2Answer: previousUser2Answer,
+                bothAnswered: previousBothAnswered,
+                lastAnsweredAt: previousLastAnsweredAt
+            )
+            throw error
+        }
     }
 
     // swiftlint:disable trailing_closure

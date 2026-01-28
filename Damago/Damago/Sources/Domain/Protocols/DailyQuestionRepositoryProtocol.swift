@@ -9,7 +9,7 @@ import Combine
 
 protocol DailyQuestionRepositoryProtocol {
     func fetchDailyQuestion() -> AnyPublisher<DailyQuestionDTO, Error>
-    func submitAnswer(questionID: String, answer: String) async throws -> Bool
+    func submitAnswer(questionID: String, answer: String, isUser1: Bool) async throws -> Bool
     func observeAnswer(
         coupleID: String,
         questionID: String,
