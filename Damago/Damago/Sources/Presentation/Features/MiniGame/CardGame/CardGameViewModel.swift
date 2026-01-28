@@ -19,7 +19,8 @@ final class CardGameViewModel: ViewModel {
     struct State {
         var items: [CardItem]
         var gameState: CardGameState = .ready
-        var remainingTime: Double = 20.0
+        var remainingMilliseconds = 20000
+        let maximumMilliseconds = 20000
         var score: Int = 0
         var selectedIndices = [Int]()
         var countdown: Int?
@@ -109,9 +110,9 @@ final class CardGameViewModel: ViewModel {
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self = self else { return }
-                self.state.remainingTime -= 0.1
+                self.state.remainingMilliseconds -= 100
 
-                if self.state.remainingTime <= 0 {
+                if self.state.remainingMilliseconds <= 0 {
                     self.endGame(reason: .timeUp)
                 }
             }

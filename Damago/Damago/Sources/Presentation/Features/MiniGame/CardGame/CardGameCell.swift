@@ -29,7 +29,6 @@ final class CardGameCell: UICollectionViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
-        flipCardView.configure(image: nil)
         overlayImageView.isHidden = true
         overlayImageView.image = nil
     }
