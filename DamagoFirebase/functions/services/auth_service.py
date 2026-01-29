@@ -3,9 +3,10 @@ from firebase_admin import firestore
 from nanoid import generate
 import google.cloud.firestore
 import json
+
+from utils.constants import AVAILABLE_PET_TYPES, get_default_pet_name, XP_TABLE
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
-import json
 
 def generate_code(req: https_fn.Request) -> https_fn.Response:
     """
@@ -88,9 +89,11 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
 
 def connect_couple(req: https_fn.Request) -> https_fn.Response:
     """
-    두 유저(Token User, targetCode)를 커플로 연결하고, 첫 번째 펫(Damago)을 생성합니다.
+    두 유저(Token User, targetCode)를 커플로 연결합니다.
+    visible(isAvailable)인 모든 다마고를 기본 이름으로 생성합니다.
+    활성 다마고(damagoID) 선택은 이후 PetSetup 등 선택 화면에서 이루어집니다.
     트랜잭션을 사용하여 데이터 일관성을 보장합니다.
-    
+
     Args:
         req: { "targetCode": "..." } (Header: Authorization 필수)
     """
@@ -148,7 +151,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
         if snapshot.exists:
             return "ok" # 이미 연결됨
 
-        # 커플 생성 (UDID -> UID)
+        # 커플 생성 (다마고 선택은 이후 PetSetup 등 선택 화면에서 진행)
         transaction.set(couple_ref, {
             "id": couple_ref.id,
             "user1UID": my_uid,
@@ -161,17 +164,39 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             "currentQuestionID": question_id
         })
 
-        # 유저 정보 업데이트 (상호 참조, UDID -> UID)
+        # 유저 정보 업데이트 (상호 참조, 다마고는 선택 화면에서 설정)
         transaction.update(my_ref, {
             "coupleID": couple_ref.id,
             "partnerUID": target_uid,
+            "damagoID": None,
             "updatedAt": firestore.SERVER_TIMESTAMP
         })
         transaction.update(target_ref, {
             "coupleID": couple_ref.id,
             "partnerUID": my_uid,
+            "damagoID": None,
             "updatedAt": firestore.SERVER_TIMESTAMP
         })
+
+        # visible인 모든 다마고 생성 (기본 이름 사용)
+        for pet_type in AVAILABLE_PET_TYPES:
+            damago_id = f"{couple_ref.id}_{pet_type}"
+            damago_ref = db.collection("damagos").document(damago_id)
+            transaction.set(damago_ref, {
+                "id": damago_id,
+                "level": 1,
+                "currentExp": 0,
+                "maxExp": XP_TABLE[0],
+                "isHungry": False,
+                "statusMessage": "반가워요! 새로 태어났어요.",
+                "coupleID": couple_ref.id,
+                "createdAt": firestore.SERVER_TIMESTAMP,
+                "lastUpdatedAt": firestore.SERVER_TIMESTAMP,
+                "lastFedAt": None,
+                "endedAt": None,
+                "petName": get_default_pet_name(pet_type),
+                "petType": pet_type,
+            })
 
         return "ok"
 
@@ -196,7 +221,7 @@ def withdraw_user(req: https_fn.Request) -> https_fn.Response:
 
     1. 해당 user 삭제
     2. 해당 user가 속한 커플(coupleID) 삭제
-    3. 해당 user 커플의 펫(damagoID) 삭제
+    3. 해당 커플의 모든 다마고 삭제
     4. 파트너(partnerUID) 정보 초기화 (coupleID, partnerUID, damagoID 제거)
 
     Args:
@@ -220,7 +245,6 @@ def withdraw_user(req: https_fn.Request) -> https_fn.Response:
 
     user_data = user_doc.to_dict()
     couple_id = user_data.get("coupleID")
-    damago_id = user_data.get("damagoID")
     partner_uid = user_data.get("partnerUID")
 
     batch = db.batch()
@@ -233,10 +257,10 @@ def withdraw_user(req: https_fn.Request) -> https_fn.Response:
         couple_ref = db.collection("couples").document(couple_id)
         batch.delete(couple_ref)
 
-    # 3. 펫 삭제
-    if damago_id:
-        damago_ref = db.collection("damagos").document(damago_id)
-        batch.delete(damago_ref)
+    # 3. 해당 커플의 모든 다마고 삭제
+    if couple_id:
+        for doc in db.collection("damagos").where("coupleID", "==", couple_id).stream():
+            batch.delete(doc.reference)
 
     # 4. 파트너 정보 초기화
     if partner_uid:

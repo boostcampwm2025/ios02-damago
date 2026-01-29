@@ -1,15 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "BunnySleep-Sheet.png",
+      "filename" : "paw.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "paw@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "paw@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

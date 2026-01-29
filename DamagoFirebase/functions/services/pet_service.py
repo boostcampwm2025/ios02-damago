@@ -115,7 +115,12 @@ def feed(req: https_fn.Request) -> https_fn.Response:
             "maxExp": get_required_exp(new_level),
             "isLevelUp": new_level > current_level,
             "rewardCoin": reward_coin,
-            "foodCount": new_food_count
+            "foodCount": new_food_count,
+            "user1UID": user1,
+            "user2UID": user2,
+            "petType": data.get("petType", "Bunny"),
+            "statusMessage": update_data["statusMessage"],
+            "petName": data.get("petName", "이름 없는 펫")
         }
 
     try:
@@ -123,6 +128,33 @@ def feed(req: https_fn.Request) -> https_fn.Response:
         if result is None:
              return https_fn.Response("Damago not found", status=404)
         
+        # --- [Live Activity Update] ---
+        # 밥 주기 성공 시 파트너(및 본인)에게 Live Activity 업데이트 전송
+        try:
+            users = [result.get("user1UID"), result.get("user2UID")]
+            now_str = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
+            
+            content_state = {
+                "petType": result.get("petType"),
+                "isHungry": False,
+                "statusMessage": result.get("statusMessage"),
+                "level": result.get("level"),
+                "currentExp": result.get("currentExp"),
+                "maxExp": result.get("maxExp"),
+                "lastFedAt": now_str
+            }
+            
+            attributes = {
+                "petName": result.get("petName")
+            }
+
+            for target_uid in users:
+                if target_uid:
+                    update_live_activity_internal(target_uid, content_state, attributes)
+                    
+        except Exception as la_error:
+            print(f"Failed to update Live Activity: {la_error}")
+
         # --- [Cloud Task Scheduling] ---
         try:
             client = tasks_v2.CloudTasksClient()
@@ -261,8 +293,12 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
                 "lastFedAt": last_fed_at_str
             }
             
+            attributes = {
+                "petName": pet_data.get("petName", "이름 없는 펫")
+            }
+            
             for uid in users:
                 if uid:
-                    update_live_activity_internal(uid, content_state)
+                    update_live_activity_internal(uid, content_state, attributes)
 
     return https_fn.Response("Made hungry and notified", status=200)

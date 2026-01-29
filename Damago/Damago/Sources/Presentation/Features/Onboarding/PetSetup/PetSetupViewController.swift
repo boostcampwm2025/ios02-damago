@@ -83,7 +83,7 @@ final class PetSetupViewController: UIViewController {
     
     private func showNamingPopup(for petType: DamagoType) {
         let popupView = PetNamingPopupView()
-        popupView.configure(with: petType)
+        popupView.configure(with: petType, initialName: viewModel.prefillName(for: petType))
         popupView.translatesAutoresizingMaskIntoConstraints = false
         
         guard let targetView = navigationController?.view ?? view else { return }
@@ -101,6 +101,17 @@ final class PetSetupViewController: UIViewController {
                 self?.viewModel.selectPet(petType)
                 self?.confirmButtonTappedPublisher.send(name)
                 popupView?.removeFromSuperview()
+            }
+            .store(in: &cancellables)
+
+        // 선택한 타입의 기존 이름이 있으면 Firestore에서 가져와 prefill
+        viewModel.observePrefillName(for: petType)
+            .receive(on: DispatchQueue.main)
+            .prefix(1)
+            .sink { [weak popupView] name in
+                let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { return }
+                popupView?.updateInitialName(trimmed)
             }
             .store(in: &cancellables)
             

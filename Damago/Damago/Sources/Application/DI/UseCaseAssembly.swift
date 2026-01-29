@@ -13,6 +13,9 @@ final class UseCaseAssembly: Assembly {
         container.register(FetchCodeUseCase.self) {
             FetchCodeUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }
+        container.register(FetchUserInfoUseCase.self) {
+            FetchUserInfoUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
         container.register(ConnectCoupleUseCase.self) {
             ConnectCoupleUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }
@@ -88,6 +91,9 @@ final class UseCaseAssembly: Assembly {
         }
         container.register(FetchBalanceGamesHistoryUseCase.self) {
             FetchBalanceGamesHistoryUseCaseImpl(repository: container.resolve(HistoryRepositoryProtocol.self))
+        }
+        container.register(AdjustCoinAmountUseCase.self) {
+            AdjustCoinAmountUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }
     }
 }
