@@ -54,11 +54,19 @@ final class HomeView: UIView {
     let editNameButton: UIButton = {
         var config = UIButton.Configuration.plain()
         config.image = UIImage(systemName: "pencil")
-        config.baseForegroundColor = .textSecondary
-        config.contentInsets = .init(top: 0, leading: .spacingS, bottom: 0, trailing: 0)
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(font: .body3)
+        config.baseForegroundColor = .damagoPrimary
+        config.contentInsets = .init(top: .spacingS, leading: .spacingS, bottom: .spacingS, trailing: .spacingS)
+        
+        config.background.backgroundColor = UIColor.damagoPrimary.withAlphaComponent(0.12)
+        config.background.strokeColor = UIColor.damagoPrimary.withAlphaComponent(0.25)
+        config.background.strokeWidth = 1
+        config.background.cornerRadius = .mediumButton
+
         let button = UIButton(configuration: config)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.accessibilityLabel = "이름 변경"
+
         return button
     }()
 
