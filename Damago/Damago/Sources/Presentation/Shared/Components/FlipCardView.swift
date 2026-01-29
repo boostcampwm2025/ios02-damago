@@ -31,7 +31,7 @@ final class FlipCardView: UIView {
     private let frontImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
+        imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.backgroundColor = .damagoSecondary
         imageView.layer.cornerRadius = .mediumButton
