@@ -36,9 +36,6 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
                    let lastUpdated = entity.lastUpdated,
                    Calendar.current.isDateInToday(lastUpdated) {
                     
-                    let formatter = ISO8601DateFormatter()
-                    let lastAnsweredAtString = entity.lastAnsweredAt.map { formatter.string(from: $0) }
-                    
                     let dto = BalanceGameDTO(
                         gameID: entity.gameID,
                         questionContent: entity.questionContent,
@@ -47,7 +44,7 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
                         myChoice: entity.isUser1 ? entity.user1Choice : entity.user2Choice,
                         opponentChoice: entity.isUser1 ? entity.user2Choice : entity.user1Choice,
                         isUser1: entity.isUser1,
-                        lastAnsweredAt: lastAnsweredAtString
+                        lastAnsweredAt: entity.lastAnsweredAt
                     )
                     continuation.yield(dto)
                 }
@@ -156,9 +153,6 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
     @MainActor
     private func saveToLocalGame(dto: BalanceGameDTO) async {
         do {
-            let formatter = ISO8601DateFormatter()
-            let lastAnsweredAtDate = dto.lastAnsweredAt.flatMap { formatter.date(from: $0) }
-            
             let entity = BalanceGameEntity(
                 gameID: dto.gameID,
                 questionContent: dto.questionContent,
@@ -167,7 +161,7 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
                 user1Choice: dto.isUser1 ? dto.myChoice : dto.opponentChoice,
                 user2Choice: dto.isUser1 ? dto.opponentChoice : dto.myChoice,
                 isUser1: dto.isUser1,
-                lastAnsweredAt: lastAnsweredAtDate
+                lastAnsweredAt: dto.lastAnsweredAt
             )
             try await localDataSource.saveGame(entity)
         } catch {
@@ -178,14 +172,11 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
     @MainActor
     private func updateLocalChoice(gameID: String, response: FirestoreBalanceGameAnswerDTO) async {
         do {
-            let formatter = ISO8601DateFormatter()
-            let lastAnsweredAtDate = response.lastAnsweredAt.flatMap { formatter.date(from: $0) }
-            
             try await localDataSource.updateChoice(
                 gameID: gameID,
                 user1Choice: response.user1Answer,
                 user2Choice: response.user2Answer,
-                lastAnsweredAt: lastAnsweredAtDate
+                lastAnsweredAt: response.lastAnsweredAt
             )
         } catch {
             SharedLogger.interaction.error("Local update failed: \(error)")
@@ -197,5 +188,5 @@ private struct FirestoreBalanceGameAnswerDTO: Decodable {
     let user1Answer: Int?
     let user2Answer: Int?
     let bothAnswered: Bool?
-    let lastAnsweredAt: String?
+    let lastAnsweredAt: Date?
 }

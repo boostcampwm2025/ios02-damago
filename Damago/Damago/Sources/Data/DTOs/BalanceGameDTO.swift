@@ -15,14 +15,14 @@ struct BalanceGameDTO: Decodable {
     let myChoice: Int?
     let opponentChoice: Int?
     let isUser1: Bool
-    let lastAnsweredAt: String?
+    let lastAnsweredAt: Date?
 }
 
 extension BalanceGameDTO {
     func toDomain() -> BalanceGameUIModel {
         let nextGameAvailableAt: Date?
-        if let lastAnsweredAt, let date = ISO8601DateFormatter().date(from: lastAnsweredAt) {
-            nextGameAvailableAt = date.addingTimeInterval(12 * 3600) // 12시간 쿨타임
+        if let lastAnsweredAt {
+            nextGameAvailableAt = lastAnsweredAt.addingTimeInterval(12 * 3600) // 12시간 쿨타임
         } else {
             nextGameAvailableAt = nil
         }
