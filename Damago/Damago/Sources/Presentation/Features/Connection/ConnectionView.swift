@@ -161,17 +161,6 @@ final class ConnectionView: UIView {
         return button
     }()
 
-    let shareButton: CircularActionButton = {
-        let button = CircularActionButton()
-        button.configure(
-            backgroundColor: .damagoPrimary,
-            systemName: "square.and.arrow.up",
-            tintColor: .white
-        )
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-
     init() {
         super.init(frame: .zero)
         setupUI()

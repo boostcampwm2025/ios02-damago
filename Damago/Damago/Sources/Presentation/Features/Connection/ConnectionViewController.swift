@@ -31,17 +31,32 @@ final class ConnectionViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupNavigationBar()
         setupKeyboard()
+        
+        let shareButton = UIBarButtonItem(
+            image: UIImage(systemName: "square.and.arrow.up"),
+            style: .plain,
+            target: nil,
+            action: nil
+        )
+        navigationItem.rightBarButtonItem = shareButton
+
         let input = ConnectionViewModel.Input(
             viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
             copyButtonDidTap: mainView.copyButton.tapPublisher,
             textfieldValueDidChange: mainView.opponentCodeTextField.textPublisher,
-            shareButtonDidTap: mainView.shareButton.tapPublisher,
+            shareButtonDidTap: shareButton.tapPublisher,
             connectButtonDidTap: mainView.connectButton.tapPublisher
         )
         let output = viewModel.transform(input)
         bind(output)
         viewDidLoadPublisher.send()
+    }
+    
+    private func setupNavigationBar() {
+        navigationController?.setNavigationBarHidden(false, animated: true)
+        navigationController?.navigationBar.tintColor = .damagoPrimary
     }
     
     private func setupKeyboard() {
