@@ -22,6 +22,7 @@ final class RemovableImageView: UIView {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
         button.tintColor = .white
+        button.backgroundColor = .damagoPrimary
         button.layer.cornerRadius = .mediumButton
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
