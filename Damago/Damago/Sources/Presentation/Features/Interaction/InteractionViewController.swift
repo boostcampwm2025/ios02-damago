@@ -16,10 +16,10 @@ final class InteractionViewController: UIViewController {
     private var isNavigationBarHidden = true
     private var cancellables = Set<AnyCancellable>()
 
-    private lazy var balanceGameCardChildViewController: BalanceGameCardViewController = {
-        let vc = BalanceGameCardViewController()
-        return vc
-    }()
+    private var balanceGameCardChildViewController: BalanceGameCardViewController?
+    
+    private let interactionTips = InteractionTip()
+    private var tipsTasks = Set<Task<Void, Never>>()
 
     init(viewModel: InteractionViewModel) {
         self.viewModel = viewModel
@@ -39,7 +39,6 @@ final class InteractionViewController: UIViewController {
         setupNavigation()
         setupDelegate()
         mainView.configure(title: viewModel.title, subtitle: viewModel.subtitle)
-        embedBalanceGameCardChildViewControllerIfNeeded()
         
         let output = viewModel.transform(
             InteractionViewModel.Input(
@@ -50,13 +49,19 @@ final class InteractionViewController: UIViewController {
         )
         
         bind(output)
-        
         viewDidLoadPublisher.send()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        setupTips()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        tipsTasks.forEach { $0.cancel() }
+        tipsTasks.removeAll()
     }
     
     private func setupNavigation() {
@@ -69,25 +74,32 @@ final class InteractionViewController: UIViewController {
         mainView.scrollView.delegate = self
     }
 
-    private func embedBalanceGameCardChildViewControllerIfNeeded() {
-        guard balanceGameCardChildViewController.parent == nil else { return }
+    private func setupBalanceGameCard(uiModel: BalanceGameUIModel) {
+        guard balanceGameCardChildViewController == nil else { return }
 
+        let vm = BalanceGameCardViewModel(
+            uiModel: uiModel,
+            uiModelPublisher: viewModel.balanceGameUIModelPublisher
+        ) { [weak self] choice in
+            try await self?.viewModel.submitBalanceGameChoice(choice: choice)
+        }
+
+        let vc = BalanceGameCardViewController(viewModel: vm)
+        self.balanceGameCardChildViewController = vc
         let containerView = mainView.balanceGameCardView
 
-        addChild(balanceGameCardChildViewController)
-
-        let childView = balanceGameCardChildViewController.view!
-        childView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(childView)
+        addChild(vc)
+        vc.view.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(vc.view)
 
         NSLayoutConstraint.activate([
-            childView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            childView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            childView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            childView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+            vc.view.topAnchor.constraint(equalTo: containerView.topAnchor),
+            vc.view.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            vc.view.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            vc.view.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
         ])
 
-        balanceGameCardChildViewController.didMove(toParent: self)
+        vc.didMove(toParent: self)
     }
     
     private func bind(_ output: InteractionViewModel.Output) {
@@ -97,6 +109,8 @@ final class InteractionViewController: UIViewController {
             .sink { [weak self] uiModel in
                 let questionContent: String
                 let buttonTitle: String
+                var rightTitle: String = ""
+                var targetDate: Date?
                 
                 switch uiModel {
                 case .input(let inputState):
@@ -105,9 +119,32 @@ final class InteractionViewController: UIViewController {
                 case .result(let resultState):
                     questionContent = resultState.questionContent
                     buttonTitle = resultState.buttonTitle
+                    
+                    if resultState.bothAnswered {
+                        rightTitle = "다음 질문"
+                        if let lastAnsweredAt = resultState.lastAnsweredAt {
+                            targetDate = lastAnsweredAt.addingTimeInterval(12 * 3600)
+                        }
+                    } else {
+                        rightTitle = "상대방을 기다리는 중"
+                    }
                 }
                 
-                self?.mainView.questionCardView.configure(question: questionContent, buttonTitle: buttonTitle)
+                self?.mainView.questionCardView.configure(
+                    question: questionContent,
+                    buttonTitle: buttonTitle,
+                    rightTitle: rightTitle,
+                    targetDate: targetDate
+                )
+            }
+            .store(in: &cancellables)
+
+        output
+            .mapForUI { $0.balanceGameUIModel }
+            .compactMap { $0 }
+            .first()
+            .sink { [weak self] uiModel in
+                self?.setupBalanceGameCard(uiModel: uiModel)
             }
             .store(in: &cancellables)
         
@@ -115,21 +152,37 @@ final class InteractionViewController: UIViewController {
             .pulse(\.route)
             .sink { [weak self] route in
                 guard let self else { return }
+                navigationController?.setNavigationBarHidden(false, animated: true)
+                isNavigationBarHidden = false
                 switch route {
                 case .questionInput(let uiModel):
                     let submitUseCase = AppDIContainer.shared.resolve(SubmitDailyQuestionAnswerUseCase.self)
+                    let manageDraftUseCase = AppDIContainer.shared.resolve(ManageDailyQuestionDraftAnswerUseCase.self)
                     
                     let vm = DailyQuestionInputViewModel(
                         uiModel: uiModel,
-                        uiModelPublisher: self.viewModel.uiModelPublisher,
-                        submitDailyQuestionAnswerUseCase: submitUseCase
+                        uiModelPublisher: self.viewModel.dailyQuestionUIModelPublisher,
+                        submitDailyQuestionAnswerUseCase: submitUseCase,
+                        manageDraftAnswerUseCase: manageDraftUseCase
                     )
                     let vc = DailyQuestionInputViewController(viewModel: vm)
                     vc.hidesBottomBarWhenPushed = true
                     self.navigationController?.pushViewController(vc, animated: true)
                     
                 case .history:
-                    print("지난 내역 보기 클릭")
+                    let fetchDailyQuestionsHistoryUseCase = AppDIContainer.shared.resolve(
+                        FetchDailyQuestionsHistoryUseCase.self
+                    )
+                    let fetchBalanceGamesHistoryUseCase = AppDIContainer.shared.resolve(
+                        FetchBalanceGamesHistoryUseCase.self
+                    )
+                    let vm = HistoryViewModel(
+                        fetchDailyQuestionsHistoryUseCase: fetchDailyQuestionsHistoryUseCase,
+                        fetchBalanceGamesHistoryUseCase: fetchBalanceGamesHistoryUseCase
+                    )
+                    let vc = HistoryViewController(viewModel: vm)
+                    vc.hidesBottomBarWhenPushed = true
+                    self.navigationController?.pushViewController(vc, animated: true)
                     
                 }
             }
@@ -160,5 +213,33 @@ extension InteractionViewController: UIScrollViewDelegate {
         let fadeThreshold: CGFloat = 50
         let alpha = max(0, min(1, 1 - (scrollY / fadeThreshold)))
         mainView.setSubtitleAlpha(alpha)
+    }
+}
+
+extension InteractionViewController: UIPopoverPresentationControllerDelegate {
+    func adaptivePresentationStyle(
+        for controller: UIPresentationController,
+        traitCollection: UITraitCollection
+    ) -> UIModalPresentationStyle {
+        .none
+    }
+    
+    private func setupTips() {
+        tipsTasks.forEach { $0.cancel() }
+        tipsTasks.removeAll()
+
+        tipsTasks.insert(Task { @MainActor in
+            await interactionTips.dailyQuestion.monitor(
+                on: self,
+                sourceItem: .view(mainView.questionCardView)
+            )
+        })
+
+        tipsTasks.insert(Task { @MainActor in
+            await interactionTips.balanceGame.monitor(
+                on: self,
+                sourceItem: .view(mainView.balanceGameCardView)
+            )
+        })
     }
 }

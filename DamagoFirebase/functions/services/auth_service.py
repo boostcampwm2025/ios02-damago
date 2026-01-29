@@ -2,6 +2,9 @@ from firebase_functions import https_fn
 from firebase_admin import firestore
 from nanoid import generate
 import google.cloud.firestore
+import json
+
+from utils.constants import AVAILABLE_PET_TYPES, get_default_pet_name, XP_TABLE
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
 
@@ -30,8 +33,20 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
     if doc_snapshot.exists:
         user_data = doc_snapshot.to_dict()
         existing_code = user_data.get("code")
+        
+        partner_uid = user_data.get("partnerUID")
+        partner_code = None
+        
+        if partner_uid:
+            partner_doc = users_ref.document(partner_uid).get()
+            if partner_doc.exists:
+                partner_code = partner_doc.to_dict().get("code")
 
-        return https_fn.Response(f"{existing_code}")
+        return https_fn.Response(
+            json.dumps({"myCode": existing_code, "partnerCode": partner_code}), 
+            status=200,
+            mimetype='application/json'
+        )
 
     # --- [Step 2] 고유 코드 생성 (NanoID) ---
     safe_alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
@@ -66,13 +81,19 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
         "updatedAt": firestore.SERVER_TIMESTAMP
     })
 
-    return https_fn.Response(f"{unique_code}")
+    return https_fn.Response(
+        json.dumps({"myCode": unique_code, "partnerCode": None}), 
+        status=200,
+        mimetype='application/json'
+    )
 
 def connect_couple(req: https_fn.Request) -> https_fn.Response:
     """
-    두 유저(Token User, targetCode)를 커플로 연결하고, 첫 번째 펫(Damago)을 생성합니다.
+    두 유저(Token User, targetCode)를 커플로 연결합니다.
+    visible(isAvailable)인 모든 다마고를 기본 이름으로 생성합니다.
+    활성 다마고(damagoID) 선택은 이후 PetSetup 등 선택 화면에서 이루어집니다.
     트랜잭션을 사용하여 데이터 일관성을 보장합니다.
-    
+
     Args:
         req: { "targetCode": "..." } (Header: Authorization 필수)
     """
@@ -115,7 +136,6 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     codes = sorted([my_code, target_code])
     couple_doc_id = f"{codes[0]}_{codes[1]}"
     couple_ref = db.collection("couples").document(couple_doc_id)
-    damago_ref = db.collection("damagos").document()
 
     # 첫 번째 질문 ID 가져오기 (order=1)
     first_question_id = None
@@ -123,39 +143,20 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     if questions_query:
         first_question_id = questions_query[0].id
 
-    from utils.constants import XP_TABLE # 초기 경험치 참조
-
     # --- [Step 3] 트랜잭션 실행 ---
     @google.cloud.firestore.transactional
-    def run_transaction(transaction, couple_ref, damago_ref, my_ref, target_ref, my_uid, target_uid, question_id):
+    def run_transaction(transaction, couple_ref, my_ref, target_ref, my_uid, target_uid, question_id):
         snapshot = couple_ref.get(transaction=transaction)
 
         if snapshot.exists:
             return "ok" # 이미 연결됨
 
-        # 펫 생성
-        transaction.set(damago_ref, {
-            "id": damago_ref.id,
-            "coupleID": couple_ref.id,
-            "petName": "이름 없는 펫",
-            "petType": "Bunny",
-            "level": 1,
-            "currentExp": 0,
-            "maxExp": XP_TABLE[0],
-            "isHungry": False,
-            "statusMessage": "반가워요! 우리 잘 지내봐요.",
-            "lastFedAt": None,
-            "lastUpdatedAt": firestore.SERVER_TIMESTAMP,
-            "createdAt": firestore.SERVER_TIMESTAMP,
-            "endedAt": None
-        })
-
-        # 커플 생성 (UDID -> UID)
+        # 커플 생성 (다마고 선택은 이후 PetSetup 등 선택 화면에서 진행)
         transaction.set(couple_ref, {
             "id": couple_ref.id,
             "user1UID": my_uid,
             "user2UID": target_uid,
-            "damagoID": damago_ref.id,
+            "damagoID": None,
             "anniversaryDate": None,
             "createdAt": firestore.SERVER_TIMESTAMP,
             "totalCoin": 0,
@@ -163,19 +164,39 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             "currentQuestionID": question_id
         })
 
-        # 유저 정보 업데이트 (상호 참조, UDID -> UID)
+        # 유저 정보 업데이트 (상호 참조, 다마고는 선택 화면에서 설정)
         transaction.update(my_ref, {
             "coupleID": couple_ref.id,
-            "damagoID": damago_ref.id,
             "partnerUID": target_uid,
+            "damagoID": None,
             "updatedAt": firestore.SERVER_TIMESTAMP
         })
         transaction.update(target_ref, {
             "coupleID": couple_ref.id,
-            "damagoID": damago_ref.id,
             "partnerUID": my_uid,
+            "damagoID": None,
             "updatedAt": firestore.SERVER_TIMESTAMP
         })
+
+        # visible인 모든 다마고 생성 (기본 이름 사용)
+        for pet_type in AVAILABLE_PET_TYPES:
+            damago_id = f"{couple_ref.id}_{pet_type}"
+            damago_ref = db.collection("damagos").document(damago_id)
+            transaction.set(damago_ref, {
+                "id": damago_id,
+                "level": 1,
+                "currentExp": 0,
+                "maxExp": XP_TABLE[0],
+                "isHungry": False,
+                "statusMessage": "반가워요! 새로 태어났어요.",
+                "coupleID": couple_ref.id,
+                "createdAt": firestore.SERVER_TIMESTAMP,
+                "lastUpdatedAt": firestore.SERVER_TIMESTAMP,
+                "lastFedAt": None,
+                "endedAt": None,
+                "petName": get_default_pet_name(pet_type),
+                "petType": pet_type,
+            })
 
         return "ok"
 
@@ -183,7 +204,6 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
         result_message = run_transaction(
             db.transaction(),
             couple_ref,
-            damago_ref,
             my_doc.reference,
             target_doc.reference,
             my_uid,
@@ -194,3 +214,67 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response(f"Transaction failed: {str(e)}", status=500)
 
     return https_fn.Response(result_message)
+
+def withdraw_user(req: https_fn.Request) -> https_fn.Response:
+    """
+    회원 탈퇴를 처리합니다.
+
+    1. 해당 user 삭제
+    2. 해당 user가 속한 커플(coupleID) 삭제
+    3. 해당 커플의 모든 다마고 삭제
+    4. 파트너(partnerUID) 정보 초기화 (coupleID, partnerUID, damagoID 제거)
+
+    Args:
+        req (https_fn.Request): Header Authorization Bearer Token
+
+    Returns:
+        JSON Response: { "message": "User withdrawn successfully" }
+    """
+    try:
+        uid = get_uid_from_request(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+
+    db = get_db()
+    user_ref = db.collection("users").document(uid)
+
+    # 유저 정보 조회
+    user_doc = user_ref.get()
+    if not user_doc.exists:
+        return https_fn.Response("User not found", status=404)
+
+    user_data = user_doc.to_dict()
+    couple_id = user_data.get("coupleID")
+    partner_uid = user_data.get("partnerUID")
+
+    batch = db.batch()
+
+    # 1. 해당 user 삭제
+    batch.delete(user_ref)
+
+    # 2. 커플 삭제
+    if couple_id:
+        couple_ref = db.collection("couples").document(couple_id)
+        batch.delete(couple_ref)
+
+    # 3. 해당 커플의 모든 다마고 삭제
+    if couple_id:
+        for doc in db.collection("damagos").where("coupleID", "==", couple_id).stream():
+            batch.delete(doc.reference)
+
+    # 4. 파트너 정보 초기화
+    if partner_uid:
+        partner_ref = db.collection("users").document(partner_uid)
+        batch.update(partner_ref, {
+            "coupleID": firestore.DELETE_FIELD,
+            "partnerUID": firestore.DELETE_FIELD,
+            "damagoID": firestore.DELETE_FIELD,
+            "anniversaryDate": firestore.DELETE_FIELD
+        })
+
+    batch.commit()
+
+    return https_fn.Response(
+        json.dumps({"message": "User withdrawn successfully"}),
+        mimetype="application/json"
+    )

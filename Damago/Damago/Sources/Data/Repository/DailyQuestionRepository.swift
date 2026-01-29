@@ -27,38 +27,82 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
         self.localDataSource = localDataSource
     }
     
-    func fetchDailyQuestion() async throws -> DailyQuestionDTO {
-        let token = try await tokenProvider.idToken()
-        do {
-            let dto: DailyQuestionDTO = try await networkProvider.request(DailyQuestionAPI.fetch(accessToken: token))
-            await saveToLocalAnswer(dto: dto)
-            return dto
-        } catch {
-            SharedLogger.interaction.error("API 조회 실패 로컬 캐시 조회: \(error.localizedDescription)")
-            
-            // Fallback: 로컬 캐시 조회
-            if let entity = try? await localDataSource.fetchLatestQuestion() {
-                return DailyQuestionDTO(
-                    questionID: entity.questionID,
-                    questionContent: entity.questionContent,
-                    user1Answer: entity.user1Answer,
-                    user2Answer: entity.user2Answer,
-                    isUser1: entity.isUser1
-                )
+    func fetchDailyQuestion() -> AsyncStream<DailyQuestionDTO> {
+        AsyncStream { continuation in
+            Task {
+                // 1. 로컬 데이터 조회 및 즉시 방출 (오늘 데이터인 경우만)
+                if let entity = try? await localDataSource.fetchLatestQuestion(),
+                   let lastUpdated = entity.lastUpdated,
+                   Calendar.current.isDateInToday(lastUpdated) {
+                    
+                    let dto = DailyQuestionDTO(
+                        questionID: entity.questionID,
+                        questionContent: entity.questionContent,
+                        user1Answer: entity.user1Answer,
+                        user2Answer: entity.user2Answer,
+                        bothAnswered: entity.bothAnswered,
+                        lastAnsweredAt: entity.lastAnsweredAt,
+                        isUser1: entity.isUser1
+                    )
+                    continuation.yield(dto)
+                }
+
+                // 2. 네트워크 데이터 조회 및 방출
+                do {
+                    let token = try await tokenProvider.idToken()
+                    let dto: DailyQuestionDTO = try await networkProvider.request(
+                        DailyQuestionAPI.fetch(accessToken: token)
+                    )
+                    await saveToLocalAnswer(dto: dto)
+                    continuation.yield(dto)
+                } catch {
+                    SharedLogger.interaction.error("Daily Question 네트워크 조회 실패: \(error.localizedDescription)")
+                }
+
+                continuation.finish()
             }
-            throw error
         }
     }
     
-    func submitAnswer(questionID: String, answer: String) async throws -> Bool {
-        let token = try await tokenProvider.idToken()
-        return try await networkProvider.requestSuccess(
-            DailyQuestionAPI.submit(
-                accessToken: token,
-                questionID: questionID,
-                answer: answer
-            )
+    func submitAnswer(questionID: String, answer: String, isUser1: Bool) async throws -> Bool {
+        let previousEntity = try await localDataSource.fetchQuestion(id: questionID)
+        let previousUser1Answer = previousEntity?.user1Answer
+        let previousUser2Answer = previousEntity?.user2Answer
+        let previousBothAnswered = previousEntity?.bothAnswered ?? false
+        let previousLastAnsweredAt = previousEntity?.lastAnsweredAt
+        
+        // 로컬 업데이트 수행
+        try await localDataSource.updateAnswer(
+            questionID: questionID,
+            user1Answer: isUser1 ? answer : previousUser1Answer,
+            user2Answer: isUser1 ? previousUser2Answer : answer,
+            bothAnswered: previousBothAnswered,
+            lastAnsweredAt: Date()
         )
+        
+        do {
+            let token = try await tokenProvider.idToken()
+            let success = try await networkProvider.requestSuccess(
+                DailyQuestionAPI.submit(
+                    accessToken: token,
+                    questionID: questionID,
+                    answer: answer
+                )
+            )
+            return success
+        } catch {
+            SharedLogger.interaction.error("API 제출 실패, 로컬 데이터 롤백: \(error.localizedDescription)")
+            
+            // 실패 시 롤백: 이전 상태로 복구
+            try await localDataSource.updateAnswer(
+                questionID: questionID,
+                user1Answer: previousUser1Answer,
+                user2Answer: previousUser2Answer,
+                bothAnswered: previousBothAnswered,
+                lastAnsweredAt: previousLastAnsweredAt
+            )
+            throw error
+        }
     }
 
     // swiftlint:disable trailing_closure
@@ -90,6 +134,8 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
                     questionContent: questionContent,
                     user1Answer: dto.user1Answer,
                     user2Answer: dto.user2Answer,
+                    bothAnswered: dto.bothAnswered,
+                    lastAnsweredAt: dto.lastAnsweredAt,
                     isUser1: isUser1
                 )
                 return .success(combinedDTO)
@@ -111,6 +157,8 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
                 questionContent: dto.questionContent,
                 user1Answer: dto.user1Answer,
                 user2Answer: dto.user2Answer,
+                bothAnswered: dto.bothAnswered ?? false,
+                lastAnsweredAt: dto.lastAnsweredAt,
                 isUser1: dto.isUser1
             )
             try await localDataSource.saveQuestion(entity)
@@ -125,7 +173,9 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
             try await localDataSource.updateAnswer(
                 questionID: questionID,
                 user1Answer: response.user1Answer,
-                user2Answer: response.user2Answer
+                user2Answer: response.user2Answer,
+                bothAnswered: response.bothAnswered ?? false,
+                lastAnsweredAt: response.lastAnsweredAt
             )
         } catch {
             SharedLogger.interaction.error("Local update failed: \(error)")
@@ -137,4 +187,5 @@ private struct FirestoreAnswerDTO: Decodable {
     let user1Answer: String?
     let user2Answer: String?
     let bothAnswered: Bool?
+    let lastAnsweredAt: Date?
 }

@@ -13,6 +13,9 @@ final class UseCaseAssembly: Assembly {
         container.register(FetchCodeUseCase.self) {
             FetchCodeUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }
+        container.register(FetchUserInfoUseCase.self) {
+            FetchUserInfoUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
         container.register(ConnectCoupleUseCase.self) {
             ConnectCoupleUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }
@@ -52,6 +55,45 @@ final class UseCaseAssembly: Assembly {
             UpdateUserUseCaseImpl(
                 userRepository: container.resolve(UserRepositoryProtocol.self)
             )
+        }
+        
+        container.register(FetchBalanceGameUseCase.self) {
+            FetchBalanceGameUseCaseImpl(
+                repository: container.resolve(BalanceGameRepositoryProtocol.self)
+            )
+        }
+        
+        container.register(SubmitBalanceGameChoiceUseCase.self) {
+            SubmitBalanceGameChoiceUseCaseImpl(
+                repository: container.resolve(BalanceGameRepositoryProtocol.self)
+            )
+        }
+        
+        container.register(ObserveBalanceGameAnswerUseCase.self) {
+            ObserveBalanceGameAnswerUseCaseImpl(
+                repository: container.resolve(BalanceGameRepositoryProtocol.self)
+            )
+        }
+
+        container.register(WithdrawUseCase.self) {
+            WithdrawUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
+        container.register(CheckConnectionUseCase.self) {
+            CheckConnectionUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
+        container.register(ManageDailyQuestionDraftAnswerUseCase.self) {
+            ManageDailyQuestionDraftAnswerUseCaseImpl(
+                localDataSource: container.resolve(DailyQuestionLocalDataSourceProtocol.self)
+            )
+        }
+        container.register(FetchDailyQuestionsHistoryUseCase.self) {
+            FetchDailyQuestionsHistoryUseCaseImpl(repository: container.resolve(HistoryRepositoryProtocol.self))
+        }
+        container.register(FetchBalanceGamesHistoryUseCase.self) {
+            FetchBalanceGamesHistoryUseCaseImpl(repository: container.resolve(HistoryRepositoryProtocol.self))
+        }
+        container.register(AdjustCoinAmountUseCase.self) {
+            AdjustCoinAmountUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }
     }
 }

@@ -20,6 +20,9 @@ final class SettingsViewController: UIViewController {
     private let alertConfirmSubject = PassthroughSubject<AlertActionType, Never>()
 
     private lazy var dataSource: SettingsDataSource = createDataSource()
+    
+    private let settingsTips = SettingsTip()
+    private var tipsTasks = Set<Task<Void, Never>>()
 
     init(viewModel: SettingsViewModel) {
         self.viewModel = viewModel
@@ -40,6 +43,17 @@ final class SettingsViewController: UIViewController {
         setupDelegate()
         bind()
         viewDidLoadSubject.send()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        setupTips()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        tipsTasks.forEach { $0.cancel() }
+        tipsTasks.removeAll()
     }
 
     private func setupNavigationBar() {
@@ -123,6 +137,16 @@ final class SettingsViewController: UIViewController {
             let vc = EditProfileViewController(viewModel: viewModel)
             navigationController?.pushViewController(vc, animated: true)
 
+        case .connection:
+            let fetchCodeUseCase = AppDIContainer.shared.resolve(FetchCodeUseCase.self)
+            let connectCoupleUseCase = AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
+            let viewModel = ConnectionViewModel(
+                fetchCodeUseCase: fetchCodeUseCase,
+                connectCoupleUseCase: connectCoupleUseCase
+            )
+            let vc = ConnectionViewController(viewModel: viewModel)
+            navigationController?.pushViewController(vc, animated: true)
+
         case .webLink(let url):
             guard let url else { return }
             UIApplication.shared.open(url)
@@ -136,7 +160,7 @@ final class SettingsViewController: UIViewController {
             present(alert, animated: true)
 
         case .error(let message):
-            let alert = UIAlertController(title: "에러", message: message, preferredStyle: .alert)
+            let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "확인", style: .default))
             present(alert, animated: true)
             
@@ -177,14 +201,14 @@ extension SettingsViewController: UITableViewDelegate {
 
                 content.image = UIImage(systemName: "heart.fill")
                 content.imageProperties.tintColor = .systemPink
-                content.text = "커플 연결"
+                content.text = "커플 연결 다시하기"
                 content.textProperties.color = .textPrimary
                 content.secondaryText = opponentName.isEmpty ? "상대방의 닉네임이 없어요!" : "\(opponentName)님과 연결됨"
                 content.secondaryTextProperties.color = .textSecondary
 
                 cell.contentConfiguration = content
                 cell.accessoryType = .disclosureIndicator
-                cell.selectionStyle = .none
+                cell.selectionStyle = .default
                 return cell
 
             case .toggle(let type, let isOn):
@@ -242,5 +266,34 @@ extension SettingsViewController: UITableViewDelegate {
         let section = SettingsSection(rawValue: indexPath.section)
         if section == .profile { return 100 }
         return UITableView.automaticDimension
+    }
+}
+
+extension SettingsViewController: UIPopoverPresentationControllerDelegate {
+    func adaptivePresentationStyle(
+        for controller: UIPresentationController,
+        traitCollection: UITraitCollection
+    ) -> UIModalPresentationStyle {
+        .none
+    }
+    
+    private func setupTips() {
+        tipsTasks.forEach { $0.cancel() }
+        tipsTasks.removeAll()
+
+        // 다이내믹 아일랜드(Live Activity) 토글 셀 찾기
+        let snapshot = dataSource.snapshot()
+        let items = snapshot.itemIdentifiers(inSection: .preferences)
+        
+        guard let liveActivityItem = items.first(where: {
+            if case .toggle(let type, _) = $0, type == .liveActivity { return true }
+            return false
+        }),
+        let indexPath = dataSource.indexPath(for: liveActivityItem),
+        let cell = mainView.tableView.cellForRow(at: indexPath) else { return }
+
+        tipsTasks.insert(Task { @MainActor in
+            await settingsTips.dynamicIsland.monitor(on: self, sourceItem: .view(cell))
+        })
     }
 }

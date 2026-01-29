@@ -16,7 +16,7 @@ final class SpriteAnimationView: UIView {
     private let spriteSheetName: String
     private let spriteSheetColumns: Int
     
-    var animationDuration: TimeInterval = 1.0
+    var frameDuration: TimeInterval = 0.2
     
     /// 포커스 시스템 지원 여부
     override var canBecomeFocused: Bool { false }
@@ -130,7 +130,7 @@ extension SpriteAnimationView {
 private extension SpriteAnimationView {
     /// 가로 1열, 정사각형 프레임 가정으로 columns 자동 감지
     static func autoDetectColumns(sheetName: String) -> Int? {
-        guard let image = UIImage(named: sheetName) else { return nil }
+        guard !sheetName.isEmpty, let image = UIImage(named: sheetName) else { return nil }
         let sheetSize = image.size
         let frameSize = sheetSize.height
         let columns = Int(sheetSize.width / frameSize)
@@ -139,6 +139,7 @@ private extension SpriteAnimationView {
     
     /// 스프라이트 시트에서 텍스처를 로드 (가로 1열 가정)
     func loadTextures(sheetName: String, columns: Int) -> [SKTexture]? {
+        guard !sheetName.isEmpty else { return nil }
         let sheet: SKTexture?
         if let image = UIImage(named: sheetName) {
             sheet = SKTexture(image: image)
@@ -188,7 +189,7 @@ private extension SpriteAnimationView {
     func createAnimationAction(with textures: [SKTexture], repeatCount: Int?) -> SKAction {
         let baseAnimation = SKAction.animate(
             with: textures,
-            timePerFrame: animationDuration / Double(textures.count)
+            timePerFrame: frameDuration
         )
         return repeatCount.map { SKAction.repeat(baseAnimation, count: $0) }
             ?? SKAction.repeatForever(baseAnimation)

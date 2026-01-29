@@ -12,6 +12,7 @@ import FirebaseFirestore
 import FirebaseMessaging
 import OSLog
 import UIKit
+import TipKit
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -32,7 +33,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             SharedLogger.firebase.error("키체인 그룹 에러: \(error.localizedDescription)")
         }
 
-        setupFirestoreEmulator()
+        setupFirebaseEmulators()
 
         // 2. iOS 기본 알림 센터(UNUserNotificationCenter) delegate 설정
         // -> 앱이 켜져 있을 때 알림을 어떻게 처리할지 결정하기 위함
@@ -65,6 +66,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         let assembler = AppAssembler()
         assembler.assemble(AppDIContainer.shared)
 
+        try? Tips.configure([.displayFrequency(.immediate), .datastoreLocation(.applicationDefault)])
+        #if DEBUG
+        try? Tips.resetDatastore()
+        #endif
         return true
     }
 
@@ -130,9 +135,9 @@ extension AppDelegate: MessagingDelegate {
         UserDefaults.standard.set(fcmToken, forKey: "fcmToken")
 
         NotificationCenter.default.post(name: .fcmTokenDidUpdate, object: nil)
-        
+
         guard let fcmToken else { return }
-        
+
         Task {
             let useCase = AppDIContainer.shared.resolve(UpdateFCMTokenUseCase.self)
             do {
@@ -146,13 +151,18 @@ extension AppDelegate: MessagingDelegate {
 }
 
 extension AppDelegate {
-    func setupFirestoreEmulator() {
-        #if DEBUG
+    func setupFirebaseEmulators() {
+#if DEBUG
         guard let localIP = ProcessInfo.processInfo.environment["USE_LOCAL_EMULATOR"] else { return }
+
+        // Firestore Emulator
         Firestore.firestore().useEmulator(withHost: localIP, port: 8080)
         let settings = Firestore.firestore().settings
         settings.isSSLEnabled = false
         Firestore.firestore().settings = settings
-        #endif
+
+        // Auth Emulator
+        Auth.auth().useEmulator(withHost: localIP, port: 9099)
+#endif
     }
 }

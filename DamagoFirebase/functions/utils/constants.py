@@ -8,7 +8,7 @@ IS_EMULATOR = bool(os.environ.get("FUNCTIONS_EMULATOR"))
 PROJECT_ID = os.environ.get("GCLOUD_PROJECT", "damago-dev")
 
 # Cloud Tasks 설정
-LOCATION = "us-central1"
+LOCATION = "asia-northeast3"
 QUEUE_NAME = "make-hungry-queue"
 HUNGER_DELAY_SECONDS = 4 * 60 * 60 # 4시간
 
@@ -54,5 +54,43 @@ def get_level_up_reward(level: int) -> int:
     """
     if level % 5 != 0:
         return 0
-    
+
     return 50 + (level * 10)
+
+
+# DamagoAttributes.DamagoType.isAvailable == true 인 타입 (동기화 유지)
+AVAILABLE_PET_TYPES = [
+    "CatSiamese",
+    "CatTiger",
+    "CatBatman",
+    "CatChristmas",
+    "CatEgypt",
+    "CatOddEye",
+    "CatThreeColored",
+    "CatWizard",
+]
+
+# DamagoType rawValue → 기본 이름 (DamagoAttributes.DamagoType.defaultName과 동기화)
+PET_TYPE_DEFAULT_NAMES = {
+    "CatSiamese": "샴",
+    "CatTiger": "호랑이",
+    "CatBatman": "배트맨",
+    "CatChristmas": "크리스마스",
+    "CatEgypt": "이집트",
+    "CatOddEye": "오드아이",
+    "CatThreeColored": "삼색",
+    "CatWizard": "위자드",
+    "Dog": "강아지",
+    "Fish": "물고기",
+    "Lizard": "도마뱀",
+    "Owl": "부엉이",
+    "Parrot": "앵무새",
+    "Rabbit": "토끼",
+}
+
+
+def get_default_pet_name(pet_type: str | None) -> str:
+    """pet_type에 맞는 기본 이름을 반환합니다. 없으면 '다마고'."""
+    if not pet_type:
+        return "다마고"
+    return PET_TYPE_DEFAULT_NAMES.get(pet_type, "다마고")

@@ -113,9 +113,16 @@ struct FeedAppIntent: AppIntent, LiveActivityIntent {
 
     /// 서버에서 받은 PetStatus로 ContentState를 재구성하고, 화면을 idle로 복귀시킵니다.
     private func applyPetStatusAndReturnIdle(_ petStatus: DamagoStatusResponse) async {
+        guard let petType = DamagoType(rawValue: petStatus.petType) else {
+            SharedLogger.liveActivityAppIntent
+                .error("Invalid petType from server: \(petStatus.petType)")
+            await showTransientErrorAndReturnIdle()
+            return
+        }
+
         await updateState { state in
             state = DamagoAttributes.ContentState(
-                petType: petStatus.petType,
+                petType: petType,
                 isHungry: petStatus.isHungry,
                 statusMessage: petStatus.statusMessage,
                 level: petStatus.level,

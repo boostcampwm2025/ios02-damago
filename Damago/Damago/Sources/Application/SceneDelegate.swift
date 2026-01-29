@@ -6,8 +6,8 @@
 //
 
 import ActivityKit
-import DamagoNetwork
 import AppIntents
+import DamagoNetwork
 import FirebaseAuth
 import OSLog
 import UIKit
@@ -40,6 +40,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: windowScene)
         self.window = window
+        let initialRootVC = UIViewController()
+        initialRootVC.view.backgroundColor = .background
+        window.rootViewController = initialRootVC
         if let urlContext = connectionOptions.urlContexts.first {
             handleURL(urlContext.url)
         } else {
@@ -61,15 +64,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         else { return }
 
         if Auth.auth().currentUser != nil {
-            let fetchCodeUseCase = AppDIContainer.shared.resolve(FetchCodeUseCase.self)
-            let connectCoupleUseCase = AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
-            let connectionVM = ConnectionViewModel(
-                fetchCodeUseCase: fetchCodeUseCase,
-                connectCoupleUseCase: connectCoupleUseCase,
-                opponentCode: code
-            )
-            let connectionVC = ConnectionViewController(viewModel: connectionVM)
-            window?.rootViewController = connectionVC
+            navigateToConnection(with: code)
         } else {
             let signInVM = SignInViewModel(
                 signInUseCase: AppDIContainer.shared.resolve(SignInUseCase.self),
@@ -83,18 +78,20 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func setupRootViewController() {
+        let checkConnectionUseCase = AppDIContainer.shared.resolve(CheckConnectionUseCase.self)
+
         if Auth.auth().currentUser != nil {
-            if UserDefaults.standard.bool(forKey: "isConnected") {
-                startGlobalMonitoring()
-                let tabBarController = TabBarViewController()
-                window?.rootViewController = tabBarController
-            } else {
-                let connectionVM = ConnectionViewModel(
-                    fetchCodeUseCase: AppDIContainer.shared.resolve(FetchCodeUseCase.self),
-                    connectCoupleUseCase: AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
-                )
-                let connectionVC = ConnectionViewController(viewModel: connectionVM)
-                window?.rootViewController = connectionVC
+            Task {
+                do {
+                    let isConnected = try await checkConnectionUseCase.execute()
+                    if isConnected {
+                        navigateToProfileSettingIfNeeded()
+                    } else {
+                        navigateToConnection()
+                    }
+                } catch {
+                    navigateToConnection()
+                }
             }
         } else {
             let signInVM = SignInViewModel(signInUseCase: AppDIContainer.shared.resolve(SignInUseCase.self))
@@ -115,14 +112,41 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    // 사용자가 Foreground에 돌아왔을 때 서버와 동기화
-    func sceneDidBecomeActive(_ scene: UIScene) {
-        LiveActivityManager.shared.synchronizeActivity()
-    }
-
     private func startGlobalMonitoring() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
         globalStore.startMonitoring(uid: uid)
+    }
+    
+    private func navigateToConnection(with code: String? = nil) {
+        let fetchCodeUseCase = AppDIContainer.shared.resolve(FetchCodeUseCase.self)
+        let connectCoupleUseCase = AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
+        let connectionVM = ConnectionViewModel(
+            fetchCodeUseCase: fetchCodeUseCase,
+            connectCoupleUseCase: connectCoupleUseCase,
+            opponentCode: code
+        )
+        let connectionVC = ConnectionViewController(viewModel: connectionVM)
+        let navigationController = UINavigationController(rootViewController: connectionVC)
+        window?.rootViewController = navigationController
+    }
+    
+    private func navigateToProfileSettingIfNeeded() {
+        let isOnboardingCompleted = UserDefaults.standard.bool(forKey: "isOnboardingCompleted")
+        if isOnboardingCompleted {
+            startGlobalMonitoring()
+            let tabBarController = TabBarViewController()
+            window?.rootViewController = tabBarController
+        } else {
+            let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
+            let vm = ProfileSettingViewModel(
+                updateUserUseCase: updateUserUseCase,
+                userRepository: userRepository
+            )
+            let vc = ProfileSettingViewController(viewModel: vm)
+            let navigationController = UINavigationController(rootViewController: vc)
+            window?.rootViewController = navigationController
+        }
     }
 }

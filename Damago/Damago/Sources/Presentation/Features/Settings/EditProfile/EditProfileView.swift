@@ -155,7 +155,7 @@ final class EditProfileView: UIView {
         NSLayoutConstraint.activate(
             [
                 // ScrollView & Main Button
-                scrollView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
+                scrollView.topAnchor.constraint(equalTo: topAnchor),
                 scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
                 scrollView.bottomAnchor.constraint(equalTo: saveButton.topAnchor, constant: -.spacingM),
@@ -307,14 +307,14 @@ extension EditProfileView {
         )
         
         let disabledConfig = CTAButton.Configuration(
-            backgroundColor: .textTertiary,
+            backgroundColor: .disabled,
             foregroundColor: .white,
             image: nil,
             title: "저장하기",
             subtitle: nil
         )
         
-        saveButton.configure(active: activeConfig, disabled: disabledConfig)
+        saveButton.configure(enabled: activeConfig, disabled: disabledConfig)
         saveButton.isEnabled = isEnabled
     }
 

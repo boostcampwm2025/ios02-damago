@@ -14,9 +14,26 @@ final class CTAButton: UIButton {
         let image: UIImage?
         let title: String
         let subtitle: String?
+        let font: UIFont?
+
+        init(
+            backgroundColor: UIColor,
+            foregroundColor: UIColor,
+            image: UIImage? = nil,
+            title: String,
+            subtitle: String? = nil,
+            font: UIFont? = nil
+        ) {
+            self.backgroundColor = backgroundColor
+            self.foregroundColor = foregroundColor
+            self.image = image
+            self.title = title
+            self.subtitle = subtitle
+            self.font = font
+        }
     }
 
-    private var activeConfig: Configuration?
+    private var enabledConfig: Configuration?
     private var disabledConfig: Configuration?
 
     override init(frame: CGRect) {
@@ -37,25 +54,29 @@ final class CTAButton: UIButton {
         config.background.cornerRadius = .mediumButton
         config.cornerStyle = .fixed
         self.configuration = config
+        self.configurationUpdateHandler = { button in
+            guard let ctaButton = button as? CTAButton else { return }
+            ctaButton.updateButtonStyle()
+        }
         self.translatesAutoresizingMaskIntoConstraints = false
-
         self.heightAnchor.constraint(equalToConstant: 56).isActive = true
     }
 
-    func configure(active: Configuration, disabled: Configuration) {
-        self.activeConfig = active
+    func configure(enabled: Configuration, disabled: Configuration) {
+        self.enabledConfig = enabled
         self.disabledConfig = disabled
         updateButtonStyle()
     }
     
     func setTitle(_ title: String) {
-        if let active = activeConfig {
-            activeConfig = Configuration(
-                backgroundColor: active.backgroundColor,
-                foregroundColor: active.foregroundColor,
-                image: active.image,
+        if let enabled = enabledConfig {
+            enabledConfig = Configuration(
+                backgroundColor: enabled.backgroundColor,
+                foregroundColor: enabled.foregroundColor,
+                image: enabled.image,
                 title: title,
-                subtitle: active.subtitle
+                subtitle: enabled.subtitle,
+                font: enabled.font
             )
         }
         
@@ -65,7 +86,8 @@ final class CTAButton: UIButton {
                 foregroundColor: disabled.foregroundColor,
                 image: disabled.image,
                 title: title,
-                subtitle: disabled.subtitle
+                subtitle: disabled.subtitle,
+                font: disabled.font
             )
         }
         
@@ -77,23 +99,25 @@ final class CTAButton: UIButton {
     }
 
     private func updateButtonStyle() {
-        guard let style = isEnabled ? activeConfig : disabledConfig else { return }
+        guard let style = isEnabled ? enabledConfig : disabledConfig else { return }
 
         var updatedConfig = self.configuration
 
-        updatedConfig?.baseBackgroundColor = style.backgroundColor
+        updatedConfig?.background.backgroundColor = style.backgroundColor
         updatedConfig?.baseForegroundColor = style.foregroundColor
 
         var titleContainer = AttributeContainer()
-        titleContainer.font = .title3
+        titleContainer.font = style.font ?? .title3
         titleContainer.foregroundColor = style.foregroundColor
         updatedConfig?.attributedTitle = AttributedString(style.title, attributes: titleContainer)
 
         if let subtitleText = style.subtitle {
             var subtitleContainer = AttributeContainer()
             subtitleContainer.font = .body3
-            subtitleContainer.foregroundColor = style.foregroundColor.withAlphaComponent(0.6)
+            subtitleContainer.foregroundColor = style.foregroundColor
             updatedConfig?.attributedSubtitle = AttributedString(subtitleText, attributes: subtitleContainer)
+        } else {
+            updatedConfig?.attributedSubtitle = nil
         }
 
         updatedConfig?.image = style.image

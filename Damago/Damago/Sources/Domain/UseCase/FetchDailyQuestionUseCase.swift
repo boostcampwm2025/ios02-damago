@@ -6,7 +6,7 @@
 //
 
 protocol FetchDailyQuestionUseCase {
-    func execute() async throws -> DailyQuestionUIModel
+    func execute() -> AsyncStream<DailyQuestionUIModel>
 }
 
 final class FetchDailyQuestionUseCaseImpl: FetchDailyQuestionUseCase {
@@ -16,8 +16,14 @@ final class FetchDailyQuestionUseCaseImpl: FetchDailyQuestionUseCase {
         self.dailyQuestionRepository = dailyQuestionRepository
     }
     
-    func execute() async throws -> DailyQuestionUIModel {
-        let dto = try await dailyQuestionRepository.fetchDailyQuestion()
-        return dto.toDomain()
+    func execute() -> AsyncStream<DailyQuestionUIModel> {
+        AsyncStream { continuation in
+            Task {
+                for await dto in dailyQuestionRepository.fetchDailyQuestion() {
+                    continuation.yield(dto.toDomain())
+                }
+                continuation.finish()
+            }
+        }
     }
 }

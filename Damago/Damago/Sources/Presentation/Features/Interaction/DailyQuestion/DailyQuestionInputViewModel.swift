@@ -25,13 +25,26 @@ final class DailyQuestionInputViewModel: ViewModel {
     
     @Published private var state: State
     private let submitDailyQuestionAnswerUseCase: SubmitDailyQuestionAnswerUseCase
+    private let manageDraftAnswerUseCase: ManageDailyQuestionDraftAnswerUseCase
     private var cancellables = Set<AnyCancellable>()
+    
+    private var currentQuestionID: String {
+        state.uiModel.questionID
+    }
+    
+    private var isUser1: Bool {
+        state.uiModel.isUser1
+    }
     
     init(
         uiModel: DailyQuestionUIModel,
         uiModelPublisher: AnyPublisher<DailyQuestionUIModel, Never>,
-        submitDailyQuestionAnswerUseCase: SubmitDailyQuestionAnswerUseCase
+        submitDailyQuestionAnswerUseCase: SubmitDailyQuestionAnswerUseCase,
+        manageDraftAnswerUseCase: ManageDailyQuestionDraftAnswerUseCase
     ) {
+        self.submitDailyQuestionAnswerUseCase = submitDailyQuestionAnswerUseCase
+        self.manageDraftAnswerUseCase = manageDraftAnswerUseCase
+        
         let initialText: String
         if case .result(let resultState) = uiModel {
             initialText = resultState.myAnswer.content ?? ""
@@ -39,11 +52,23 @@ final class DailyQuestionInputViewModel: ViewModel {
             initialText = ""
         }
         
-        self.submitDailyQuestionAnswerUseCase = submitDailyQuestionAnswerUseCase
         self.state = State(
             uiModel: uiModel,
             currentText: initialText
         )
+        
+        // 저장된 임시 답변이 있으면 복원
+        if case .input(let inputState) = uiModel {
+            Task { @MainActor in
+                if let draftAnswer =
+                    try? await manageDraftAnswerUseCase.loadDraftAnswer(questionID: inputState.questionID),
+                   !draftAnswer.isEmpty {
+                    self.state.currentText = draftAnswer
+                    self.state.textCount = "\(draftAnswer.count) / 200"
+                    self.state.isSubmitButtonEnabled = !draftAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                }
+            }
+        }
         
         uiModelPublisher
             .receive(on: DispatchQueue.main)
@@ -79,17 +104,48 @@ final class DailyQuestionInputViewModel: ViewModel {
         state.currentText = limitedText
         state.textCount = "\(limitedText.count) / 200"
         state.isSubmitButtonEnabled = !limitedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        
+        // 답변 변경 시 자동 저장
+        saveDraftAnswer()
     }
     
     private func handleSubmit() {
-        guard case .input(let inputState) = state.uiModel else { return }
         guard !state.isLoading else { return }
         
-        let questionID = inputState.questionID
+        let questionID = currentQuestionID
         let answer = state.currentText
+        let isUser1 = self.isUser1
+        let questionContent = state.uiModel.questionContent
+        let originalUIModel = state.uiModel
         
         state.isLoading = true
         state.isSubmitButtonEnabled = false
+        
+        let optimisticResultModel = DailyQuestionUIModel.result(
+            .init(
+                questionID: questionID,
+                questionContent: questionContent,
+                myAnswer: .init(
+                    type: .unlocked,
+                    title: "나의 답변",
+                    content: answer,
+                    placeholderText: nil,
+                    iconName: nil
+                ),
+                opponentAnswer: .init(
+                    type: .locked,
+                    title: "상대의 답변",
+                    content: nil,
+                    placeholderText: "상대방이 아직 고민 중이에요...",
+                    iconName: "hourglass"
+                ),
+                buttonTitle: "답변 확인",
+                isUser1: isUser1,
+                bothAnswered: false,
+                lastAnsweredAt: Date()
+            )
+        )
+        state.uiModel = optimisticResultModel
         
         Task {
             defer {
@@ -99,15 +155,38 @@ final class DailyQuestionInputViewModel: ViewModel {
             do {
                 try await submitDailyQuestionAnswerUseCase.execute(
                     questionID: questionID,
-                    answer: answer
+                    answer: answer,
+                    isUser1: isUser1
                 )
+                
+                // 답변 제출 성공 시 저장된 임시 답변 삭제
+                try await manageDraftAnswerUseCase.deleteDraftAnswer(questionID: questionID)
                 
             } catch {
                 SharedLogger.interaction.error("답변 전송 실패: \(error.localizedDescription)")
                 
                 await MainActor.run {
+                    self.state.uiModel = originalUIModel
                     self.state.isSubmitButtonEnabled = true
                 }
+            }
+        }
+    }
+    
+    // MARK: - Draft Answer Management
+    
+    func saveDraftAnswer() {
+        let questionID = currentQuestionID
+        let trimmedText = state.currentText.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        Task { @MainActor in
+            do {
+                try await manageDraftAnswerUseCase.saveDraftAnswer(
+                    questionID: questionID,
+                    draftAnswer: trimmedText.isEmpty ? nil : trimmedText
+                )
+            } catch {
+                SharedLogger.interaction.error("임시 답변 저장 실패: \(error.localizedDescription)")
             }
         }
     }

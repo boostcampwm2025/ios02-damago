@@ -22,7 +22,8 @@ final class ConnectionViewModel: ViewModel {
         var opponentCode = ""
         var route: Pulse<Route>?
         var pasteboardCode: Pulse<String>?
-        var isLoading = false
+        var isLoading = true
+        var loadingMessage = ""
 
         var isConnectButtonEnabled: Bool { !opponentCode.isEmpty && !isLoading }
     }
@@ -30,7 +31,7 @@ final class ConnectionViewModel: ViewModel {
     enum Route {
         case alert(message: String)
         case activity(url: URL)
-        case home
+        case editProfile
     }
 
     @Published private var state: State
@@ -106,29 +107,32 @@ final class ConnectionViewModel: ViewModel {
     }
 
     private func resolveMyCode() async {
+        state.loadingMessage = "코드 불러오는 중..."
+        state.isLoading = true
+        defer { state.isLoading = false }
+
         do {
-            let code = try await fetchCodeUseCase.execute()
-            state.myCode = code
+            let codes = try await fetchCodeUseCase.execute()
+            state.myCode = codes.myCode
+
+            if let partnerCode = codes.partnerCode {
+                state.opponentCode = partnerCode
+            }
         } catch {
-            state.route = .init(.alert(message: error.localizedDescription))
+            state.route = .init(.alert(message: error.userFriendlyMessage))
         }
     }
 
     private func connect() async {
+        state.loadingMessage = "연결 중..."
         state.isLoading = true
+        defer { state.isLoading = false }
         
         do {
             try await connectCoupleUseCase.execute(code: state.opponentCode)
-            UserDefaults.standard.setValue(true, forKey: "isConnected")
-            
-            // 커플 연결 성공 시 Live Activity 시작
-            LiveActivityManager.shared.synchronizeActivity()
-            
-            state.isLoading = false
-            state.route = .init(.home)
+            state.route = .init(.editProfile)
         } catch {
-            state.isLoading = false
-            state.route = .init(.alert(message: error.localizedDescription))
+            state.route = .init(.alert(message: error.userFriendlyMessage))
         }
     }
 

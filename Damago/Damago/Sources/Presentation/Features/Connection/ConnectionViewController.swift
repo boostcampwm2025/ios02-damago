@@ -31,17 +31,33 @@ final class ConnectionViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupNavigationBar()
         setupKeyboard()
+        
+        let shareButton = UIBarButtonItem(
+            image: UIImage(systemName: "square.and.arrow.up"),
+            style: .plain,
+            target: nil,
+            action: nil
+        )
+        navigationItem.rightBarButtonItem = shareButton
+
         let input = ConnectionViewModel.Input(
             viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
             copyButtonDidTap: mainView.copyButton.tapPublisher,
             textfieldValueDidChange: mainView.opponentCodeTextField.textPublisher,
-            shareButtonDidTap: mainView.shareButton.tapPublisher,
+            shareButtonDidTap: shareButton.tapPublisher,
             connectButtonDidTap: mainView.connectButton.tapPublisher
         )
         let output = viewModel.transform(input)
         bind(output)
         viewDidLoadPublisher.send()
+    }
+    
+    private func setupNavigationBar() {
+        navigationController?.setNavigationBarHidden(false, animated: true)
+        navigationItem.hidesBackButton = true
+        navigationController?.navigationBar.tintColor = .damagoPrimary
     }
     
     private func setupKeyboard() {
@@ -83,8 +99,16 @@ final class ConnectionViewController: UIViewController {
                     presentAlert(with: message)
                 case let .activity(url):
                     presentActivity(with: url)
-                case .home:
-                    replaceRootVC()
+                case .editProfile:
+                    let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+                    let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
+                    let vm = ProfileSettingViewModel(
+                        updateUserUseCase: updateUserUseCase,
+                        userRepository: userRepository
+                    )
+                    let vc = ProfileSettingViewController(viewModel: vm)
+                    let navigationController = UINavigationController(rootViewController: vc)
+                    self.view.window?.replaceRootViewController(with: navigationController)
                 }
             }
             .store(in: &cancellables)
@@ -98,11 +122,11 @@ final class ConnectionViewController: UIViewController {
             .store(in: &cancellables)
 
         output
-            .mapForUI { $0.isLoading }
-            .sink { [weak self] isLoading in
+            .mapForUI { LoadingState(isLoading: $0.isLoading, message: $0.loadingMessage) }
+            .sink { [weak self] state in
                 guard let self else { return }
-                if isLoading {
-                    progressView.show(in: view, message: "연결 중...")
+                if state.isLoading {
+                    progressView.show(in: view, message: state.message)
                 } else {
                     progressView.hide()
                 }
@@ -111,7 +135,7 @@ final class ConnectionViewController: UIViewController {
     }
 
     private func presentAlert(with message: String) {
-        let alert = UIAlertController(title: "에러", message: message, preferredStyle: .alert)
+        let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
         let confirmAction = UIAlertAction(title: "확인", style: .default)
         alert.addAction(confirmAction)
         present(alert, animated: true)
@@ -172,5 +196,12 @@ extension ConnectionViewController: UITextFieldDelegate {
         textField.sendActions(for: .editingChanged)
         
         return false
+    }
+}
+
+private extension ConnectionViewController {
+    struct LoadingState: Equatable {
+        let isLoading: Bool
+        let message: String
     }
 }

@@ -12,7 +12,7 @@ from services import auth_service, pet_service, push_service, user_service, seed
 # traffic spikes by instead downgrading performance. This limit is a per-function
 # limit. You can override the limit for each function using the max_instances
 # parameter in the decorator, e.g. @https_fn.on_request(max_instances=5).
-set_global_options(max_instances=10)
+set_global_options(max_instances=10, region="asia-northeast3")
 initialize_app()
 
 @https_fn.on_request()
@@ -60,12 +60,36 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
     return user_service.update_user_info(req)
 
 @https_fn.on_request()
+def adjust_coin(req: https_fn.Request) -> https_fn.Response:
+    return user_service.adjust_coin(req)
+
+@https_fn.on_request()
+def withdraw_user(req: https_fn.Request) -> https_fn.Response:
+    return auth_service.withdraw_user(req)
+
+@https_fn.on_request()
+def check_couple_connection(req: https_fn.Request) -> https_fn.Response:
+    return user_service.check_couple_connection(req)
+
+@https_fn.on_request()
 def fetch_daily_question(req: https_fn.Request) -> https_fn.Response:
     return couple_interaction_service.fetch_daily_question(req)
 
 @https_fn.on_request()
+def fetch_history(req: https_fn.Request) -> https_fn.Response:
+    return couple_interaction_service.fetch_history(req)
+
+@https_fn.on_request()
 def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
     return couple_interaction_service.submit_daily_question(req)
+
+@https_fn.on_request()
+def fetch_balance_game(req: https_fn.Request) -> https_fn.Response:
+    return couple_interaction_service.fetch_balance_game(req)
+
+@https_fn.on_request()
+def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
+    return couple_interaction_service.submit_balance_game(req)
 
 # ========================================
 # 시드 데이터 관리 (관리자 전용)

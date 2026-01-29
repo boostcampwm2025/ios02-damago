@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Combine
 import DamagoNetwork
 
 enum TabItem: String, CaseIterable {
@@ -50,11 +51,24 @@ enum TabItem: String, CaseIterable {
 
 final class TabBarViewController: UITabBarController {
     private var tabItems: [TabItem] = TabItem.allCases
-
+    private var cancellables = Set<AnyCancellable>()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViewControllers()
         setupTabBar()
+        setupForegroundNotification()
+    }
+
+    private func setupForegroundNotification() {
+        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                if self.view.window != nil {
+                    LiveActivityManager.shared.synchronizeActivity()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private func setupTabBar() {
@@ -89,44 +103,62 @@ final class TabBarViewController: UITabBarController {
     private func getViewController(for tabItem: TabItem) -> UIViewController {
         switch tabItem {
         case .collection:
-            return UIViewController()
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
+            let fetchUserInfoUseCase = AppDIContainer.shared.resolve(FetchUserInfoUseCase.self)
+            let viewModel = CollectionViewModel(
+                updateUserUseCase: updateUserUseCase,
+                fetchUserInfoUseCase: fetchUserInfoUseCase
+            )
+            return CollectionViewController(viewModel: viewModel)
         case .home:
             let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
             let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
             let petRepository = AppDIContainer.shared.resolve(PetRepositoryProtocol.self)
             let pushRepository = AppDIContainer.shared.resolve(PushRepositoryProtocol.self)
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
 
             let vm = HomeViewModel(
                 globalStore: globalStore,
                 userRepository: userRepository,
                 petRepository: petRepository,
-                pushRepository: pushRepository
+                pushRepository: pushRepository,
+                updateUserUseCase: updateUserUseCase
             )
             let vc = HomeViewController(viewModel: vm)
             return vc
         case .interaction:
-            let fetchUseCase = AppDIContainer.shared.resolve(FetchDailyQuestionUseCase.self)
-            let observeUseCase = AppDIContainer.shared.resolve(ObserveDailyQuestionAnswerUseCase.self)
+            let fetchDailyQuestionUseCase = AppDIContainer.shared.resolve(FetchDailyQuestionUseCase.self)
+            let observeDailyQuestionAnswerUseCase = AppDIContainer.shared.resolve(
+                ObserveDailyQuestionAnswerUseCase.self
+            )
+            let fetchBalanceGameUseCase = AppDIContainer.shared.resolve(FetchBalanceGameUseCase.self)
+            let observeBalanceGameAnswerUseCase = AppDIContainer.shared.resolve(ObserveBalanceGameAnswerUseCase.self)
+            let submitBalanceGameChoiceUseCase = AppDIContainer.shared.resolve(SubmitBalanceGameChoiceUseCase.self)
             let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
             let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
-            
+
             let vm = InteractionViewModel(
-                fetchDailyQuestionUseCase: fetchUseCase,
-                observeDailyQuestionAnswerUseCase: observeUseCase,
+                fetchDailyQuestionUseCase: fetchDailyQuestionUseCase,
+                observeDailyQuestionAnswerUseCase: observeDailyQuestionAnswerUseCase,
+                fetchBalanceGameUseCase: fetchBalanceGameUseCase,
+                observeBalanceGameAnswerUseCase: observeBalanceGameAnswerUseCase,
+                submitBalanceGameChoiceUseCase: submitBalanceGameChoiceUseCase,
                 userRepository: userRepository,
                 globalStore: globalStore
             )
             let vc = InteractionViewController(viewModel: vm)
             return vc
         case .game:
-            return UIViewController()
+            return MiniGameViewController()
         case .setting:
             let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
             let signOutUseCase = AppDIContainer.shared.resolve(SignOutUseCase.self)
+            let withdrawUseCase = AppDIContainer.shared.resolve(WithdrawUseCase.self)
             let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
             let viewModel = SettingsViewModel(
                 globalStore: globalStore,
                 signOutUseCase: signOutUseCase,
+                withdrawUseCase: withdrawUseCase,
                 updateUserUseCase: updateUserUseCase
             )
             let vc = SettingsViewController(viewModel: viewModel)

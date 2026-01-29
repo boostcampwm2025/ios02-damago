@@ -12,6 +12,7 @@ final class InteractionView: UIView {
         let scrollView = UIScrollView()
         scrollView.showsVerticalScrollIndicator = true
         scrollView.alwaysBounceVertical = true
+        scrollView.contentInsetAdjustmentBehavior = .never
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         return scrollView
     }()
@@ -24,26 +25,13 @@ final class InteractionView: UIView {
         stackView.distribution = .fill
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.isLayoutMarginsRelativeArrangement = true
-        stackView.layoutMargins = UIEdgeInsets(top: 0, left: .spacingM, bottom: .spacingXL, right: .spacingM)
+        stackView.layoutMargins = UIEdgeInsets(top: .spacingS, left: .spacingM, bottom: .spacingXL, right: .spacingM)
         return stackView
     }()
     
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 34, weight: .bold)
-        label.textColor = .textPrimary
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private let subtitleLabel: UILabel = {
-        let label = UILabel()
-        label.font = .body3
-        label.textColor = .textTertiary
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
+    private let titleLabel: UILabel = .makeScreenTitle()
+
+    private let subtitleLabel: UILabel = .makeScreenSubtitle()
 
     lazy var questionCardView = DailyQuestionCardView()
     lazy var balanceGameCardView: UIView = makeCardView()
@@ -58,7 +46,7 @@ final class InteractionView: UIView {
             subtitle: nil
         )
         
-        button.configure(active: config, disabled: config)
+        button.configure(enabled: config, disabled: config)
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOpacity = 0.05
         button.layer.shadowOffset = CGSize(width: 0, height: 4)
@@ -110,10 +98,10 @@ final class InteractionView: UIView {
     private func setupConstraints() {
         // ScrollView Layout
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: topAnchor),
+            scrollView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor),
             
             contentStackView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
             contentStackView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
@@ -137,6 +125,22 @@ final class InteractionView: UIView {
         view.layer.shadowOffset = CGSize(width: 0, height: 10)
         view.layer.shadowRadius = 20
         view.translatesAutoresizingMaskIntoConstraints = false
+        
+        let label = UILabel()
+        label.text = "\"질문을 불러오는 중...\""
+        label.font = .body1
+        label.textColor = .textSecondary
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: .spacingL),
+            label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -.spacingL)
+        ])
+        
         return view
     }
 }

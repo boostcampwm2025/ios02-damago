@@ -33,8 +33,15 @@ final class GlobalStore: GlobalStoreProtocol {
         stopMonitoring()
 
         observeGlobalStateUseCase.execute(uid: uid)
-            .sink { [weak self] newState in
-                self?.globalStateSubject.send(newState)
+            .scan((nil, GlobalState.empty)) { (pair: (GlobalState?, GlobalState), newState: GlobalState) in
+                (pair.1, newState)
+            }
+            .sink { [weak self] oldState, newState in
+                guard let self = self else { return }
+                if oldState?.coupleID != nil, newState.coupleID == nil {
+                    NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
+                }
+                self.globalStateSubject.send(newState)
             }
             .store(in: &cancellables)
     }

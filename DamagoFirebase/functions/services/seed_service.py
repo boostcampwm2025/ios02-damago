@@ -90,7 +90,7 @@ def seed_daily_questions(req: https_fn.Request) -> https_fn.Response:
     
     사용법:
         # 개발 환경 (에뮬레이터) - 인증 불필요
-        curl -X POST http://localhost:5001/damago-dev-26/us-central1/seed_daily_questions
+        curl -X POST http://localhost:5001/damago-dev-26/asia-northeast3/seed_daily_questions
         
         # 프로덕션 - Authorization 헤더 필요
         curl -X POST https://your-function-url/seed_daily_questions \
@@ -190,7 +190,7 @@ def seed_balance_games(req: https_fn.Request) -> https_fn.Response:
     
     사용법:
         # 개발 환경 (에뮬레이터) - 인증 불필요
-        curl -X POST http://localhost:5001/damago-dev-26/us-central1/seed_balance_games
+        curl -X POST http://localhost:5001/damago-dev-26/asia-northeast3/seed_balance_games
         
         # 프로덕션 - Authorization 헤더 필요
         curl -X POST https://your-function-url/seed_balance_games \
@@ -291,11 +291,11 @@ def clear_seed_data(req: https_fn.Request) -> https_fn.Response:
     
     사용법:
         # 모든 시드 데이터 삭제 (dailyQuestions + balanceGames)
-        curl -X DELETE http://localhost:5001/damago-dev-26/us-central1/clear_seed_data
+        curl -X DELETE http://localhost:5001/damago-dev-26/asia-northeast3/clear_seed_data
         
         # 특정 컬렉션만 삭제
-        curl -X DELETE "http://localhost:5001/damago-dev-26/us-central1/clear_seed_data?collection=dailyQuestions"
-        curl -X DELETE "http://localhost:5001/damago-dev-26/us-central1/clear_seed_data?collection=balanceGames"
+        curl -X DELETE "http://localhost:5001/damago-dev-26/asia-northeast3/clear_seed_data?collection=dailyQuestions"
+        curl -X DELETE "http://localhost:5001/damago-dev-26/asia-northeast3/clear_seed_data?collection=balanceGames"
     """
     
     # 관리자 권한 확인 (에뮬레이터에서는 자동 통과)

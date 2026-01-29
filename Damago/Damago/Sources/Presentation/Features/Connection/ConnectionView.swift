@@ -146,17 +146,6 @@ final class ConnectionView: UIView {
         return button
     }()
 
-    let shareButton: CircularActionButton = {
-        let button = CircularActionButton()
-        button.configure(
-            backgroundColor: .damagoPrimary,
-            systemName: "square.and.arrow.up",
-            tintColor: .white
-        )
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-
     init() {
         super.init(frame: .zero)
         setupUI()
@@ -187,13 +176,23 @@ final class ConnectionView: UIView {
         [opponentCodeTextField]
             .forEach(opponentCodeContainer.addSubview)
 
-        [titleLabel, subtitleLabel, cardContainer, shareButton, connectButton]
+        [titleLabel, subtitleLabel, cardContainer, connectButton]
             .forEach(addSubview)
     }
 
     private func setupConstraints() {
         NSLayoutConstraint.activate(
             [
+                titleLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+                titleLabel.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: .spacingM),
+
+                subtitleLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+                subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: .spacingL),
+
+                cardContainer.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: .spacingL),
+                cardContainer.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
+                cardContainer.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
+                
                 cardHeaderLabel.topAnchor.constraint(equalTo: cardContainer.topAnchor, constant: .spacingM),
                 cardHeaderLabel.centerXAnchor.constraint(equalTo: cardContainer.centerXAnchor),
                 
@@ -216,7 +215,7 @@ final class ConnectionView: UIView {
                 copyButton.trailingAnchor.constraint(equalTo: myCodeContainer.trailingAnchor, constant: -.spacingM),
                 copyButton.centerYAnchor.constraint(equalTo: myCodeContainer.centerYAnchor),
                 
-                centerDividerView.topAnchor.constraint(equalTo: myCodeContainer.bottomAnchor, constant: .spacingXL),
+                centerDividerView.topAnchor.constraint(equalTo: myCodeContainer.bottomAnchor, constant: .spacingL),
                 centerDividerView.leadingAnchor.constraint(equalTo: cardContainer.leadingAnchor, constant: .spacingM),
                 centerDividerView.trailingAnchor.constraint(
                     equalTo: cardContainer.trailingAnchor,
@@ -229,7 +228,7 @@ final class ConnectionView: UIView {
                 
                 opponentCodeTitleLabel.topAnchor.constraint(
                     equalTo: centerDividerView.bottomAnchor,
-                    constant: .spacingXL
+                    constant: .spacingL
                 ),
                 opponentCodeTitleLabel.leadingAnchor.constraint(
                     equalTo: cardContainer.leadingAnchor,
@@ -251,7 +250,7 @@ final class ConnectionView: UIView {
                 opponentCodeContainer.heightAnchor.constraint(equalToConstant: 55),
                 opponentCodeContainer.bottomAnchor.constraint(
                     equalTo: cardContainer.bottomAnchor,
-                    constant: -.spacingXL
+                    constant: -.spacingL
                 ),
                 
                 opponentCodeTextField.leadingAnchor.constraint(
@@ -263,25 +262,11 @@ final class ConnectionView: UIView {
                     constant: -.spacingM
                 ),
                 opponentCodeTextField.centerYAnchor.constraint(equalTo: opponentCodeContainer.centerYAnchor),
-                
-                titleLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-                titleLabel.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: .spacingL),
-                
-                subtitleLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-                subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: .spacingXL),
-                
-                cardContainer.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: .spacingXL),
-                cardContainer.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
-                cardContainer.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
 
-                shareButton.centerXAnchor.constraint(equalTo: centerXAnchor),
-                shareButton.bottomAnchor.constraint(equalTo: connectButton.topAnchor, constant: -.spacingL),
-                shareButton.widthAnchor.constraint(equalToConstant: 64),
-                shareButton.heightAnchor.constraint(equalToConstant: 64),
-
+                connectButton.topAnchor.constraint(greaterThanOrEqualTo: cardContainer.bottomAnchor, constant: .spacingL),
                 connectButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
                 connectButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
-                connectButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingXL)
+                connectButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingL)
             ]
         )
     }
@@ -305,7 +290,7 @@ extension ConnectionView {
             subtitle: nil
         )
 
-        connectButton.configure(active: activeConfig, disabled: disabledConfig)
+        connectButton.configure(enabled: activeConfig, disabled: disabledConfig)
         connectButton.isEnabled = isEnabled
     }
 }

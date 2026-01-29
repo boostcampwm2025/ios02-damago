@@ -59,6 +59,7 @@ final class SettingsViewModel: ViewModel {
 
     enum Route {
         case editProfile
+        case connection
         case webLink(url: URL?)
         case alert(type: AlertActionType)
         case error(message: String)
@@ -69,16 +70,19 @@ final class SettingsViewModel: ViewModel {
     private var cancellables = Set<AnyCancellable>()
     private let globalStore: GlobalStoreProtocol
     private let signOutUseCase: SignOutUseCase
+    private let withdrawUseCase: WithdrawUseCase
     private let updateUserUseCase: UpdateUserUseCase
 
     init(
         globalStore: GlobalStoreProtocol,
         signOutUseCase: SignOutUseCase,
+        withdrawUseCase: WithdrawUseCase,
         updateUserUseCase: UpdateUserUseCase
     ) {
         self.globalStore = globalStore
         self.signOutUseCase = signOutUseCase
         self.updateUserUseCase = updateUserUseCase
+        self.withdrawUseCase = withdrawUseCase
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
@@ -209,14 +213,18 @@ final class SettingsViewModel: ViewModel {
                     nickname: nil,
                     anniversaryDate: nil,
                     useFCM: isOn,
-                    useLiveActivity: nil
+                    useLiveActivity: nil,
+                    petName: nil,
+                    petType: nil
                 )
             case .liveActivity:
                 try await updateUserUseCase.execute(
                     nickname: nil,
                     anniversaryDate: nil,
                     useFCM: nil,
-                    useLiveActivity: isOn
+                    useLiveActivity: isOn,
+                    petName: nil,
+                    petType: nil
                 )
             }
         } catch {
@@ -235,6 +243,8 @@ final class SettingsViewModel: ViewModel {
         switch item {
         case .profile:
             state.route = Pulse(.editProfile)
+        case .relationship:
+            state.route = Pulse(.connection)
         case .link(_, let url):
             state.route = Pulse(.webLink(url: url))
         case .action(let type):
@@ -254,14 +264,22 @@ final class SettingsViewModel: ViewModel {
             do {
                 try signOutUseCase.execute()
                 // 로그아웃 시 커플 연결 상태 초기화 및 Live Activity 종료
-                UserDefaults.standard.setValue(false, forKey: "isConnected")
+                UserDefaults.standard.set(false, forKey: "isOnboardingCompleted")
                 LiveActivityManager.shared.synchronizeActivity()
                 NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
             } catch {
-                state.route = Pulse(.error(message: error.localizedDescription))
+                state.route = Pulse(.error(message: error.userFriendlyMessage))
             }
         case .deleteAccount:
-            break
+            Task {
+                do {
+                    try await withdrawUseCase.execute()
+                    UserDefaults.standard.set(false, forKey: "isOnboardingCompleted")
+                    NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
+                } catch {
+                    state.route = Pulse(.error(message: error.localizedDescription))
+                }
+            }
         case .openSettings:
             state.route = Pulse(.openSettings)
         }

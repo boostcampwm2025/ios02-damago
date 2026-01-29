@@ -101,11 +101,13 @@ final class EditProfileViewModel: ViewModel {
                     nickname: state.nickname,
                     anniversaryDate: state.anniversaryDate,
                     useFCM: nil,
-                    useLiveActivity: nil
+                    useLiveActivity: nil,
+                    petName: nil,
+                    petType: nil
                 )
                 state.route = Pulse(.back)
             } catch {
-                state.route = Pulse(.error(message: error.localizedDescription))
+                state.route = Pulse(.error(message: error.userFriendlyMessage))
             }
         }
     }

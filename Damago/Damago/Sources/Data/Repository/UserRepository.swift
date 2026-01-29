@@ -30,9 +30,10 @@ final class UserRepository: UserRepositoryProtocol {
         self.firestoreService = firestoreService
     }
     
-    func generateCode() async throws -> String {
+    func generateCode() async throws -> ConnectionCodes {
         let token = try await tokenProvider.idToken()
-        return try await networkProvider.requestString(UserAPI.generateCode(accessToken: token))
+        let response: UserCodeDTO = try await networkProvider.request(UserAPI.generateCode(accessToken: token))
+        return .init(myCode: response.myCode, partnerCode: response.partnerCode)
     }
     
     func connectCouple(targetCode: String) async throws {
@@ -81,7 +82,14 @@ final class UserRepository: UserRepositoryProtocol {
         firestoreService.observe(collection: "users", document: uid)
     }
 
-    func updateUserInfo(nickname: String?, anniversaryDate: Date?, useFCM: Bool?, useLiveActivity: Bool?) async throws {
+    func updateUserInfo(
+        nickname: String?,
+        anniversaryDate: Date?,
+        useFCM: Bool?,
+        useLiveActivity: Bool?,
+        petName: String?,
+        petType: String?
+    ) async throws {
         let token = try await tokenProvider.idToken()
         let dateString = anniversaryDate.map {
             let formatter = ISO8601DateFormatter()
@@ -95,13 +103,43 @@ final class UserRepository: UserRepositoryProtocol {
                 nickname: nickname,
                 anniversaryDate: dateString,
                 useFCM: useFCM,
-                useLiveActivity: useLiveActivity
+                useLiveActivity: useLiveActivity,
+                petName: petName,
+                petType: petType
             )
         )
     }
 
     func signOut() throws {
         try authService.signOut()
+    }
+
+    func withdraw() async throws {
+        let rawNonce = try cryptoService.randomNonceString()
+        let hashedNonce = cryptoService.sha256(rawNonce)
+        let credential = try await authService.request(hashedNonce: hashedNonce)
+
+        let token = try await tokenProvider.idToken()
+
+        try await networkProvider.requestSuccess(UserAPI.withdrawUser(accessToken: token))
+
+        try await authService.deleteAccount(credential: credential)
+    }
+    
+    func checkCoupleConnection() async throws -> Bool {
+        let token = try await tokenProvider.idToken()
+        let response: CheckCoupleConnectionResponse = try await networkProvider.request(
+            UserAPI.checkCoupleConnection(accessToken: token)
+        )
+        return response.isConnected
+    }
+    
+    func adjustCoin(amount: Int) async throws -> Int {
+        let token = try await tokenProvider.idToken()
+        let response: AdjustCoinResponse = try await networkProvider.request(
+            UserAPI.adjustCoin(accessToken: token, amount: amount)
+        )
+        return response.totalCoin
     }
 }
 

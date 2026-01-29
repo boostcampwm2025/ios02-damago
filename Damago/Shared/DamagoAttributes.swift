@@ -13,7 +13,7 @@ struct DamagoAttributes: ActivityAttributes {
 
     // MARK: - Dynamic State
     public struct ContentState: Codable, Hashable {
-        var petType: String
+        var petType: DamagoType
         var isHungry: Bool
         var statusMessage: String
 
@@ -28,7 +28,7 @@ struct DamagoAttributes: ActivityAttributes {
 
         var imageName: String {
             let stateName: String = isHungry ? "Hungry" : "Base"
-            return "\(petType)\(stateName)"
+            return "\(petType.rawValue)\(stateName)"
         }
 
         var statusImageName: String {
@@ -38,6 +38,36 @@ struct DamagoAttributes: ActivityAttributes {
 
     // MARK: - Static Data
     var petName: String
+}
+
+public enum DamagoType: String, CaseIterable, Codable {
+    case siamese = "CatSiamese"
+    case tiger = "CatTiger"
+    case batman = "CatBatman"
+    case christmas = "CatChristmas"
+    case egypt = "CatEgypt"
+    case oddEye = "CatOddEye"
+    case threeColored = "CatThreeColored"
+    case wizard = "CatWizard"
+    case dog = "Dog"
+    case fish = "Fish"
+    case lizard = "Lizard"
+    case owl = "Owl"
+    case parrot = "Parrot"
+    case rabbit = "Rabbit"
+
+    public var imageName: String {
+        "\(self.rawValue)Base"
+    }
+
+    public var isAvailable: Bool {
+        switch self {
+        case .siamese, .tiger, .batman, .christmas, .egypt, .oddEye, .threeColored, .wizard:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 extension DamagoAttributes {

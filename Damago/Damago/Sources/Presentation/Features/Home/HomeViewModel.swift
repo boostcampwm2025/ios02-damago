@@ -14,15 +14,19 @@ final class HomeViewModel: ViewModel {
         let viewDidLoad: AnyPublisher<Void, Never>
         let feedButtonDidTap: AnyPublisher<Void, Never>
         let pokeMessageSelected: AnyPublisher<String, Never>
+        let petNameChangeSubmitted: AnyPublisher<String, Never>
     }
 
-    struct State {
+    struct State: Equatable {
         var isLoading = true
+        var isUpdatingName = false
         var isFeeding = false
         var coinAmount = 0
         var foodAmount = 0
         var dDay = 0
         var petName = ""
+        var petType = ""
+        var isHungry: Bool = true
         var level = 0
         var currentExp = 0
         var maxExp = 0
@@ -32,6 +36,12 @@ final class HomeViewModel: ViewModel {
 
         var isFeedButtonEnabled: Bool { foodCount > 0 && !isFeeding }
         var isPokeButtonEnabled: Bool { true }
+        var route: Pulse<Route>?
+    }
+
+    enum Route: Equatable {
+        case nameChangeSuccess
+        case error(message: String)
     }
 
     @Published private var state = State()
@@ -42,17 +52,20 @@ final class HomeViewModel: ViewModel {
     private let userRepository: UserRepositoryProtocol
     private let petRepository: PetRepositoryProtocol
     private let pushRepository: PushRepositoryProtocol
+    private let updateUserUseCase: UpdateUserUseCase
     
     init(
         globalStore: GlobalStoreProtocol,
         userRepository: UserRepositoryProtocol,
         petRepository: PetRepositoryProtocol,
-        pushRepository: PushRepositoryProtocol
+        pushRepository: PushRepositoryProtocol,
+        updateUserUseCase: UpdateUserUseCase
     ) {
         self.globalStore = globalStore
         self.userRepository = userRepository
         self.petRepository = petRepository
         self.pushRepository = pushRepository
+        self.updateUserUseCase = updateUserUseCase
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
@@ -76,6 +89,13 @@ final class HomeViewModel: ViewModel {
             }
             .store(in: &cancellables)
 
+        input.petNameChangeSubmitted
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] name in
+                self?.updatePetName(name: name)
+            }
+            .store(in: &cancellables)
+
         return $state.eraseToAnyPublisher()
     }
     
@@ -96,6 +116,8 @@ final class HomeViewModel: ViewModel {
                     state.currentExp = petStatus.currentExp
                     state.maxExp = petStatus.maxExp
                     state.petName = petStatus.petName
+                    state.petType = petStatus.petType
+                    state.isHungry = petStatus.isHungry
                     state.lastFedAt = petStatus.lastFedAt
                 }
             } catch {
@@ -135,7 +157,45 @@ final class HomeViewModel: ViewModel {
         }
     }
 
+    private func updatePetName(name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            state.route = Pulse(.error(message: "이름을 입력해 주세요."))
+            return
+        }
+
+        Task {
+            state.isUpdatingName = true
+            defer { state.isUpdatingName = false }
+            do {
+                try await updateUserUseCase.execute(
+                    nickname: nil,
+                    anniversaryDate: nil,
+                    useFCM: nil,
+                    useLiveActivity: nil,
+                    petName: trimmed,
+                    petType: nil
+                )
+                // 서버/Firestore 반영을 기다리지 않고 UI를 즉시 갱신
+                state.petName = trimmed
+                state.route = Pulse(.nameChangeSuccess)
+            } catch {
+                state.route = Pulse(.error(message: error.userFriendlyMessage))
+            }
+        }
+    }
+
     private func bindGlobalState() {
+        globalStore.globalState
+            .compactMapForUI { $0 }
+            .sink { [weak self] state in
+                guard let self, let petType = state.petType, let isHungry = state.isHungry else { return }
+                
+                self.state.petType = petType
+                self.state.isHungry = isHungry
+            }
+            .store(in: &cancellables)
+
         globalStore.globalState
             .compactMapForUI { $0.petName }
             .sink { [weak self] in self?.state.petName = $0 }

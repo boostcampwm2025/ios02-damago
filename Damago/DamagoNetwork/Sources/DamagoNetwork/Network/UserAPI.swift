@@ -11,8 +11,11 @@ public enum UserAPI {
     case generateCode(accessToken: String)
     case connectCouple(accessToken: String, targetCode: String)
     case getUserInfo(accessToken: String)
-    case updateUserInfo(accessToken: String, nickname: String?, anniversaryDate: String?, useFCM: Bool?, useLiveActivity: Bool?)
+    case updateUserInfo(accessToken: String, nickname: String?, anniversaryDate: String?, useFCM: Bool?, useLiveActivity: Bool?, petName: String?, petType: String?)
     case updateFCMToken(accessToken: String, fcmToken: String)
+    case withdrawUser(accessToken: String)
+    case checkCoupleConnection(accessToken: String)
+    case adjustCoin(accessToken: String, amount: Int)
 }
 
 extension UserAPI: EndPoint {
@@ -27,6 +30,9 @@ extension UserAPI: EndPoint {
         case .getUserInfo: "/get_user_info"
         case .updateFCMToken: "/update_fcm_token"
         case .updateUserInfo: "/update_user_info"
+        case .withdrawUser: "/withdraw_user"
+        case .checkCoupleConnection: "/check_couple_connection"
+        case .adjustCoin: "/adjust_coin"
         }
     }
     
@@ -41,7 +47,10 @@ extension UserAPI: EndPoint {
              .connectCouple(let token, _),
              .getUserInfo(let token),
              .updateFCMToken(let token, _),
-             .updateUserInfo(let token, _, _, _, _):
+             .withdrawUser(let token),
+             .checkCoupleConnection(let token),
+             .updateUserInfo(let token, _, _, _, _, _, _),
+             .adjustCoin(let token, _):
             headers["Authorization"] = "Bearer \(token)"
         }
         return headers
@@ -51,7 +60,7 @@ extension UserAPI: EndPoint {
         let parameters: [String: Any?]
         
         switch self {
-        case .generateCode, .getUserInfo:
+        case .generateCode, .getUserInfo, .checkCoupleConnection:
             parameters = [:]
             
         case .connectCouple(_, let targetCode):
@@ -60,13 +69,21 @@ extension UserAPI: EndPoint {
         case .updateFCMToken(_, let fcmToken):
             parameters = ["fcmToken": fcmToken]
             
-        case .updateUserInfo(_, let nickname, let anniversaryDate, let useFCM, let useLiveActivity):
+        case .updateUserInfo(_, let nickname, let anniversaryDate, let useFCM, let useLiveActivity, let petName, let petType):
             parameters = [
                 "nickname": nickname,
                 "anniversaryDate": anniversaryDate,
                 "useFCM": useFCM,
-                "useLiveActivity": useLiveActivity
+                "useLiveActivity": useLiveActivity,
+                "petName": petName,
+                "petType": petType
             ]
+            
+        case .withdrawUser:
+            parameters = [:]
+            
+        case .adjustCoin(_, let amount):
+            parameters = ["amount": amount]
         }
         
         let validParameters = parameters.compactMapValues { $0 }

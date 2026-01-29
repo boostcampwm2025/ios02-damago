@@ -5,9 +5,32 @@
 //  Created by 김재영 on 1/20/26.
 //
 
+import Foundation
+
 enum DailyQuestionUIModel: Equatable {
     case input(InputState)
     case result(ResultState)
+    
+    var questionID: String {
+        switch self {
+        case .input(let state): return state.questionID
+        case .result(let state): return state.questionID
+        }
+    }
+    
+    var isUser1: Bool {
+        switch self {
+        case .input(let state): return state.isUser1
+        case .result(let state): return state.isUser1
+        }
+    }
+    
+    var questionContent: String {
+        switch self {
+        case .input(let state): return state.questionContent
+        case .result(let state): return state.questionContent
+        }
+    }
     
     struct InputState: Equatable {
         let questionID: String
@@ -23,6 +46,8 @@ enum DailyQuestionUIModel: Equatable {
         let opponentAnswer: AnswerCardUIModel
         let buttonTitle: String
         let isUser1: Bool
+        let bothAnswered: Bool
+        let lastAnsweredAt: Date?
     }
 }
 
