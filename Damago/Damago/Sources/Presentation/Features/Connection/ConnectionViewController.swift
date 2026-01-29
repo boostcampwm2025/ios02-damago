@@ -56,6 +56,7 @@ final class ConnectionViewController: UIViewController {
     
     private func setupNavigationBar() {
         navigationController?.setNavigationBarHidden(false, animated: true)
+        navigationItem.hidesBackButton = true
         navigationController?.navigationBar.tintColor = .damagoPrimary
     }
     

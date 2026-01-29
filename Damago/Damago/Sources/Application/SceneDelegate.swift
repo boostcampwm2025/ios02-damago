@@ -127,7 +127,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             opponentCode: code
         )
         let connectionVC = ConnectionViewController(viewModel: connectionVM)
-        window?.rootViewController = connectionVC
+        let navigationController = UINavigationController(rootViewController: connectionVC)
+        window?.rootViewController = navigationController
     }
     
     private func navigateToProfileSettingIfNeeded() {
