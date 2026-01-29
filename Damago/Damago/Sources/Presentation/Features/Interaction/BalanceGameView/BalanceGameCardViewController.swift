@@ -25,6 +25,8 @@ final class BalanceGameCardViewController: UIViewController {
     private var leftChoiceText: String?
     private var rightChoiceText: String?
 
+    private var currentID: String?
+
     init(viewModel: BalanceGameCardViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -83,13 +85,16 @@ final class BalanceGameCardViewController: UIViewController {
         let question: String
         let option1: String
         let option2: String
+        let gameID: String
         
         switch uiModel {
         case .input(let inputState):
+            gameID = inputState.gameID
             question = inputState.questionContent
             option1 = inputState.option1
             option2 = inputState.option2
         case .result(let resultState):
+            gameID = resultState.gameID
             question = resultState.questionContent
             option1 = resultState.option1
             option2 = resultState.option2
@@ -98,14 +103,17 @@ final class BalanceGameCardViewController: UIViewController {
         self.leftChoiceText = option1
         self.rightChoiceText = option2
 
-        cardView.configure(
-            category: "미니 미션",
-            question: "Q: \(question)",
-            leftChoice: option1,
-            rightChoice: option2,
-            foods: 2,
-            coins: 20
-        )
+        if currentID != gameID {
+            currentID = gameID
+            cardView.configure(
+                category: "미니 미션",
+                question: "Q: \(question)",
+                leftChoice: option1,
+                rightChoice: option2,
+                foods: 2,
+                coins: 20
+            )
+        }
 
         let viewState: BalanceGameCardUIState
 
@@ -123,11 +131,12 @@ final class BalanceGameCardViewController: UIViewController {
             )
         } else {
             // 결과 데이터가 없거나 불완전하면 선택 중 상태로 간주
-            let choiceToRender = state.pendingConfirm ?? state.myChoice
+            let choiceToRender = state.pendingConfirm ?? state.myChoice ?? state.localSelection
             viewState = .choosing(
                 selected: choiceToRender,
                 headerStatus: state.headerStatus,
-                targetDate: state.targetDate
+                targetDate: state.targetDate,
+                isSubmitting: state.isLoading
             )
         }
 
