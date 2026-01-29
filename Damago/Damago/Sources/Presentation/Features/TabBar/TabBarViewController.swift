@@ -120,12 +120,14 @@ final class TabBarViewController: UITabBarController {
             let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
             let petRepository = AppDIContainer.shared.resolve(PetRepositoryProtocol.self)
             let pushRepository = AppDIContainer.shared.resolve(PushRepositoryProtocol.self)
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
 
             let vm = HomeViewModel(
                 globalStore: globalStore,
                 userRepository: userRepository,
                 petRepository: petRepository,
-                pushRepository: pushRepository
+                pushRepository: pushRepository,
+                updateUserUseCase: updateUserUseCase
             )
             let vc = HomeViewController(viewModel: vm)
             return vc
