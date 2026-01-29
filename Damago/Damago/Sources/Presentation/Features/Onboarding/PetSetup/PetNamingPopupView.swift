@@ -79,13 +79,13 @@ final class PetNamingPopupView: UIView {
     let cancelButton: CTAButton = {
         let button = CTAButton()
         let config = CTAButton.Configuration(
-            backgroundColor: .textTertiary,
+            backgroundColor: .disabled,
             foregroundColor: .white,
             title: "취소",
             font: .body2
         )
         
-        button.configure(active: config, disabled: config)
+        button.configure(enabled: config, disabled: config)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -99,13 +99,13 @@ final class PetNamingPopupView: UIView {
             font: .body2
         )
         let disabledConfig = CTAButton.Configuration(
-            backgroundColor: .textTertiary,
+            backgroundColor: .disabled,
             foregroundColor: .white,
             title: "이름을 알려줘!",
             font: .body2
         )
         
-        button.configure(active: config, disabled: disabledConfig)
+        button.configure(enabled: config, disabled: disabledConfig)
         button.isEnabled = false
         button.translatesAutoresizingMaskIntoConstraints = false
         return button

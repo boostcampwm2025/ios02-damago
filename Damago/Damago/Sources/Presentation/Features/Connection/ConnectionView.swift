@@ -305,7 +305,7 @@ extension ConnectionView {
             subtitle: nil
         )
 
-        connectButton.configure(active: activeConfig, disabled: disabledConfig)
+        connectButton.configure(enabled: activeConfig, disabled: disabledConfig)
         connectButton.isEnabled = isEnabled
     }
 }

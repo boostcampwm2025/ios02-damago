@@ -110,14 +110,14 @@ final class DailyQuestionInputView: UIView {
         )
         
         let disabledConfig = CTAButton.Configuration(
-            backgroundColor: .textTertiary,
+            backgroundColor: .disabled,
             foregroundColor: .white,
             image: nil,
             title: "답변 내용을 입력해주세요",
             subtitle: nil
         )
         
-        button.configure(active: config, disabled: disabledConfig)
+        button.configure(enabled: config, disabled: disabledConfig)
         button.isEnabled = false
         button.translatesAutoresizingMaskIntoConstraints = false
         return button

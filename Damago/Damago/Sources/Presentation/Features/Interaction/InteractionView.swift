@@ -46,7 +46,7 @@ final class InteractionView: UIView {
             subtitle: nil
         )
         
-        button.configure(active: config, disabled: config)
+        button.configure(enabled: config, disabled: config)
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOpacity = 0.05
         button.layer.shadowOffset = CGSize(width: 0, height: 4)
