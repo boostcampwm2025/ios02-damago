@@ -216,7 +216,14 @@ extension InteractionViewController: UIScrollViewDelegate {
     }
 }
 
-extension InteractionViewController {
+extension InteractionViewController: UIPopoverPresentationControllerDelegate {
+    func adaptivePresentationStyle(
+        for controller: UIPresentationController,
+        traitCollection: UITraitCollection
+    ) -> UIModalPresentationStyle {
+        .none
+    }
+    
     private func setupTips() {
         tipsTasks.forEach { $0.cancel() }
         tipsTasks.removeAll()
@@ -224,14 +231,14 @@ extension InteractionViewController {
         tipsTasks.insert(Task { @MainActor in
             await interactionTips.dailyQuestion.monitor(
                 on: self,
-                sourceItem: mainView.questionCardView
+                sourceItem: .view(mainView.questionCardView)
             )
         })
 
         tipsTasks.insert(Task { @MainActor in
             await interactionTips.balanceGame.monitor(
                 on: self,
-                sourceItem: mainView.balanceGameCardView
+                sourceItem: .view(mainView.balanceGameCardView)
             )
         })
     }

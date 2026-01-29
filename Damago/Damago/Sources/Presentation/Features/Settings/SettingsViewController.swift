@@ -269,7 +269,14 @@ extension SettingsViewController: UITableViewDelegate {
     }
 }
 
-extension SettingsViewController {
+extension SettingsViewController: UIPopoverPresentationControllerDelegate {
+    func adaptivePresentationStyle(
+        for controller: UIPresentationController,
+        traitCollection: UITraitCollection
+    ) -> UIModalPresentationStyle {
+        .none
+    }
+    
     private func setupTips() {
         tipsTasks.forEach { $0.cancel() }
         tipsTasks.removeAll()
@@ -286,7 +293,7 @@ extension SettingsViewController {
         let cell = mainView.tableView.cellForRow(at: indexPath) else { return }
 
         tipsTasks.insert(Task { @MainActor in
-            await settingsTips.dynamicIsland.monitor(on: self, sourceItem: cell)
+            await settingsTips.dynamicIsland.monitor(on: self, sourceItem: .view(cell))
         })
     }
 }

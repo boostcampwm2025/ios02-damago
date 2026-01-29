@@ -239,18 +239,25 @@ final class HomeViewController: UIViewController {
 }
 
 extension HomeViewController: UIPopoverPresentationControllerDelegate {
+    func adaptivePresentationStyle(
+        for controller: UIPresentationController,
+        traitCollection: UITraitCollection
+    ) -> UIModalPresentationStyle {
+        .none
+    }
+
     private func setupTips() {
         tipsTasks.forEach { $0.cancel() }
         tipsTasks.removeAll()
 
         // 1. 콕 찌르기 팁 감시
         tipsTasks.insert(Task { @MainActor in
-            await homeTips.poke.monitor(on: self, sourceItem: mainView.pokeButton)
+            await homeTips.poke.monitor(on: self, sourceItem: .view(mainView.pokeButton))
         })
         
         // 2. 먹이 주기 팁 감시
         tipsTasks.insert(Task { @MainActor in
-            await homeTips.feed.monitor(on: self, sourceItem: mainView.feedButton)
+            await homeTips.feed.monitor(on: self, sourceItem: .view(mainView.feedButton))
         })
     }
 }
