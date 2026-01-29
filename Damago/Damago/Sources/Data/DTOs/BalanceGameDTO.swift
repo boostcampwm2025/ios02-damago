@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 
 struct BalanceGameDTO: Decodable {
     let gameID: String
@@ -20,13 +21,6 @@ struct BalanceGameDTO: Decodable {
 
 extension BalanceGameDTO {
     func toDomain() -> BalanceGameUIModel {
-        let nextGameAvailableAt: Date?
-        if let lastAnsweredAt {
-            nextGameAvailableAt = lastAnsweredAt.addingTimeInterval(12 * 3600) // 12시간 쿨타임
-        } else {
-            nextGameAvailableAt = nil
-        }
-
         if let myChoice {
             return .result(.init(
                 gameID: gameID,
@@ -36,7 +30,7 @@ extension BalanceGameDTO {
                 myChoice: myChoice,
                 opponentChoice: opponentChoice,
                 isUser1: isUser1,
-                nextGameAvailableAt: nextGameAvailableAt
+                lastAnsweredAt: lastAnsweredAt
             ))
         } else {
             return .input(.init(
@@ -45,7 +39,7 @@ extension BalanceGameDTO {
                 option1: option1,
                 option2: option2,
                 isUser1: isUser1,
-                nextGameAvailableAt: nextGameAvailableAt
+                lastAnsweredAt: lastAnsweredAt
             ))
         }
     }

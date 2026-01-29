@@ -17,7 +17,7 @@ enum BalanceGameUIModel: Equatable {
         let option1: String
         let option2: String
         let isUser1: Bool
-        let nextGameAvailableAt: Date?
+        let lastAnsweredAt: Date?
     }
     
     struct ResultState: Equatable {
@@ -28,6 +28,6 @@ enum BalanceGameUIModel: Equatable {
         let myChoice: Int
         let opponentChoice: Int?
         let isUser1: Bool
-        let nextGameAvailableAt: Date?
+        let lastAnsweredAt: Date?
     }
 }
