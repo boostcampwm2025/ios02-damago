@@ -12,6 +12,7 @@ import FirebaseFirestore
 import FirebaseMessaging
 import OSLog
 import UIKit
+import TipKit
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -65,6 +66,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         let assembler = AppAssembler()
         assembler.assemble(AppDIContainer.shared)
 
+        try? Tips.configure([.displayFrequency(.immediate), .datastoreLocation(.applicationDefault)])
+        #if DEBUG
+        try? Tips.resetDatastore()
+        #endif
         return true
     }
 
