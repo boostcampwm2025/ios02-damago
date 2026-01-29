@@ -69,15 +69,43 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
         }
     }
     
-    func submitChoice(gameID: String, choice: Int) async throws -> Bool {
-        let token = try await tokenProvider.idToken()
-        return try await networkProvider.requestSuccess(
-            BalanceGameAPI.submit(
-                accessToken: token,
-                gameID: gameID,
-                choice: choice
-            )
+    func submitChoice(gameID: String, choice: Int, isUser1: Bool) async throws -> Bool {
+        // 1. 이전 상태 백업 (롤백용)
+        let previousEntity = try await localDataSource.fetchGame(id: gameID)
+        let previousUser1Choice = previousEntity?.user1Choice
+        let previousUser2Choice = previousEntity?.user2Choice
+        let previousLastAnsweredAt = previousEntity?.lastAnsweredAt
+        
+        // 2. 로컬 업데이트 선반영 (Optimistic Update)
+        try await localDataSource.updateChoice(
+            gameID: gameID,
+            user1Choice: isUser1 ? choice : previousUser1Choice,
+            user2Choice: isUser1 ? previousUser2Choice : choice,
+            lastAnsweredAt: Date()
         )
+        
+        do {
+            let token = try await tokenProvider.idToken()
+            let success = try await networkProvider.requestSuccess(
+                BalanceGameAPI.submit(
+                    accessToken: token,
+                    gameID: gameID,
+                    choice: choice
+                )
+            )
+            return success
+        } catch {
+            SharedLogger.interaction.error("API 제출 실패, 로컬 데이터 롤백: \(error.localizedDescription)")
+            
+            // 3. 실패 시 롤백: 이전 상태로 복구
+            try await localDataSource.updateChoice(
+                gameID: gameID,
+                user1Choice: previousUser1Choice,
+                user2Choice: previousUser2Choice,
+                lastAnsweredAt: previousLastAnsweredAt
+            )
+            throw error
+        }
     }
     
     // swiftlint:disable trailing_closure

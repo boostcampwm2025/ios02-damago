@@ -212,11 +212,20 @@ final class InteractionViewModel: ViewModel {
     func submitBalanceGameChoice(choice: BalanceGameChoice) async throws {
         guard let uiModel = state.balanceGameUIModel else { return }
         let gameID: String
+        let isUser1: Bool
 
         switch uiModel {
-        case .input(let state): gameID = state.gameID
-        case .result(let state): gameID = state.gameID
+        case .input(let state):
+            gameID = state.gameID
+            isUser1 = state.isUser1
+        case .result(let state):
+            gameID = state.gameID
+            isUser1 = state.isUser1
         }
-        try await submitBalanceGameChoiceUseCase.execute(gameID: gameID, choice: choice.rawValue)
+        try await submitBalanceGameChoiceUseCase.execute(
+            gameID: gameID,
+            choice: choice.rawValue,
+            isUser1: isUser1
+        )
     }
 }
