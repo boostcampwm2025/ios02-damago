@@ -17,6 +17,9 @@ final class InteractionViewController: UIViewController {
     private var cancellables = Set<AnyCancellable>()
 
     private var balanceGameCardChildViewController: BalanceGameCardViewController?
+    
+    private let interactionTips = InteractionTip()
+    private var tipsTasks = Set<Task<Void, Never>>()
 
     init(viewModel: InteractionViewModel) {
         self.viewModel = viewModel
@@ -52,6 +55,13 @@ final class InteractionViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        setupTips()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        tipsTasks.forEach { $0.cancel() }
+        tipsTasks.removeAll()
     }
     
     private func setupNavigation() {
@@ -203,5 +213,26 @@ extension InteractionViewController: UIScrollViewDelegate {
         let fadeThreshold: CGFloat = 50
         let alpha = max(0, min(1, 1 - (scrollY / fadeThreshold)))
         mainView.setSubtitleAlpha(alpha)
+    }
+}
+
+extension InteractionViewController {
+    private func setupTips() {
+        tipsTasks.forEach { $0.cancel() }
+        tipsTasks.removeAll()
+
+        tipsTasks.insert(Task { @MainActor in
+            await interactionTips.dailyQuestion.monitor(
+                on: self,
+                sourceItem: mainView.questionCardView
+            )
+        })
+
+        tipsTasks.insert(Task { @MainActor in
+            await interactionTips.balanceGame.monitor(
+                on: self,
+                sourceItem: mainView.balanceGameCardView
+            )
+        })
     }
 }
