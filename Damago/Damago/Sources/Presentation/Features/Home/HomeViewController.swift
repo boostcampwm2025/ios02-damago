@@ -34,7 +34,6 @@ final class HomeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        LiveActivityManager.shared.synchronizeActivity()
 
         let output = viewModel.transform(
             HomeViewModel.Input(

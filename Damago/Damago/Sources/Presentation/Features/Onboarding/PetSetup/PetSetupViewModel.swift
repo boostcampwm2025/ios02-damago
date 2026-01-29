@@ -117,8 +117,8 @@ final class PetSetupViewModel: ViewModel {
                 try await updateUserUseCase.execute(
                     nickname: nil,
                     anniversaryDate: nil,
-                    useFCM: nil,
-                    useLiveActivity: nil,
+                    useFCM: true,
+                    useLiveActivity: true,
                     petName: name,
                     petType: selectedPet.rawValue
                 )
