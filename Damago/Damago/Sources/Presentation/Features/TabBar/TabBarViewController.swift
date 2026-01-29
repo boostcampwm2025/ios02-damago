@@ -108,7 +108,12 @@ final class TabBarViewController: UITabBarController {
     private func getViewController(for tabItem: TabItem) -> UIViewController {
         switch tabItem {
         case .collection:
-            let viewModel = CollectionViewModel()
+            let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
+            let fetchUserInfoUseCase = AppDIContainer.shared.resolve(FetchUserInfoUseCase.self)
+            let viewModel = CollectionViewModel(
+                updateUserUseCase: updateUserUseCase,
+                fetchUserInfoUseCase: fetchUserInfoUseCase
+            )
             return CollectionViewController(viewModel: viewModel)
         case .home:
             let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)

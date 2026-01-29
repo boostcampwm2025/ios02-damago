@@ -130,7 +130,7 @@ extension SpriteAnimationView {
 private extension SpriteAnimationView {
     /// 가로 1열, 정사각형 프레임 가정으로 columns 자동 감지
     static func autoDetectColumns(sheetName: String) -> Int? {
-        guard let image = UIImage(named: sheetName) else { return nil }
+        guard !sheetName.isEmpty, let image = UIImage(named: sheetName) else { return nil }
         let sheetSize = image.size
         let frameSize = sheetSize.height
         let columns = Int(sheetSize.width / frameSize)
@@ -139,6 +139,7 @@ private extension SpriteAnimationView {
     
     /// 스프라이트 시트에서 텍스처를 로드 (가로 1열 가정)
     func loadTextures(sheetName: String, columns: Int) -> [SKTexture]? {
+        guard !sheetName.isEmpty else { return nil }
         let sheet: SKTexture?
         if let image = UIImage(named: sheetName) {
             sheet = SKTexture(image: image)
