@@ -40,9 +40,8 @@ final class CardGameViewModel: ViewModel {
 
     private let adjustCoinAmountUseCase: AdjustCoinAmountUseCase
 
-    init(configuration: CardGameConfiguration, adjustCoinAmountUseCase: AdjustCoinAmountUseCase) {
-        let difficulty = configuration.difficulty
-        let items = Self.createItems(configuration: configuration)
+    init(difficulty: CardGameDifficulty, images: [UIImage], adjustCoinAmountUseCase: AdjustCoinAmountUseCase) {
+        let items = Self.createItems(difficulty: difficulty, images: images)
         self.state = State(items: items, difficulty: difficulty)
         self.adjustCoinAmountUseCase = adjustCoinAmountUseCase
     }
@@ -200,9 +199,8 @@ final class CardGameViewModel: ViewModel {
         }
     }
 
-    private static func createItems(configuration: CardGameConfiguration) -> [CardItem] {
-        let pairCount = configuration.difficulty.cardCount / 2
-        let images = configuration.images
+    private static func createItems(difficulty: CardGameDifficulty, images: [UIImage]) -> [CardItem] {
+        let pairCount = difficulty.cardCount / 2
 
         return (0..<pairCount)
             .map { images[$0 % images.count] } // 인덱스 에러 방지
@@ -217,25 +215,6 @@ final class CardGameViewModel: ViewModel {
 }
 
 extension CardGameViewModel {
-    enum CardGameConfiguration {
-        case easy([UIImage])
-        case hard([UIImage])
-
-        var difficulty: CardGameDifficulty {
-            switch self {
-            case .easy: return .easy
-            case .hard: return .hard
-            }
-        }
-
-        var images: [UIImage] {
-            switch self {
-            case .easy(let images): return images
-            case .hard(let images): return images
-            }
-        }
-    }
-
     private enum GameEndReason: String {
         case timeUp = "시간이 종료되었습니다!"
         case allCleared = "모든 짝을 찾았습니다!"

@@ -65,7 +65,7 @@ final class CharacterChangeConfirmPopupView: UIView {
             title: "취소",
             font: .body2
         )
-        button.configure(active: config, disabled: config)
+        button.configure(enabled: config, disabled: config)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -78,7 +78,7 @@ final class CharacterChangeConfirmPopupView: UIView {
             title: "변경하기",
             font: .body2
         )
-        button.configure(active: config, disabled: config)
+        button.configure(enabled: config, disabled: config)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()

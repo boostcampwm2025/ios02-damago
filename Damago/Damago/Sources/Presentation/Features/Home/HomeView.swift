@@ -197,7 +197,6 @@ final class HomeView: UIView {
             feedButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingXL)
         ])
     }
-
 }
 
 extension HomeView {
@@ -249,14 +248,14 @@ extension HomeView {
         let disabledSubtitle = state.foodAmount == 0 ? "서로에 대해 알아가며 먹이를 얻어 보세요" : nil
 
         let disabledConfig = CTAButton.Configuration(
-            backgroundColor: .textTertiary,
+            backgroundColor: .disabled,
             foregroundColor: .white,
             image: UIImage(systemName: "carrot"),
             title: disabledTitle,
             subtitle: disabledSubtitle
         )
 
-        feedButton.configure(active: activeConfig, disabled: disabledConfig)
+        feedButton.configure(enabled: activeConfig, disabled: disabledConfig)
         feedButton.isEnabled = state.isEnabled
     }
     

@@ -10,8 +10,10 @@ import UIKit
 final class HistoryView: UIView {
     let segmentedControl: UISegmentedControl = {
         let control = UISegmentedControl(items: ["오늘의 질문", "밸런스 게임"])
-        control.tintColor = .damagoPrimary
         control.selectedSegmentIndex = 0
+        control.selectedSegmentTintColor = .damagoPrimary
+        control.setTitleTextAttributes([.foregroundColor: UIColor.textPrimary], for: .normal)
+        control.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
         control.translatesAutoresizingMaskIntoConstraints = false
         return control
     }()

@@ -38,17 +38,8 @@ final class MiniGameViewController: UIViewController {
 
     @objc
     private func cardGameDidTap() {
-        let adjustCoinUseCase = AppDIContainer.shared.resolve(AdjustCoinAmountUseCase.self)
-        let vm = CardGameViewModel(
-            configuration: .easy([
-                UIImage(systemName: "carrot")!,
-                UIImage(systemName: "person")!,
-                UIImage(systemName: "heart")!,
-                UIImage(systemName: "star")!
-            ]),
-            adjustCoinAmountUseCase: adjustCoinUseCase
-        )
-        let vc = CardGameViewController(viewModel: vm)
+        let vm = CardGameConfigViewModel()
+        let vc = CardGameConfigViewController(viewModel: vm)
         vc.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(vc, animated: true)
     }

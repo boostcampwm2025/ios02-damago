@@ -307,14 +307,14 @@ extension EditProfileView {
         )
         
         let disabledConfig = CTAButton.Configuration(
-            backgroundColor: .textTertiary,
+            backgroundColor: .disabled,
             foregroundColor: .white,
             image: nil,
             title: "저장하기",
             subtitle: nil
         )
         
-        saveButton.configure(active: activeConfig, disabled: disabledConfig)
+        saveButton.configure(enabled: activeConfig, disabled: disabledConfig)
         saveButton.isEnabled = isEnabled
     }
 

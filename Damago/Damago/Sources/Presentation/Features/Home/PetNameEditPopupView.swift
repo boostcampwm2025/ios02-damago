@@ -84,7 +84,7 @@ final class PetNameEditPopupView: UIView {
             title: "취소",
             font: .body2
         )
-        button.configure(active: config, disabled: config)
+        button.configure(enabled: config, disabled: config)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -103,7 +103,7 @@ final class PetNameEditPopupView: UIView {
             title: "이름을 알려줘!",
             font: .body2
         )
-        button.configure(active: config, disabled: disabledConfig)
+        button.configure(enabled: config, disabled: disabledConfig)
         button.isEnabled = false
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
