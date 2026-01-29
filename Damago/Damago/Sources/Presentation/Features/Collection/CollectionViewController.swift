@@ -109,7 +109,8 @@ final class CollectionViewController: UIViewController {
         popupView.configure(with: petType)
         popupView.translatesAutoresizingMaskIntoConstraints = false
 
-        guard let targetView = navigationController?.view ?? view else { return }
+        // 탭바까지 덮도록 tabBarController의 view에 추가
+        guard let targetView = tabBarController?.view ?? navigationController?.view ?? view else { return }
         targetView.addSubview(popupView)
 
         NSLayoutConstraint.activate([
