@@ -7,6 +7,7 @@
 
 import Combine
 import UIKit
+import TipKit
 
 final class HomeViewController: UIViewController {
     private let mainView = HomeView()
@@ -18,6 +19,9 @@ final class HomeViewController: UIViewController {
     private let pokeMessageSelectedPublisher = PassthroughSubject<String, Never>()
     private let petNameChangeSubmittedPublisher = PassthroughSubject<String, Never>()
     private var currentPetTypeRaw: String = ""
+    
+    private let homeTips = HomeTip()
+    private var tipsTasks = Set<Task<Void, Never>>()
 
     init(viewModel: HomeViewModel) {
         self.viewModel = viewModel
@@ -48,6 +52,17 @@ final class HomeViewController: UIViewController {
         setupActions()
 
         viewDidLoadPublisher.send()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        setupTips()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        tipsTasks.forEach { $0.cancel() }
+        tipsTasks.removeAll()
     }
     
     private func setupActions() {
@@ -219,5 +234,29 @@ final class HomeViewController: UIViewController {
             alert.addAction(UIAlertAction(title: "확인", style: .default))
             present(alert, animated: true)
         }
+    }
+}
+
+extension HomeViewController: UIPopoverPresentationControllerDelegate {
+    func adaptivePresentationStyle(
+        for controller: UIPresentationController,
+        traitCollection: UITraitCollection
+    ) -> UIModalPresentationStyle {
+        .none
+    }
+
+    private func setupTips() {
+        tipsTasks.forEach { $0.cancel() }
+        tipsTasks.removeAll()
+
+        // 1. 콕 찌르기 팁 감시
+        tipsTasks.insert(Task { @MainActor in
+            await homeTips.poke.monitor(on: self, sourceItem: .view(mainView.pokeButton))
+        })
+        
+        // 2. 먹이 주기 팁 감시
+        tipsTasks.insert(Task { @MainActor in
+            await homeTips.feed.monitor(on: self, sourceItem: .view(mainView.feedButton))
+        })
     }
 }

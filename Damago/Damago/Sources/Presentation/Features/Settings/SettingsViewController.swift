@@ -20,6 +20,9 @@ final class SettingsViewController: UIViewController {
     private let alertConfirmSubject = PassthroughSubject<AlertActionType, Never>()
 
     private lazy var dataSource: SettingsDataSource = createDataSource()
+    
+    private let settingsTips = SettingsTip()
+    private var tipsTasks = Set<Task<Void, Never>>()
 
     init(viewModel: SettingsViewModel) {
         self.viewModel = viewModel
@@ -40,6 +43,17 @@ final class SettingsViewController: UIViewController {
         setupDelegate()
         bind()
         viewDidLoadSubject.send()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        setupTips()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        tipsTasks.forEach { $0.cancel() }
+        tipsTasks.removeAll()
     }
 
     private func setupNavigationBar() {
@@ -252,5 +266,34 @@ extension SettingsViewController: UITableViewDelegate {
         let section = SettingsSection(rawValue: indexPath.section)
         if section == .profile { return 100 }
         return UITableView.automaticDimension
+    }
+}
+
+extension SettingsViewController: UIPopoverPresentationControllerDelegate {
+    func adaptivePresentationStyle(
+        for controller: UIPresentationController,
+        traitCollection: UITraitCollection
+    ) -> UIModalPresentationStyle {
+        .none
+    }
+    
+    private func setupTips() {
+        tipsTasks.forEach { $0.cancel() }
+        tipsTasks.removeAll()
+
+        // 다이내믹 아일랜드(Live Activity) 토글 셀 찾기
+        let snapshot = dataSource.snapshot()
+        let items = snapshot.itemIdentifiers(inSection: .preferences)
+        
+        guard let liveActivityItem = items.first(where: {
+            if case .toggle(let type, _) = $0, type == .liveActivity { return true }
+            return false
+        }),
+        let indexPath = dataSource.indexPath(for: liveActivityItem),
+        let cell = mainView.tableView.cellForRow(at: indexPath) else { return }
+
+        tipsTasks.insert(Task { @MainActor in
+            await settingsTips.dynamicIsland.monitor(on: self, sourceItem: .view(cell))
+        })
     }
 }
