@@ -79,7 +79,9 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
                     opponentName: partnerSnapshot?.nickname,
                     useFCM: userSnapshot.useFCM,
                     useLiveActivity: userSnapshot.useLiveActivity,
-                    coupleID: coupleSnapshot?.id,
+                    // coupleSnapshot이 아직 로드되지 않았을 때(prepend(nil) 등) userSnapshot.coupleID로
+                    // 폴백하여, 다마고 변경 등으로 스트림이 재생성될 때 잘못된 "연결 해제" 감지를 방지
+                    coupleID: coupleSnapshot?.id ?? userSnapshot.coupleID,
                     totalCoin: coupleSnapshot?.totalCoin,
                     foodCount: coupleSnapshot?.foodCount,
                     anniversaryDate: coupleSnapshot?.anniversaryDate,

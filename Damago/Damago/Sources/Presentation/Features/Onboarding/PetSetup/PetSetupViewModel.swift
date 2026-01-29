@@ -18,6 +18,9 @@ final class PetSetupViewModel: ViewModel {
     struct State {
         var pets: [DamagoType] = DamagoType.allCases
         var selectedPet: DamagoType?
+        var currentPetType: DamagoType?
+        var currentPetName: String?
+        var coupleID: String?
         var isLoading: Bool = false
         var route: Pulse<Route>?
     }
@@ -32,12 +35,26 @@ final class PetSetupViewModel: ViewModel {
     private var cancellables = Set<AnyCancellable>()
     
     private let updateUserUseCase: UpdateUserUseCase
+    private let fetchUserInfoUseCase: FetchUserInfoUseCase
+    private let petRepository: PetRepositoryProtocol
     
-    init(updateUserUseCase: UpdateUserUseCase) {
+    init(
+        updateUserUseCase: UpdateUserUseCase,
+        fetchUserInfoUseCase: FetchUserInfoUseCase,
+        petRepository: PetRepositoryProtocol
+    ) {
         self.updateUserUseCase = updateUserUseCase
+        self.fetchUserInfoUseCase = fetchUserInfoUseCase
+        self.petRepository = petRepository
     }
     
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
+        input.viewDidLoad
+            .sink { [weak self] in
+                self?.loadCurrentPetInfo()
+            }
+            .store(in: &cancellables)
+
         input.petSelected
             .sink { [weak self] petType in
                 if petType.isAvailable {
@@ -58,6 +75,37 @@ final class PetSetupViewModel: ViewModel {
         return $state.eraseToAnyPublisher()
     }
     
+    func prefillName(for petType: DamagoType) -> String? {
+        guard petType == state.currentPetType else { return nil }
+        return state.currentPetName
+    }
+
+    func observePrefillName(for petType: DamagoType) -> AnyPublisher<String, Never> {
+        guard let coupleID = state.coupleID else {
+            return Empty().eraseToAnyPublisher()
+        }
+        let damagoID = "\(coupleID)_\(petType.rawValue)"
+        return petRepository.observePetSnapshot(damagoID: damagoID)
+            .compactMap { try? $0.get().petName }
+            .removeDuplicates()
+            .eraseToAnyPublisher()
+    }
+
+    private func loadCurrentPetInfo() {
+        Task {
+            do {
+                let userInfo = try await fetchUserInfoUseCase.execute()
+                state.coupleID = userInfo.coupleID
+                state.currentPetType = userInfo.petStatus.flatMap { DamagoType(rawValue: $0.petType) }
+                state.currentPetName = userInfo.petStatus?.petName
+            } catch {
+                state.coupleID = nil
+                state.currentPetType = nil
+                state.currentPetName = nil
+            }
+        }
+    }
+
     private func savePet(name: String) {
         guard let selectedPet = state.selectedPet else { return }
         

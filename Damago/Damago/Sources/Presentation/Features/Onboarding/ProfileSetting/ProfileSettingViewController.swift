@@ -115,7 +115,13 @@ final class ProfileSettingViewController: UIViewController {
     
     private func navigateToPetSetup() {
         let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
-        let vm = PetSetupViewModel(updateUserUseCase: updateUserUseCase)
+        let fetchUserInfoUseCase = AppDIContainer.shared.resolve(FetchUserInfoUseCase.self)
+        let petRepository = AppDIContainer.shared.resolve(PetRepositoryProtocol.self)
+        let vm = PetSetupViewModel(
+            updateUserUseCase: updateUserUseCase,
+            fetchUserInfoUseCase: fetchUserInfoUseCase,
+            petRepository: petRepository
+        )
         let vc = PetSetupViewController(viewModel: vm)
         navigationController?.pushViewController(vc, animated: true)
     }

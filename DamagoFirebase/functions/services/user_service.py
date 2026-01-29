@@ -2,7 +2,7 @@ from firebase_functions import https_fn
 from firebase_admin import firestore
 import google.cloud.firestore
 from utils.firestore import get_db
-from utils.constants import get_required_exp
+from utils.constants import get_default_pet_name, get_required_exp
 from utils.middleware import get_uid_from_request
 import json
 from datetime import datetime
@@ -203,6 +203,9 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
                         "lastFedAt": None,
                         "endedAt": None
                     })
+                    # 요청에 petName이 없으면 해당 타입의 기본 이름 사용
+                    if "petName" not in pet_updates:
+                        pet_updates["petName"] = get_default_pet_name(pet_type)
                     damago_ref.set(pet_updates)
                 else:
                     damago_ref.update(pet_updates)

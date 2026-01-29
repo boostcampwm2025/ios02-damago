@@ -58,7 +58,8 @@ final class TokenProviderImpl: TokenProvider {
         var currentError: Error? = error
         while let errorToInspect = currentError {
             let nsError = errorToInspect as NSError
-            if let deserializedResponse = nsError.userInfo["FIRAuthErrorUserInfoDeserializedResponseKey"] as? [String: Any],
+            if let deserializedResponse =
+                nsError.userInfo["FIRAuthErrorUserInfoDeserializedResponseKey"] as? [String: Any],
                (deserializedResponse["message"] as? String) == "INVALID_REFRESH_TOKEN" {
                 return true
             }

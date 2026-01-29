@@ -28,7 +28,12 @@ final class CollectionView: UIView {
     }
 
     private static func createLayout() -> UICollectionViewLayout {
-        let itemInsets = NSDirectionalEdgeInsets(top: .spacingS, leading: .spacingS, bottom: .spacingS, trailing: .spacingS)
+        let itemInsets = NSDirectionalEdgeInsets(
+            top: .spacingS,
+            leading: .spacingS,
+            bottom: .spacingS,
+            trailing: .spacingS
+        )
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0 / 3),
             heightDimension: .fractionalHeight(1.0)

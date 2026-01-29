@@ -14,6 +14,7 @@ final class PetNamingPopupView: UIView {
     let requestCancelConfirmationSubject = PassthroughSubject<Void, Never>()
     
     private var containerViewCenterYConstraint: NSLayoutConstraint?
+    private var initialName: String?
     
     private let containerView: UIView = {
         let view = UIView()
@@ -122,8 +123,20 @@ final class PetNamingPopupView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(with petType: DamagoType) {
+    func configure(with petType: DamagoType, initialName: String?) {
         petView.configure(with: petType)
+        let trimmed = initialName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        self.initialName = trimmed
+        nameTextField.text = trimmed
+        confirmButton.isEnabled = !trimmed.isEmpty
+    }
+
+    /// 비동기 prefill 등으로 나중에 초기 이름을 설정할 때 사용
+    func updateInitialName(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        initialName = trimmed
+        nameTextField.text = trimmed
+        confirmButton.isEnabled = !trimmed.isEmpty
     }
     
     private func setupUI() {
@@ -176,10 +189,14 @@ final class PetNamingPopupView: UIView {
     }
     
     private func handleCancel() {
-        if let text = nameTextField.text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            requestCancelConfirmationSubject.send(())
-        } else {
+        let current = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let original = initialName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        
+        // 변경 내용이 없거나 비어 있으면 바로 닫기
+        if current.isEmpty || current == original {
             cancelButtonTappedSubject.send(())
+        } else {
+            requestCancelConfirmationSubject.send(())
         }
     }
     
