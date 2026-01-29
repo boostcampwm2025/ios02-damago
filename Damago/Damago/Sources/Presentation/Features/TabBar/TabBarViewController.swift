@@ -59,11 +59,6 @@ final class TabBarViewController: UITabBarController {
         setupTabBar()
         setupForegroundNotification()
     }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        LiveActivityManager.shared.synchronizeActivity()
-    }
 
     private func setupForegroundNotification() {
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)

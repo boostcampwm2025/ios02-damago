@@ -36,8 +36,8 @@ struct GlobalState: Equatable {
     static let empty = GlobalState(
         nickname: nil,
         opponentName: nil,
-        useFCM: true,
-        useLiveActivity: true,
+        useFCM: false,
+        useLiveActivity: false,
         coupleID: nil,
         totalCoin: nil,
         foodCount: nil,
