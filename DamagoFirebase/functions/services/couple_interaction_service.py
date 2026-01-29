@@ -598,7 +598,7 @@ def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
         answer_snapshot = next(transaction.get(answer_ref))
         answer_data = answer_snapshot.to_dict() if answer_snapshot.exists else {}
         
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         answer_update = {}
         
         if is_user1:
@@ -614,6 +614,7 @@ def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
         
         if is_completing_now:
             answer_update["bothAnswered"] = True
+            answer_update["lastAnsweredAt"] = now
             current_stats = couple_data.get("balanceGameStats", {})
             current_total = current_stats.get("totalAnswered", 0)
             

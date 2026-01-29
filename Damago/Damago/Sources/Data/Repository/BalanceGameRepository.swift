@@ -131,6 +131,10 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
         .map { (result: Result<FirestoreBalanceGameAnswerDTO, Error>) in
             switch result {
             case .success(let dto):
+                if dto.lastAnsweredAt == nil && dto.bothAnswered == true {
+                    SharedLogger.interaction.debug("Repository: bothAnswered는 true인데 lastAnsweredAt이 nil입니다. 데이터 확인 필요.")
+                }
+                
                 let combinedDTO = BalanceGameDTO(
                     gameID: gameID,
                     questionContent: questionContent,
