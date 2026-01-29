@@ -6,7 +6,7 @@
 //
 
 protocol FetchBalanceGameUseCase {
-    func execute() async throws -> BalanceGameUIModel
+    func execute() -> AsyncStream<BalanceGameUIModel>
 }
 
 final class FetchBalanceGameUseCaseImpl: FetchBalanceGameUseCase {
@@ -16,8 +16,14 @@ final class FetchBalanceGameUseCaseImpl: FetchBalanceGameUseCase {
         self.repository = repository
     }
     
-    func execute() async throws -> BalanceGameUIModel {
-        let dto = try await repository.fetchBalanceGame()
-        return dto.toDomain()
+    func execute() -> AsyncStream<BalanceGameUIModel> {
+        AsyncStream { continuation in
+            Task {
+                for await dto in repository.fetchBalanceGame() {
+                    continuation.yield(dto.toDomain())
+                }
+                continuation.finish()
+            }
+        }
     }
 }
