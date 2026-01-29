@@ -45,7 +45,25 @@ final class BalanceGameLocalDataSource: BalanceGameLocalDataSourceProtocol {
     }
 
     func saveGame(_ entity: BalanceGameEntity) async throws {
-        storage.context.insert(entity)
+        let targetID = entity.gameID
+        let descriptor = FetchDescriptor<BalanceGameEntity>(
+            predicate: #Predicate { $0.gameID == targetID }
+        )
+        
+        if let existingEntity = try storage.context.fetch(descriptor).first {
+            existingEntity.questionContent = entity.questionContent
+            existingEntity.option1 = entity.option1
+            existingEntity.option2 = entity.option2
+            existingEntity.user1Choice = entity.user1Choice
+            existingEntity.user2Choice = entity.user2Choice
+            existingEntity.isUser1 = entity.isUser1
+            existingEntity.lastAnsweredAt = entity.lastAnsweredAt
+            existingEntity.lastUpdated = Date()
+            return
+        } else {
+            storage.context.insert(entity)
+        }
+        
         try storage.context.save()
     }
 

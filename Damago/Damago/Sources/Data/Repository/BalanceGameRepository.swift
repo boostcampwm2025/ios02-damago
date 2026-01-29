@@ -28,32 +28,44 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
         self.localDataSource = localDataSource
     }
     
-    func fetchBalanceGame() async throws -> BalanceGameDTO {
-        let token = try await tokenProvider.idToken()
-        do {
-            let dto: BalanceGameDTO = try await networkProvider.request(BalanceGameAPI.fetch(accessToken: token))
-            await saveToLocalGame(dto: dto)
-            return dto
-        } catch {
-            SharedLogger.interaction.error("API 조회 실패 로컬 캐시 조회: \(error.localizedDescription)")
-            
-            // Fallback: 로컬 캐시 조회
-            if let entity = try? await localDataSource.fetchLatestGame() {
-                let formatter = ISO8601DateFormatter()
-                let lastAnsweredAtString = entity.lastAnsweredAt.map { formatter.string(from: $0) }
-                
-                return BalanceGameDTO(
-                    gameID: entity.gameID,
-                    questionContent: entity.questionContent,
-                    option1: entity.option1,
-                    option2: entity.option2,
-                    myChoice: entity.isUser1 ? entity.user1Choice : entity.user2Choice,
-                    opponentChoice: entity.isUser1 ? entity.user2Choice : entity.user1Choice,
-                    isUser1: entity.isUser1,
-                    lastAnsweredAt: lastAnsweredAtString
-                )
+    func fetchBalanceGame() -> AsyncStream<BalanceGameDTO> {
+        AsyncStream { continuation in
+            Task {
+                // 1. 로컬 데이터 조회 및 즉시 방출 (오늘 데이터인 경우만)
+                if let entity = try? await localDataSource.fetchLatestGame(),
+                   let lastUpdated = entity.lastUpdated,
+                   Calendar.current.isDateInToday(lastUpdated) {
+                    
+                    let formatter = ISO8601DateFormatter()
+                    let lastAnsweredAtString = entity.lastAnsweredAt.map { formatter.string(from: $0) }
+                    
+                    let dto = BalanceGameDTO(
+                        gameID: entity.gameID,
+                        questionContent: entity.questionContent,
+                        option1: entity.option1,
+                        option2: entity.option2,
+                        myChoice: entity.isUser1 ? entity.user1Choice : entity.user2Choice,
+                        opponentChoice: entity.isUser1 ? entity.user2Choice : entity.user1Choice,
+                        isUser1: entity.isUser1,
+                        lastAnsweredAt: lastAnsweredAtString
+                    )
+                    continuation.yield(dto)
+                }
+
+                // 2. 네트워크 데이터 조회 및 방출
+                do {
+                    let token = try await tokenProvider.idToken()
+                    let dto: BalanceGameDTO = try await networkProvider.request(
+                        BalanceGameAPI.fetch(accessToken: token)
+                    )
+                    await saveToLocalGame(dto: dto)
+                    continuation.yield(dto)
+                } catch {
+                    SharedLogger.interaction.error("Balance Game 네트워크 조회 실패: \(error.localizedDescription)")
+                }
+
+                continuation.finish()
             }
-            throw error
         }
     }
     
