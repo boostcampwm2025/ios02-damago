@@ -8,6 +8,21 @@
 import UIKit
 
 final class ConnectionView: UIView {
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.alwaysBounceVertical = true
+        scrollView.contentInsetAdjustmentBehavior = .never
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        return scrollView
+    }()
+
+    private let contentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "다마고"
@@ -187,8 +202,13 @@ final class ConnectionView: UIView {
         [opponentCodeTextField]
             .forEach(opponentCodeContainer.addSubview)
 
-        [titleLabel, subtitleLabel, cardContainer, shareButton, connectButton]
+        [scrollView, connectButton]
             .forEach(addSubview)
+
+        scrollView.addSubview(contentView)
+
+        [titleLabel, subtitleLabel, cardContainer]
+            .forEach(contentView.addSubview)
     }
 
     private func setupConstraints() {
@@ -263,21 +283,28 @@ final class ConnectionView: UIView {
                     constant: -.spacingM
                 ),
                 opponentCodeTextField.centerYAnchor.constraint(equalTo: opponentCodeContainer.centerYAnchor),
-                
-                titleLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-                titleLabel.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: .spacingL),
-                
-                subtitleLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-                subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: .spacingXL),
-                
-                cardContainer.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: .spacingXL),
-                cardContainer.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
-                cardContainer.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
 
-                shareButton.centerXAnchor.constraint(equalTo: centerXAnchor),
-                shareButton.bottomAnchor.constraint(equalTo: connectButton.topAnchor, constant: -.spacingL),
-                shareButton.widthAnchor.constraint(equalToConstant: 64),
-                shareButton.heightAnchor.constraint(equalToConstant: 64),
+                scrollView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
+                scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
+                scrollView.bottomAnchor.constraint(equalTo: connectButton.topAnchor, constant: -.spacingL),
+
+                contentView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
+                contentView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+                contentView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+                contentView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+                contentView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
+
+                titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: .spacingL),
+
+                subtitleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: .spacingXL),
+
+                cardContainer.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: .spacingXL),
+                cardContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: .spacingM),
+                cardContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -.spacingM),
+                cardContainer.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -.spacingXL),
 
                 connectButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
                 connectButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
