@@ -54,8 +54,8 @@ final class CTAButton: UIButton {
         config.background.cornerRadius = .mediumButton
         config.cornerStyle = .fixed
         self.configuration = config
-        self.configurationUpdateHandler = { [weak self] button in
-            guard let self = self, let ctaButton = button as? CTAButton else { return }
+        self.configurationUpdateHandler = { button in
+            guard let ctaButton = button as? CTAButton else { return }
             ctaButton.updateButtonStyle()
         }
         self.translatesAutoresizingMaskIntoConstraints = false
