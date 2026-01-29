@@ -6,6 +6,46 @@ import time
 from utils.constants import BUNDLE_ID
 
 
+def send_push_notification(target_uid: str, title: str, body: str, data: dict = None) -> bool:
+    """
+    특정 사용자에게 푸시 알림을 전송합니다.
+    """
+    db = get_db()
+    target_user_doc = db.collection("users").document(target_uid).get()
+
+    if not target_user_doc.exists:
+        print(f"User {target_uid} not found")
+        return False
+
+    target_user_data = target_user_doc.to_dict()
+    target_fcm_token = target_user_data.get("fcmToken")
+
+    if not target_fcm_token:
+        print(f"User {target_uid} has no FCM token")
+        return False
+
+    # 알림 설정 확인
+    if not target_user_data.get("useFCM", True):
+        print(f"User {target_uid} has disabled push notifications")
+        return False
+
+    try:
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title=title,
+                body=body,
+            ),
+            data=data or {},
+            token=target_fcm_token
+        )
+        response = messaging.send(message)
+        print(f"Successfully sent message to {target_uid}: {response}")
+        return True
+    except Exception as e:
+        print(f"Error sending message to {target_uid}: {e}")
+        return False
+
+
 def poke(req: https_fn.Request) -> https_fn.Response:
     """
     상대방(partner)에게 '콕 찌르기' 푸시 알림을 전송합니다.
@@ -38,46 +78,25 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     if not partner_uid:
         return https_fn.Response("User is not in a couple", status=400)
 
-    target_user_doc = db.collection("users").document(partner_uid).get()
-
-    if not target_user_doc.exists:
-        return https_fn.Response("Opponent not found", status=404)
-
-    target_user_data = target_user_doc.to_dict()
-    target_fcm_token = target_user_data.get("fcmToken")
-
-    if not target_fcm_token:
-        return https_fn.Response("Opponent's FCM token not found", status=404)
-
-    # 알림 설정 확인
-    if not target_user_data.get("useFCM", True):
-        return https_fn.Response("Opponent has disabled push notifications", status=200)
-
     # --- [Step 2] FCM 전송 ---
-    try:
-        nickname = my_user_data.get('nickname') or '상대방'
+    nickname = my_user_data.get('nickname') or '상대방'
+    final_body = custom_message if custom_message else f"{nickname}님이 당신을 콕 찔렀어요!"
+    
+    success = send_push_notification(
+        target_uid=partner_uid,
+        title="콕!",
+        body=final_body,
+        data={
+            "type": "poke",
+            "fromUID": my_uid,
+            "message": custom_message or "",
+        }
+    )
 
-        final_body = custom_message if custom_message else f"{nickname}님이 당신을 콕 찔렀어요!"
-
-        message = messaging.Message(
-            notification=messaging.Notification(
-                title="콕!",
-                body=final_body,
-            ),
-            data={
-                "type": "poke",
-                "fromUID": my_uid,
-                "message": custom_message or "",
-            },
-            token=target_fcm_token
-        )
-        response = messaging.send(message)
-        print("Successfully sent message:", response)
+    if success:
         return https_fn.Response("Push notification sent successfully")
-
-    except Exception as e:
-        print("Error sending message:", e)
-        return https_fn.Response(f"Error sending push notification: {str(e)}", status=500)
+    else:
+        return https_fn.Response("Failed to send push notification", status=500)
 
 def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
     """
@@ -123,9 +142,10 @@ def update_live_activity(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response("Live Activity update skipped or failed", status=200)
 
 
-def update_live_activity_internal(target_uid: str, content_state: dict) -> bool:
+def update_live_activity_internal(target_uid: str, content_state: dict, attributes: dict = None) -> bool:
     """
-    내부 호출용 Live Activity 업데이트 함수
+    내부 호출용 Live Activity 업데이트 함수.
+    업데이트 실패 시, attributes와 Start Token이 있다면 새로운 Activity를 시작합니다.
     """
     db = get_db()
 
@@ -137,44 +157,87 @@ def update_live_activity_internal(target_uid: str, content_state: dict) -> bool:
 
     user_data = user_doc.to_dict()
     fcm_token = user_data.get("fcmToken")
-    la_token = user_data.get("laUpdateToken")
+    la_update_token = user_data.get("laUpdateToken")
+    la_start_token = user_data.get("laStartToken")
     use_live_activity = user_data.get("useLiveActivity", True)
 
-    if not fcm_token or not la_token or not use_live_activity:
-        print(f"Live Activity not active for {target_uid}")
+    if not fcm_token or not use_live_activity:
+        print(f"Live Activity not active (or no FCM token) for {target_uid}")
         return False
 
-    try:
-        aps = messaging.Aps(
-            alert=messaging.ApsAlert(
-                title="다마고 상태 변경",
-                body="다마고치가 반응했어요!"
-            ),
-            custom_data={
-                "event": "update",
-                "timestamp": int(time.time()),
-                "content-state": content_state
-            }
-        )
-
-        message = messaging.Message(
-            token=fcm_token,
-            apns=messaging.APNSConfig(
-                live_activity_token=la_token,
-                headers={
-                    "apns-push-type": "liveactivity",
-                    "apns-topic": f"{BUNDLE_ID}.push-type.liveactivity",
-                    "apns-priority": "10"
-                },
-                payload=messaging.APNSPayload(aps=aps)
+    # 1. Update 시도
+    if la_update_token:
+        try:
+            aps = messaging.Aps(
+                alert=messaging.ApsAlert(
+                    title="다마고 상태 변경",
+                    body="다마고치가 반응했어요!"
+                ),
+                custom_data={
+                    "event": "update",
+                    "timestamp": int(time.time()),
+                    "content-state": content_state
+                }
             )
-        )
-        response = messaging.send(message)
-        print(f"Live Activity update sent to {target_uid}: {response}")
-        return True
 
-    except Exception as e:
-        print(f"Error updating Live Activity: {e}")
+            message = messaging.Message(
+                token=fcm_token,
+                apns=messaging.APNSConfig(
+                    live_activity_token=la_update_token,
+                    headers={
+                        "apns-push-type": "liveactivity",
+                        "apns-topic": f"{BUNDLE_ID}.push-type.liveactivity",
+                        "apns-priority": "10"
+                    },
+                    payload=messaging.APNSPayload(aps=aps)
+                )
+            )
+            response = messaging.send(message)
+            print(f"Live Activity update sent to {target_uid}: {response}")
+            return True
+
+        except Exception as e:
+            print(f"Live Activity update failed for {target_uid}: {e}. Trying fallback to Start...")
+            # Fallback 진행을 위해 예외를 무시하고 아래로 진행
+    
+    # 2. Fallback: Start 시도 (Update 실패 혹은 토큰 없음)
+    if la_start_token and attributes:
+        try:
+            print(f"Attempting to START Live Activity for {target_uid} as fallback.")
+            aps = messaging.Aps(
+                alert=messaging.ApsAlert(
+                    title="다마고 알림",
+                    body=content_state.get("statusMessage", "새로운 상태가 도착했어요!")
+                ),
+                custom_data={
+                    "event": "start",
+                    "timestamp": int(time.time()),
+                    "content-state": content_state,
+                    "attributes": attributes,
+                    "attributes-type": "DamagoAttributes"
+                }
+            )
+
+            message = messaging.Message(
+                token=fcm_token,
+                apns=messaging.APNSConfig(
+                    live_activity_token=la_start_token,
+                    headers={
+                        "apns-push-type": "liveactivity",
+                        "apns-topic": f"{BUNDLE_ID}.push-type.liveactivity",
+                        "apns-priority": "10"
+                    },
+                    payload=messaging.APNSPayload(aps=aps)
+                )
+            )
+            response = messaging.send(message)
+            print(f"Live Activity started (fallback) for {target_uid}: {response}")
+            return True
+        except Exception as e:
+            print(f"Live Activity start (fallback) failed for {target_uid}: {e}")
+            return False
+    else:
+        print(f"Cannot fallback to Start: Missing start token or attributes for {target_uid}")
         return False
 
 

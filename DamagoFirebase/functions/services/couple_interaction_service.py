@@ -5,6 +5,7 @@ from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
 import json
 from datetime import datetime, timezone
+from services.push_service import send_push_notification
 
 def fetch_history(req: https_fn.Request) -> https_fn.Response:
     """
@@ -424,11 +425,45 @@ def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
             "user2Answer": user2_answer,
             "bothAnswered": is_both_answered,
             "lastAnsweredAt": final_last_answered_at,
-            "isUser1": is_user1
+            "isUser1": is_user1,
+            "notificationData": {
+                "partnerUID": user_data.get("partnerUID"),
+                "nickname": user_data.get("nickname", "상대방"),
+                "isCompletingNow": is_completing_now
+            }
         }
 
     try:
         result = submit_answer_in_transaction(db.transaction())
+        
+        # --- [Notification] ---
+        # 트랜잭션 성공 후 알림 전송 (재시도로 인한 중복 발송 방지)
+        notif_info = result.pop("notificationData", None)
+        if notif_info and notif_info.get("partnerUID"):
+            try:
+                partner_uid = notif_info["partnerUID"]
+                nickname = notif_info["nickname"]
+                is_completing_now = notif_info["isCompletingNow"]
+                
+                if is_completing_now:
+                    title = "오늘의 질문 답변 완료!"
+                    body = f"{nickname}님이 답변을 완료했습니다! 결과를 확인해보세요."
+                else:
+                    title = "상대방이 오늘의 질문에 답변했어요!"
+                    body = f"{nickname}님이 답변을 남겼습니다! 답변하고 결과를 확인해보세요."
+                
+                send_push_notification(
+                    target_uid=partner_uid,
+                    title=title,
+                    body=body,
+                    data={
+                        "type": "daily_question",
+                        "questionID": result.get("questionID")
+                    }
+                )
+            except Exception as e:
+                print(f"Error sending notification: {e}")
+
         return https_fn.Response(json.dumps(result), mimetype="application/json")
     except ValueError as e:
         return https_fn.Response(str(e), status=400)
@@ -589,11 +624,44 @@ def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
             "gameID": game_id,
             "myChoice": choice,
             "opponentChoice": opponent_choice,
-            "bothAnswered": is_completing_now or answer_data.get("bothAnswered", False)
+            "bothAnswered": is_completing_now or answer_data.get("bothAnswered", False),
+            "notificationData": {
+                "partnerUID": user_data.get("partnerUID"),
+                "nickname": user_data.get("nickname", "상대방"),
+                "isCompletingNow": is_completing_now
+            }
         }
 
     try:
         result = submit_in_transaction(db.transaction())
+        
+        # --- [Notification] ---
+        notif_info = result.pop("notificationData", None)
+        if notif_info and notif_info.get("partnerUID"):
+            try:
+                partner_uid = notif_info["partnerUID"]
+                nickname = notif_info["nickname"]
+                is_completing_now = notif_info["isCompletingNow"]
+                
+                if is_completing_now:
+                    title = "밸런스 게임 답변 완료!"
+                    body = f"{nickname}님이 선택을 마쳤습니다. 결과를 확인해보세요!"
+                else:
+                    title = "상대방이 밸런스 게임에 답변했어요!"
+                    body = f"{nickname}님이 선택을 마쳤습니다. 선택하고 결과를 확인해보세요!"
+                
+                send_push_notification(
+                    target_uid=partner_uid,
+                    title=title,
+                    body=body,
+                    data={
+                        "type": "balance_game",
+                        "gameID": result.get("gameID")
+                    }
+                )
+            except Exception as e:
+                print(f"Error sending notification: {e}")
+
         return https_fn.Response(json.dumps(result), mimetype="application/json")
     except ValueError as e:
         return https_fn.Response(str(e), status=400)

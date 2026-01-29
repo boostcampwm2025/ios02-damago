@@ -15,7 +15,7 @@ struct CoolDownTimerView: View {
         HStack(spacing: .spacingXS) {
             Spacer()
             Text(message)
-            if let target = targetDate {
+            if let target = targetDate, target > Date() {
                 Image(systemName: "clock")
                 // SwiftUI의 내장 타이머 텍스트 사용 (별도 로직 없이 자동 업데이트)
                 Text(timerInterval: Date()...target, countsDown: true)

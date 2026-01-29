@@ -109,8 +109,8 @@ final class InteractionViewModel: ViewModel {
             .compactMapForUI { $0.coupleID }
             .first()
             .sink { [weak self] _ in
+                self?.fetchDailyQuestionData()
                 Task { [weak self] in
-                    await self?.fetchDailyQuestionData()
                     await self?.fetchBalanceGameData()
                 }
             }
@@ -119,13 +119,13 @@ final class InteractionViewModel: ViewModel {
     // swiftlint:enable trailing_closure
 
     // MARK: - Daily Question
-    private func fetchDailyQuestionData() async {
-        do {
-            let uiModel = try await fetchDailyQuestionUseCase.execute()
-            self.state.dailyQuestionUIModel = uiModel
-            self.startObservingDailyQuestion(uiModel: uiModel)
-        } catch {
-            SharedLogger.interaction.error("오늘의 질문 가져오기 실패: \(error.localizedDescription)")
+    private func fetchDailyQuestionData() {
+        Task { [weak self] in
+            guard let self else { return }
+            for await uiModel in fetchDailyQuestionUseCase.execute() {
+                self.state.dailyQuestionUIModel = uiModel
+                self.startObservingDailyQuestion(uiModel: uiModel)
+            }
         }
     }
 

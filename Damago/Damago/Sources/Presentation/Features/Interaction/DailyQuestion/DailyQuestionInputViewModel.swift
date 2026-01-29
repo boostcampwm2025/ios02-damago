@@ -28,9 +28,12 @@ final class DailyQuestionInputViewModel: ViewModel {
     private let manageDraftAnswerUseCase: ManageDailyQuestionDraftAnswerUseCase
     private var cancellables = Set<AnyCancellable>()
     
-    private var currentQuestionID: String? {
-        guard case .input(let inputState) = state.uiModel else { return nil }
-        return inputState.questionID
+    private var currentQuestionID: String {
+        state.uiModel.questionID
+    }
+    
+    private var isUser1: Bool {
+        state.uiModel.isUser1
     }
     
     init(
@@ -107,13 +110,42 @@ final class DailyQuestionInputViewModel: ViewModel {
     }
     
     private func handleSubmit() {
-        guard let questionID = currentQuestionID else { return }
         guard !state.isLoading else { return }
         
+        let questionID = currentQuestionID
         let answer = state.currentText
+        let isUser1 = self.isUser1
+        let questionContent = state.uiModel.questionContent
+        let originalUIModel = state.uiModel
         
         state.isLoading = true
         state.isSubmitButtonEnabled = false
+        
+        let optimisticResultModel = DailyQuestionUIModel.result(
+            .init(
+                questionID: questionID,
+                questionContent: questionContent,
+                myAnswer: .init(
+                    type: .unlocked,
+                    title: "나의 답변",
+                    content: answer,
+                    placeholderText: nil,
+                    iconName: nil
+                ),
+                opponentAnswer: .init(
+                    type: .locked,
+                    title: "상대의 답변",
+                    content: nil,
+                    placeholderText: "상대방이 아직 고민 중이에요...",
+                    iconName: "hourglass"
+                ),
+                buttonTitle: "답변 확인",
+                isUser1: isUser1,
+                bothAnswered: false,
+                lastAnsweredAt: Date()
+            )
+        )
+        state.uiModel = optimisticResultModel
         
         Task {
             defer {
@@ -123,7 +155,8 @@ final class DailyQuestionInputViewModel: ViewModel {
             do {
                 try await submitDailyQuestionAnswerUseCase.execute(
                     questionID: questionID,
-                    answer: answer
+                    answer: answer,
+                    isUser1: isUser1
                 )
                 
                 // 답변 제출 성공 시 저장된 임시 답변 삭제
@@ -133,6 +166,7 @@ final class DailyQuestionInputViewModel: ViewModel {
                 SharedLogger.interaction.error("답변 전송 실패: \(error.localizedDescription)")
                 
                 await MainActor.run {
+                    self.state.uiModel = originalUIModel
                     self.state.isSubmitButtonEnabled = true
                 }
             }
@@ -142,7 +176,7 @@ final class DailyQuestionInputViewModel: ViewModel {
     // MARK: - Draft Answer Management
     
     func saveDraftAnswer() {
-        guard let questionID = currentQuestionID else { return }
+        let questionID = currentQuestionID
         let trimmedText = state.currentText.trimmingCharacters(in: .whitespacesAndNewlines)
         
         Task { @MainActor in

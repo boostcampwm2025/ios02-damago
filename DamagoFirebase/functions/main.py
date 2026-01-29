@@ -60,6 +60,10 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
     return user_service.update_user_info(req)
 
 @https_fn.on_request()
+def adjust_coin(req: https_fn.Request) -> https_fn.Response:
+    return user_service.adjust_coin(req)
+
+@https_fn.on_request()
 def withdraw_user(req: https_fn.Request) -> https_fn.Response:
     return auth_service.withdraw_user(req)
 
