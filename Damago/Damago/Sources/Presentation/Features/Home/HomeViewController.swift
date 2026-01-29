@@ -245,10 +245,7 @@ extension HomeViewController: UIPopoverPresentationControllerDelegate {
 
         // 1. 콕 찌르기 팁 감시
         tipsTasks.insert(Task { @MainActor in
-            await homeTips.poke.monitor(on: self, sourceItem: mainView.pokeButton) {
-                try? await Task.sleep(for: .seconds(0.3))
-                HomeTip.hasSeenPokeTip.sendDonation()
-            }
+            await homeTips.poke.monitor(on: self, sourceItem: mainView.pokeButton)
         })
         
         // 2. 먹이 주기 팁 감시

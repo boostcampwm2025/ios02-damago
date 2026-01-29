@@ -8,8 +8,6 @@
 import TipKit
 
 struct HomeTip {
-    nonisolated static let hasSeenPokeTip = Tips.Event(id: "hasSeenPokeTip")
-    
     let poke = ReusableTip(
         id: "pokeTip",
         title: "콕 찌르기",
@@ -20,8 +18,5 @@ struct HomeTip {
         id: "feedTip",
         title: "먹이 주기",
         message: "다마고에게 먹이를 주면 위 성장 게이지가 차올라요!",
-        rules: [
-            #Rule(Self.hasSeenPokeTip) { $0.donations.count > 0 }
-        ]
     )
 }
