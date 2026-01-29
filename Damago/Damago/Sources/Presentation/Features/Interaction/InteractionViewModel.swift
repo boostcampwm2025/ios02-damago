@@ -110,9 +110,7 @@ final class InteractionViewModel: ViewModel {
             .first()
             .sink { [weak self] _ in
                 self?.fetchDailyQuestionData()
-                Task { [weak self] in
-                    await self?.fetchBalanceGameData()
-                }
+                self?.fetchBalanceGameData()
             }
             .store(in: &cancellables)
     }
@@ -159,13 +157,13 @@ final class InteractionViewModel: ViewModel {
     }
 
     // MARK: - Balance Game
-    private func fetchBalanceGameData() async {
-        do {
-            let uiModel = try await fetchBalanceGameUseCase.execute()
-            self.state.balanceGameUIModel = uiModel
-            self.startObservingBalanceGame(uiModel: uiModel)
-        } catch {
-            SharedLogger.interaction.error("밸런스 게임 가져오기 실패: \(error.localizedDescription)")
+    private func fetchBalanceGameData() {
+        Task { [weak self] in
+            guard let self else { return }
+            for await uiModel in fetchBalanceGameUseCase.execute() {
+                self.state.balanceGameUIModel = uiModel
+                self.startObservingBalanceGame(uiModel: uiModel)
+            }
         }
     }
 
@@ -214,11 +212,20 @@ final class InteractionViewModel: ViewModel {
     func submitBalanceGameChoice(choice: BalanceGameChoice) async throws {
         guard let uiModel = state.balanceGameUIModel else { return }
         let gameID: String
+        let isUser1: Bool
 
         switch uiModel {
-        case .input(let state): gameID = state.gameID
-        case .result(let state): gameID = state.gameID
+        case .input(let state):
+            gameID = state.gameID
+            isUser1 = state.isUser1
+        case .result(let state):
+            gameID = state.gameID
+            isUser1 = state.isUser1
         }
-        try await submitBalanceGameChoiceUseCase.execute(gameID: gameID, choice: choice.rawValue)
+        try await submitBalanceGameChoiceUseCase.execute(
+            gameID: gameID,
+            choice: choice.rawValue,
+            isUser1: isUser1
+        )
     }
 }

@@ -7,7 +7,7 @@
 
 protocol SubmitBalanceGameChoiceUseCase {
     @discardableResult
-    func execute(gameID: String, choice: Int) async throws -> Bool
+    func execute(gameID: String, choice: Int, isUser1: Bool) async throws -> Bool
 }
 
 final class SubmitBalanceGameChoiceUseCaseImpl: SubmitBalanceGameChoiceUseCase {
@@ -18,7 +18,7 @@ final class SubmitBalanceGameChoiceUseCaseImpl: SubmitBalanceGameChoiceUseCase {
     }
     
     @discardableResult
-    func execute(gameID: String, choice: Int) async throws -> Bool {
-        try await repository.submitChoice(gameID: gameID, choice: choice)
+    func execute(gameID: String, choice: Int, isUser1: Bool) async throws -> Bool {
+        try await repository.submitChoice(gameID: gameID, choice: choice, isUser1: isUser1)
     }
 }

@@ -8,8 +8,8 @@
 import Combine
 
 protocol BalanceGameRepositoryProtocol {
-    func fetchBalanceGame() async throws -> BalanceGameDTO
-    func submitChoice(gameID: String, choice: Int) async throws -> Bool
+    func fetchBalanceGame() -> AsyncStream<BalanceGameDTO>
+    func submitChoice(gameID: String, choice: Int, isUser1: Bool) async throws -> Bool
     func observeAnswer(
         coupleID: String,
         gameID: String,

@@ -8,7 +8,7 @@
 import UIKit
 
 enum BalanceGameCardUIState {
-    case choosing(selected: BalanceGameChoice?, headerStatus: String, targetDate: Date?)
+    case choosing(selected: BalanceGameChoice?, headerStatus: String, targetDate: Date?, isSubmitting: Bool)
     case result(
         myChoice: BalanceGameChoice,
         opponentChoice: BalanceGameChoice,
@@ -101,7 +101,7 @@ final class BalanceGameCardView: UIView {
 
     func render(state: BalanceGameCardUIState) {
         switch state {
-        case .choosing(let selected, let headerStatus, let targetDate):
+        case .choosing(let selected, let headerStatus, let targetDate, let isSubmitting):
             headerView.configure(
                 title: "밸런스 게임",
                 rightTitle: headerStatus,
@@ -111,6 +111,7 @@ final class BalanceGameCardView: UIView {
                 badge: category
             )
             choiceView.render(selected: selected, isResult: false)
+            choiceView.isUserInteractionEnabled = !isSubmitting
 
         case .result(
             let myChoice,
@@ -148,6 +149,6 @@ final class BalanceGameCardView: UIView {
         questionLabel.text = question
         choiceView.setChoiceTitles(left: leftChoice, right: rightChoice)
 
-        render(state: .choosing(selected: nil, headerStatus: "", targetDate: nil))
+        render(state: .choosing(selected: nil, headerStatus: "", targetDate: nil, isSubmitting: false))
     }
 }

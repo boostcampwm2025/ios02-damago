@@ -223,6 +223,11 @@ final class BalanceGameChoiceView: UIView {
     }
 
     private func animateBorder(button: UIButton, isActive: Bool) {
+        // 이미 활성화된 상태에서 다시 활성화를 요청하면 무시 (중복 애니메이션 방지)
+        if isActive && button.layer.borderWidth == self.activeBorderWidth {
+            return
+        }
+
         let animations = {
             button.layer.borderWidth = isActive ? self.activeBorderWidth : 0
             if !isActive {

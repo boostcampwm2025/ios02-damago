@@ -42,6 +42,10 @@ final class RepositoryAssembly: Assembly {
             DailyQuestionLocalDataSource(storage: container.resolve(SwiftDataStorage.self))
         }
 
+        container.register(BalanceGameLocalDataSourceProtocol.self) {
+            BalanceGameLocalDataSource(storage: container.resolve(SwiftDataStorage.self))
+        }
+
         container.register(DailyQuestionRepositoryProtocol.self) {
             DailyQuestionRepository(
                 networkProvider: container.resolve(NetworkProvider.self),
@@ -55,7 +59,8 @@ final class RepositoryAssembly: Assembly {
             BalanceGameRepository(
                 networkProvider: container.resolve(NetworkProvider.self),
                 tokenProvider: container.resolve(TokenProvider.self),
-                firestoreService: container.resolve(FirestoreService.self)
+                firestoreService: container.resolve(FirestoreService.self),
+                localDataSource: container.resolve(BalanceGameLocalDataSourceProtocol.self)
             )
             // 테스트를 위해 MockRepository
 //          MockBalanceGameRepository()
