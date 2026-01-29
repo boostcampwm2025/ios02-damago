@@ -56,7 +56,10 @@ final class CollectionViewController: UIViewController {
     }
 
     @objc private func shopButtonTapped() {
-        // TODO: 상점 화면 연결
+        let storeViewModel = StoreViewModel()
+        let storeVC = StoreViewController(viewModel: storeViewModel)
+        storeVC.modalPresentationStyle = .fullScreen
+        self.present(storeVC, animated: true)
     }
 }
 
