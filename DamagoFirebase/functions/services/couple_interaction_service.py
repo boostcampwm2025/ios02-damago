@@ -537,6 +537,12 @@ def fetch_balance_game(req: https_fn.Request) -> https_fn.Response:
     my_choice = user1_choice if is_user1 else user2_choice
     opponent_choice = user2_choice if is_user1 else user1_choice
     
+    formatted_last_answered_at = None
+    if last_answered_at:
+        if last_answered_at.tzinfo is None:
+            last_answered_at = last_answered_at.replace(tzinfo=timezone.utc)
+        formatted_last_answered_at = last_answered_at.isoformat(timespec="seconds").replace("+00:00", "Z")
+
     response_data = {
         "gameID": game_id,
         "questionContent": game_data.get("questionText", ""),
@@ -545,7 +551,7 @@ def fetch_balance_game(req: https_fn.Request) -> https_fn.Response:
         "myChoice": my_choice,
         "opponentChoice": opponent_choice,
         "isUser1": is_user1,
-        "lastAnsweredAt": last_answered_at.isoformat() if last_answered_at else None
+        "lastAnsweredAt": formatted_last_answered_at
     }
     
     return https_fn.Response(json.dumps(response_data), mimetype="application/json")

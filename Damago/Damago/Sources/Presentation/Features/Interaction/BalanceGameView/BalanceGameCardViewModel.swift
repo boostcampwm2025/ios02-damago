@@ -23,6 +23,7 @@ final class BalanceGameCardViewModel: ViewModel {
     struct State: Equatable {
         var uiModel: BalanceGameUIModel?
         var pendingConfirm: BalanceGameChoice?
+        var localSelection: BalanceGameChoice?
         var showLockedAlert: Pulse<BalanceGameChoice>?
         var isLoading: Bool = false
 
@@ -59,7 +60,7 @@ final class BalanceGameCardViewModel: ViewModel {
 
         var headerStatus: String {
             if myChoice != nil && !isOpponentAnswered {
-                return "상대방의 선택을 기다리고 있어요."
+                return "상대방을 기다리는 중"
             }
             return ""
         }
@@ -82,6 +83,7 @@ final class BalanceGameCardViewModel: ViewModel {
             .sink { [weak self] newModel in
                 self?.state.uiModel = newModel
                 self?.state.isLoading = false
+                self?.state.localSelection = nil
             }
             .store(in: &cancellables)
     }
@@ -100,9 +102,12 @@ final class BalanceGameCardViewModel: ViewModel {
 
         input.confirmResult
             .sink { [weak self] choice, ok in
-                self?.state.pendingConfirm = nil
+                guard let self else { return }
+                
                 if ok {
-                    self?.handleSubmit(choice: choice)
+                    self.handleSubmit(choice: choice)
+                } else {
+                    self.state.pendingConfirm = nil
                 }
             }
             .store(in: &cancellables)
@@ -113,7 +118,12 @@ final class BalanceGameCardViewModel: ViewModel {
     private func handleSubmit(choice: BalanceGameChoice) {
         guard !state.isLoading else { return }
         SharedLogger.interaction.info("ViewModel: 밸런스 게임 제출 프로세스 시작 (선택: \(choice.rawValue))")
-        state.isLoading = true
+        
+        var newState = state
+        newState.isLoading = true
+        newState.localSelection = choice
+        newState.pendingConfirm = nil
+        state = newState
         
         Task {
             do {
