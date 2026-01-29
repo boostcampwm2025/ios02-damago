@@ -49,7 +49,7 @@ final class StoreView: UIView {
             title: "100 코인"
         )
         
-        button.configure(active: config, disabled: disabledConfig)
+        button.configure(enabled: config, disabled: disabledConfig)
         button.translatesAutoresizingMaskIntoConstraints = false
         
         button.layer.shadowColor = UIColor.black.cgColor
