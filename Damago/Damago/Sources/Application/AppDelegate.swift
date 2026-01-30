@@ -98,7 +98,15 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
 
         // 발급받은 APNs 토큰을 Firebase Messaging에 연결합니다.
         // 이 과정이 없으면 Firebase Console이나 API로 보낸 푸시가 기기에 도착하지 않습니다.
-        Messaging.messaging().apnsToken = deviceToken
+        
+        // 명시적으로 토큰 타입을 설정하여 환경 불일치 문제를 방지합니다.
+        // Xcode 직접 실행(Debug) -> Sandbox
+        // TestFlight/AppStore(Release) -> Production
+        #if DEBUG
+        Messaging.messaging().setAPNSToken(deviceToken, type: .sandbox)
+        #else
+        Messaging.messaging().setAPNSToken(deviceToken, type: .prod)
+        #endif
     }
 
     /// Apple(APNs)에서 기기 고유 토큰(Device Token)의 발급이 실패했을 때 호출됩니다.
