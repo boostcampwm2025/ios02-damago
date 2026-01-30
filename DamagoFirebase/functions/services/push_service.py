@@ -60,8 +60,15 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     except ValueError as e:
         return https_fn.Response(str(e), status=401)
 
-    req_data = req.get_json(silent=True) or req.args
+    req_body = req.get_json(silent=True)
+    if isinstance(req_body, dict):
+        req_data = req_body
+    else:
+        req_data = req.args
+
     custom_message = req_data.get("message")
+    if custom_message is not None:
+        custom_message = str(custom_message)
 
     db = get_db()
 
