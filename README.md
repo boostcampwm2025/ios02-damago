@@ -7,9 +7,12 @@
 ![Xcode](https://img.shields.io/badge/Xcode-26.1-blue?logo=xcode&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Serverless-yellow?logo=firebase&logoColor=white)
 
-<img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2026-01-31 at 21 33 42" src="https://github.com/user-attachments/assets/c1a047dc-d1f9-4656-96d6-18a669eace2a" />
-<img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2026-01-31 at 22 16 38" src="https://github.com/user-attachments/assets/bc8e8ed0-e4fd-4113-993f-78814cd69fff" />
-<img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2026-01-31 at 21 34 45" src="https://github.com/user-attachments/assets/78dc12e4-ba02-4566-ab7d-51d1b9483b8d" />
+<img width="200" alt="image" src="https://github.com/user-attachments/assets/ab4e3951-0203-4fb2-b3ae-97546c8480ce" />
+<img width="200" alt="image" src="https://github.com/user-attachments/assets/a8090e91-468c-4bb9-86b2-0a623c0dd979" />
+<img width="200" alt="image" src="https://github.com/user-attachments/assets/da41bba9-113d-4666-8e7e-41e1024678ef" />
+<img width="200" alt="image" src="https://github.com/user-attachments/assets/124390a6-cf13-4993-aa26-7b51f533e1e9" />
+
+
 
 ## 📖 About
 **"앱을 켜지 않아도, 우리는 연결되어 있어."**
@@ -27,7 +30,7 @@
     * ![Simulator Screen Recording - iPhone 17 Pro - 2026-01-31 at 22 16 50](https://github.com/user-attachments/assets/338cb165-d9e9-49fe-bd19-4cac9a943339)
 
 *   **Gamification:** 먹이 주기, 콕 찌르기, 밸런스 게임 등 부담 없는 놀이 요소를 통해 관계를 돈독히 합니다.
-    * <img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2026-01-31 at 21 33 56" src="https://github.com/user-attachments/assets/6ff19dd4-9e15-43dd-9793-8222021c2e5c" /> <img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2026-01-31 at 21 37 47" src="https://github.com/user-attachments/assets/ed351df9-9910-48aa-b027-5b3a0d60abe8" />
+    * <img width="200" alt="image" src="https://github.com/user-attachments/assets/1af41319-ff6d-460b-821d-3a9d3958819e" /> <img width="200" alt="image" src="https://github.com/user-attachments/assets/9f286f80-2586-4014-b253-7e3a33109cfc" />
 
 *   **Local-First Sync:** 네트워크가 불안정해도 끊김 없는 경험을 제공하며, SwiftData를 통해 데이터를 효율적으로 관리합니다.
 
