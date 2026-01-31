@@ -61,7 +61,7 @@
 *   **Reason:**
     *   **단발성 작업:** 네트워킹과 같은 단순 비동기 작업에는 `async/await`을 사용하여 코드를 간결하게 작성했습니다.
     *   **UI 이벤트:** 버튼 탭이나 텍스트 입력과 같은 UI 이벤트 스트림은 **Combine**을 사용하여 선언적으로 처리함으로써 MVVM 패턴의 이점을 살렸습니다.
-    *   **데이터 스트림 (Local-First):** 로컬 캐시를 먼저 방출하고 네트워크 데이터를 이어서 처리해야 하는 **순차적 다발 데이터 요청**에서는, 기존 Combine(`Future`, `Merge`)의 복잡한 체이닝 대신 **`AsyncStream`**을 도입하여 `if`와 `await`을 활용한 가독성 높은 코드를 구현했습니다.
+    *   **데이터 스트림 (Local-First):** 로컬 캐시를 먼저 방출하고 네트워크 데이터를 이어서 처리해야 하는 **순차적 다발 데이터 요청**에서는, 기존 Combine(`Future`, `Merge`)의 복잡한 체이닝 대신 `AsyncStream`을 도입하여 `if`와 `await`을 활용한 가독성 높은 코드를 구현했습니다.
 
 ### 3. Data Persistence: SwiftData
 *   **Decision:** 로컬 데이터 저장소로 Core Data 대신 **SwiftData**를 채택했습니다.
@@ -70,7 +70,7 @@
     *   **Code-based**로 스키마 관리가 가능한 SwiftData를 도입하여 파일 충돌 가능성을 획기적으로 줄이고, Swift 네이티브한 문법으로 생산성을 높였습니다.
 
 ### 4. Serverless & CI/CD
-*   **Serverless Backend:** 별도의 서버 구축 대신 **Firebase Cloud Functions (Python)**를 사용하여 개발 리소스를 기능 구현에 집중했습니다. `SnapshotListener`를 활용해 실시간성을 확보하고, 환경(Dev/Prod)을 분리하여 개발 안정성을 높였습니다.
+*   **Serverless Backend:** 별도의 서버 구축 대신 **Firebase Cloud Functions** (Python)를 사용하여 개발 리소스를 기능 구현에 집중했습니다. `SnapshotListener`를 활용해 실시간성을 확보하고, 환경(Dev/Prod)을 분리하여 개발 안정성을 높였습니다.
 *   **CI/CD:** **GitHub Actions**를 도입하여 빌드 무결성을 검증하고, 팀원 간 로컬 환경 불일치로 인한 빌드 오류를 사전에 차단했습니다.
 
 ---
