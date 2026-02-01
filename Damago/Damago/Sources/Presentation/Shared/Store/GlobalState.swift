@@ -23,7 +23,7 @@ struct GlobalState: Equatable {
 
     // MARK: - Damago Content
     let damagoName: String?
-    let damagoType: String?
+    let damagoType: DamagoType?
     let level: Int?
     let currentExp: Int?
     let maxExp: Int?

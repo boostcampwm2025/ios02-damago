@@ -9,7 +9,7 @@ import Foundation
 
 struct DamagoSnapshotDTO: Decodable {
     let damagoName: String
-    let damagoType: String
+    let damagoType: DamagoType
     let isHungry: Bool
     let statusMessage: String
     let level: Int

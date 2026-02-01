@@ -163,7 +163,7 @@ extension DamagoStatusResponse {
     func toDomain() -> DamagoStatus {
         DamagoStatus(
             damagoName: damagoName,
-            damagoType: damagoType,
+            damagoType: DamagoType(rawValue: damagoType)!,
             level: level,
             currentExp: currentExp,
             maxExp: maxExp,

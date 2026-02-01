@@ -96,7 +96,7 @@ final class DamagoSetupViewModel: ViewModel {
             do {
                 let userInfo = try await fetchUserInfoUseCase.execute()
                 state.coupleID = userInfo.coupleID
-                state.currentDamagoType = userInfo.damagoStatus.flatMap { DamagoType(rawValue: $0.damagoType) }
+                state.currentDamagoType = userInfo.damagoStatus.flatMap { $0.damagoType }
                 state.currentDamagoName = userInfo.damagoStatus?.damagoName
             } catch {
                 state.coupleID = nil

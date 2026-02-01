@@ -18,7 +18,7 @@ final class HomeViewController: UIViewController {
     private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
     private let pokeMessageSelectedPublisher = PassthroughSubject<String, Never>()
     private let damagoNameChangeSubmittedPublisher = PassthroughSubject<String, Never>()
-    private var currentDamagoTypeRaw: String = ""
+    private var currentDamagoType: DamagoType?
     
     private let homeTips = HomeTip()
     private var tipsTasks = Set<Task<Void, Never>>()
@@ -87,8 +87,7 @@ final class HomeViewController: UIViewController {
 
     private func showEditDamagoNamePopup() {
         let popupView = DamagoNameEditPopupView()
-        let damagoType = DamagoType(rawValue: currentDamagoTypeRaw)
-        popupView.configure(damagoType: damagoType, initialName: mainView.nameLabel.text)
+        popupView.configure(damagoType: currentDamagoType, initialName: mainView.nameLabel.text)
         popupView.translatesAutoresizingMaskIntoConstraints = false
 
         let targetView = tabBarController?.view ?? view
@@ -206,8 +205,9 @@ final class HomeViewController: UIViewController {
         output
             .mapForUI { $0 }
             .sink { [weak self] state in
-                self?.mainView.updateDamago(damagoType: state.damagoType, isHungry: state.isHungry)
-                self?.currentDamagoTypeRaw = state.damagoType
+                guard let damagoType = state.damagoType else { return }
+                self?.mainView.updateDamago(damagoType: damagoType, isHungry: state.isHungry)
+                self?.currentDamagoType = damagoType
             }
             .store(in: &cancellables)
 

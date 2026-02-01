@@ -103,7 +103,7 @@ final class CollectionViewModel: ViewModel {
         Task {
             do {
                 let userInfo = try await fetchUserInfoUseCase.execute()
-                state.currentDamagoType = userInfo.damagoStatus.flatMap { DamagoType(rawValue: $0.damagoType) }
+                state.currentDamagoType = userInfo.damagoStatus.flatMap { $0.damagoType }
             } catch {
                 state.currentDamagoType = nil
             }

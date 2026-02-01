@@ -61,13 +61,8 @@ final class LiveActivityManager {
                 return
             }
 
-            guard let damagoType = DamagoType(rawValue: damagoStatus.damagoType) else {
-                SharedLogger.liveActivityManger.error("Invalid damagoType from server: \(damagoStatus.damagoType)")
-                return
-            }
-
             let latestContentState = DamagoAttributes.ContentState(
-                damagoType: damagoType,
+                damagoType: damagoStatus.damagoType,
                 isHungry: damagoStatus.isHungry,
                 statusMessage: damagoStatus.statusMessage,
                 level: damagoStatus.level,

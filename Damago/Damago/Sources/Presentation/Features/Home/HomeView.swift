@@ -259,8 +259,8 @@ extension HomeView {
         feedButton.isEnabled = state.isEnabled
     }
     
-    func updateDamago(damagoType: String, isHungry: Bool) {
-        let imageName = isHungry ? "\(damagoType)Hungry" : "\(damagoType)Base"
+    func updateDamago(damagoType: DamagoType, isHungry: Bool) {
+        let imageName = isHungry ? "\(damagoType.rawValue)Hungry" : "\(damagoType.rawValue)Base"
         damagoView.animate(spriteSheetName: imageName)
     }
 }

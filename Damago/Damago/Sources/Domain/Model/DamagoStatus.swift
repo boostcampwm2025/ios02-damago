@@ -9,7 +9,7 @@ import Foundation
 
 struct DamagoStatus {
     let damagoName: String
-    let damagoType: String
+    let damagoType: DamagoType
     let level: Int
     let currentExp: Int
     let maxExp: Int
