@@ -1,5 +1,5 @@
 //
-//  PetStatus.swift
+//  DamagoStatus.swift
 //  Damago
 //
 //  Created by 김재영 on 1/13/26.
@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct PetStatus {
-    let petName: String
-    let petType: String
+struct DamagoStatus {
+    let damagoName: String
+    let damagoType: String
     let level: Int
     let currentExp: Int
     let maxExp: Int

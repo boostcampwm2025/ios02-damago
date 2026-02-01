@@ -1,5 +1,5 @@
 //
-//  PetCell.swift
+//  DamagoCell.swift
 //  Damago
 //
 //  Created by 김재영 on 1/26/26.
@@ -7,9 +7,9 @@
 
 import UIKit
 
-final class PetCell: UICollectionViewCell {
-    private let petView: PetView = {
-        let view = PetView()
+final class DamagoCell: UICollectionViewCell {
+    private let damagoView: DamagoView = {
+        let view = DamagoView()
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -35,11 +35,11 @@ final class PetCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func configure(with petType: DamagoType, isCurrentPet: Bool = false) {
-        petView.configure(with: petType)
-        usingBadgeLabel.isHidden = !isCurrentPet
-        contentView.layer.borderColor = (isCurrentPet ? UIColor.damagoPrimary : .systemGray5).cgColor
-        contentView.layer.borderWidth = isCurrentPet ? 2 : 1
+    func configure(with damagoType: DamagoType, isCurrentDamago: Bool = false) {
+        damagoView.configure(with: damagoType)
+        usingBadgeLabel.isHidden = !isCurrentDamago
+        contentView.layer.borderColor = (isCurrentDamago ? UIColor.damagoPrimary : .systemGray5).cgColor
+        contentView.layer.borderWidth = isCurrentDamago ? 2 : 1
     }
 
     private func setupUI() {
@@ -54,16 +54,16 @@ final class PetCell: UICollectionViewCell {
     }
 
     private func setupHierarchy() {
-        contentView.addSubview(petView)
+        contentView.addSubview(damagoView)
         contentView.addSubview(usingBadgeLabel)
     }
 
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            petView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: .spacingM),
-            petView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: .spacingM),
-            petView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -.spacingM),
-            petView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -.spacingM),
+            damagoView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: .spacingM),
+            damagoView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: .spacingM),
+            damagoView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -.spacingM),
+            damagoView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -.spacingM),
 
             usingBadgeLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: .spacingS),
             usingBadgeLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -.spacingS),

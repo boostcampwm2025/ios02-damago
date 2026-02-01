@@ -54,29 +54,29 @@ final class LiveActivityManager {
             return
         }
         
-        fetchActivityData { petStatus in
-            guard let petStatus else {
+        fetchActivityData { damagoStatus in
+            guard let damagoStatus else {
                 // 서버로 받은 데이터가 없으면 실행 중인 모든 Live Activity를 종료합니다.
                 self.endAllActivities()
                 return
             }
 
-            guard let petType = DamagoType(rawValue: petStatus.petType) else {
-                SharedLogger.liveActivityManger.error("Invalid petType from server: \(petStatus.petType)")
+            guard let damagoType = DamagoType(rawValue: damagoStatus.damagoType) else {
+                SharedLogger.liveActivityManger.error("Invalid damagoType from server: \(damagoStatus.damagoType)")
                 return
             }
 
             let latestContentState = DamagoAttributes.ContentState(
-                petType: petType,
-                isHungry: petStatus.isHungry,
-                statusMessage: petStatus.statusMessage,
-                level: petStatus.level,
-                currentExp: petStatus.currentExp,
-                maxExp: petStatus.maxExp,
-                lastFedAt: petStatus.lastFedAt?.ISO8601Format()
+                damagoType: damagoType,
+                isHungry: damagoStatus.isHungry,
+                statusMessage: damagoStatus.statusMessage,
+                level: damagoStatus.level,
+                currentExp: damagoStatus.currentExp,
+                maxExp: damagoStatus.maxExp,
+                lastFedAt: damagoStatus.lastFedAt?.ISO8601Format()
             )
             let attributes = DamagoAttributes(
-                petName: petStatus.petName
+                damagoName: damagoStatus.damagoName
             )
 
             if let activity = Activity<DamagoAttributes>.activities.first {
@@ -94,7 +94,7 @@ final class LiveActivityManager {
         monitoringLiveActivities()
     }
 
-    private func fetchActivityData(completion: @escaping (PetStatus?) -> Void) {
+    private func fetchActivityData(completion: @escaping (DamagoStatus?) -> Void) {
         guard let repository = userRepository else {
             completion(nil)
             return
@@ -103,7 +103,7 @@ final class LiveActivityManager {
         Task {
             do {
                 let userInfo = try await repository.getUserInfo()
-                completion(userInfo.petStatus)
+                completion(userInfo.damagoStatus)
             } catch {
                 SharedLogger.liveActivityManger.error("네트워크 에러: \(error)")
                 completion(nil)

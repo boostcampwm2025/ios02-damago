@@ -4,7 +4,7 @@ from nanoid import generate
 import google.cloud.firestore
 import json
 
-from utils.constants import AVAILABLE_PET_TYPES, get_default_pet_name, XP_TABLE
+from utils.constants import AVAILABLE_DAMAGO_TYPES, get_default_damago_name, XP_TABLE
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
 
@@ -91,7 +91,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     """
     두 유저(Token User, targetCode)를 커플로 연결합니다.
     visible(isAvailable)인 모든 다마고를 기본 이름으로 생성합니다.
-    활성 다마고(damagoID) 선택은 이후 PetSetup 등 선택 화면에서 이루어집니다.
+    활성 다마고(damagoID) 선택은 이후 DamagoSetup 등 선택 화면에서 이루어집니다.
     트랜잭션을 사용하여 데이터 일관성을 보장합니다.
 
     Args:
@@ -151,7 +151,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
         if snapshot.exists:
             return "ok" # 이미 연결됨
 
-        # 커플 생성 (다마고 선택은 이후 PetSetup 등 선택 화면에서 진행)
+        # 커플 생성 (다마고 선택은 이후 DamagoSetup 등 선택 화면에서 진행)
         transaction.set(couple_ref, {
             "id": couple_ref.id,
             "user1UID": my_uid,
@@ -179,8 +179,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
         })
 
         # visible인 모든 다마고 생성 (기본 이름 사용)
-        for pet_type in AVAILABLE_PET_TYPES:
-            damago_id = f"{couple_ref.id}_{pet_type}"
+        for damago_type in AVAILABLE_DAMAGO_TYPES:
+            damago_id = f"{couple_ref.id}_{damago_type}"
             damago_ref = db.collection("damagos").document(damago_id)
             transaction.set(damago_ref, {
                 "id": damago_id,
@@ -194,8 +194,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
                 "lastUpdatedAt": firestore.SERVER_TIMESTAMP,
                 "lastFedAt": None,
                 "endedAt": None,
-                "petName": get_default_pet_name(pet_type),
-                "petType": pet_type,
+                "damagoName": get_default_damago_name(damago_type),
+                "damagoType": damago_type,
             })
 
         return "ok"

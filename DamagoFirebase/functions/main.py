@@ -5,7 +5,7 @@
 from firebase_functions import https_fn
 from firebase_functions.options import set_global_options
 from firebase_admin import initialize_app
-from services import auth_service, pet_service, push_service, user_service, seed_service, couple_interaction_service
+from services import auth_service, damago_service, push_service, user_service, seed_service, couple_interaction_service
 
 # For cost control, you can set the maximum number of containers that can be
 # running at the same time. This helps mitigate the impact of unexpected
@@ -41,11 +41,11 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
 
 @https_fn.on_request()
 def feed(req: https_fn.Request) -> https_fn.Response:
-    return pet_service.feed(req)
+    return damago_service.feed(req)
 
 @https_fn.on_request()
 def make_hungry(req: https_fn.Request) -> https_fn.Response:
-    return pet_service.make_hungry(req)
+    return damago_service.make_hungry(req)
 
 @https_fn.on_request()
 def get_user_info(req: https_fn.Request) -> https_fn.Response:

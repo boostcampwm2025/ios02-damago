@@ -1,5 +1,5 @@
 //
-//  PetNamingPopupView.swift
+//  DamagoNamingPopupView.swift
 //  Damago
 //
 //  Created by 김재영 on 1/26/26.
@@ -8,7 +8,7 @@
 import UIKit
 import Combine
 
-final class PetNamingPopupView: UIView {
+final class DamagoNamingPopupView: UIView {
     let confirmButtonTappedSubject = PassthroughSubject<String, Never>()
     let cancelButtonTappedSubject = PassthroughSubject<Void, Never>()
     let requestCancelConfirmationSubject = PassthroughSubject<Void, Never>()
@@ -25,7 +25,7 @@ final class PetNamingPopupView: UIView {
         return view
     }()
     
-    private let petBackgroundView: UIView = {
+    private let damagoBackgroundView: UIView = {
         let view = UIView()
         view.backgroundColor = .white
         view.layer.cornerRadius = .mediumButton
@@ -35,8 +35,8 @@ final class PetNamingPopupView: UIView {
         return view
     }()
     
-    private let petView: PetView = {
-        let view = PetView()
+    private let damagoView: DamagoView = {
+        let view = DamagoView()
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -123,8 +123,8 @@ final class PetNamingPopupView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(with petType: DamagoType, initialName: String?) {
-        petView.configure(with: petType)
+    func configure(with damagoType: DamagoType, initialName: String?) {
+        damagoView.configure(with: damagoType)
         let trimmed = initialName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         self.initialName = trimmed
         nameTextField.text = trimmed
@@ -202,10 +202,10 @@ final class PetNamingPopupView: UIView {
     
     private func setupHierarchy() {
         addSubview(containerView)
-        [petBackgroundView, titleLabel, nameTextField, buttonStackView].forEach {
+        [damagoBackgroundView, titleLabel, nameTextField, buttonStackView].forEach {
             containerView.addSubview($0)
         }
-        petBackgroundView.addSubview(petView)
+        damagoBackgroundView.addSubview(damagoView)
         
         buttonStackView.addArrangedSubview(cancelButton)
         buttonStackView.addArrangedSubview(confirmButton)
@@ -220,17 +220,17 @@ final class PetNamingPopupView: UIView {
             centerY,
             containerView.widthAnchor.constraint(equalToConstant: 300),
             
-            petBackgroundView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: .spacingL),
-            petBackgroundView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            petBackgroundView.widthAnchor.constraint(equalToConstant: 150),
-            petBackgroundView.heightAnchor.constraint(equalTo: petBackgroundView.widthAnchor),
+            damagoBackgroundView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: .spacingL),
+            damagoBackgroundView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            damagoBackgroundView.widthAnchor.constraint(equalToConstant: 150),
+            damagoBackgroundView.heightAnchor.constraint(equalTo: damagoBackgroundView.widthAnchor),
             
-            petView.topAnchor.constraint(equalTo: petBackgroundView.topAnchor, constant: .spacingS),
-            petView.leadingAnchor.constraint(equalTo: petBackgroundView.leadingAnchor, constant: .spacingS),
-            petView.trailingAnchor.constraint(equalTo: petBackgroundView.trailingAnchor, constant: -.spacingS),
-            petView.bottomAnchor.constraint(equalTo: petBackgroundView.bottomAnchor, constant: -.spacingS),
+            damagoView.topAnchor.constraint(equalTo: damagoBackgroundView.topAnchor, constant: .spacingS),
+            damagoView.leadingAnchor.constraint(equalTo: damagoBackgroundView.leadingAnchor, constant: .spacingS),
+            damagoView.trailingAnchor.constraint(equalTo: damagoBackgroundView.trailingAnchor, constant: -.spacingS),
+            damagoView.bottomAnchor.constraint(equalTo: damagoBackgroundView.bottomAnchor, constant: -.spacingS),
             
-            titleLabel.topAnchor.constraint(equalTo: petBackgroundView.bottomAnchor, constant: .spacingM),
+            titleLabel.topAnchor.constraint(equalTo: damagoBackgroundView.bottomAnchor, constant: .spacingM),
             titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: .spacingM),
             titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -.spacingM),
             
@@ -248,7 +248,7 @@ final class PetNamingPopupView: UIView {
     }
 }
 
-extension PetNamingPopupView: UITextFieldDelegate {
+extension DamagoNamingPopupView: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         if confirmButton.isEnabled {
@@ -259,5 +259,5 @@ extension PetNamingPopupView: UITextFieldDelegate {
 }
 
 #Preview {
-    PetNamingPopupView()
+    DamagoNamingPopupView()
 }

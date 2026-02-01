@@ -17,8 +17,8 @@ final class HomeViewController: UIViewController {
     private var cancellables = Set<AnyCancellable>()
     private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
     private let pokeMessageSelectedPublisher = PassthroughSubject<String, Never>()
-    private let petNameChangeSubmittedPublisher = PassthroughSubject<String, Never>()
-    private var currentPetTypeRaw: String = ""
+    private let damagoNameChangeSubmittedPublisher = PassthroughSubject<String, Never>()
+    private var currentDamagoTypeRaw: String = ""
     
     private let homeTips = HomeTip()
     private var tipsTasks = Set<Task<Void, Never>>()
@@ -44,7 +44,7 @@ final class HomeViewController: UIViewController {
                 viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
                 feedButtonDidTap: mainView.feedButton.tapPublisher,
                 pokeMessageSelected: pokeMessageSelectedPublisher.eraseToAnyPublisher(),
-                petNameChangeSubmitted: petNameChangeSubmittedPublisher.eraseToAnyPublisher()
+                damagoNameChangeSubmitted: damagoNameChangeSubmittedPublisher.eraseToAnyPublisher()
             )
         )
 
@@ -74,7 +74,7 @@ final class HomeViewController: UIViewController {
 
         mainView.editNameButton.tapPublisher
             .sink { [weak self] in
-                self?.showEditPetNamePopup()
+                self?.showEditDamagoNamePopup()
             }
             .store(in: &cancellables)
         
@@ -85,10 +85,10 @@ final class HomeViewController: UIViewController {
             .store(in: &cancellables)
     }
 
-    private func showEditPetNamePopup() {
-        let popupView = PetNameEditPopupView()
-        let petType = DamagoType(rawValue: currentPetTypeRaw)
-        popupView.configure(petType: petType, initialName: mainView.nameLabel.text)
+    private func showEditDamagoNamePopup() {
+        let popupView = DamagoNameEditPopupView()
+        let damagoType = DamagoType(rawValue: currentDamagoTypeRaw)
+        popupView.configure(damagoType: damagoType, initialName: mainView.nameLabel.text)
         popupView.translatesAutoresizingMaskIntoConstraints = false
 
         let targetView = tabBarController?.view ?? view
@@ -103,7 +103,7 @@ final class HomeViewController: UIViewController {
 
         popupView.confirmButtonTappedSubject
             .sink { [weak self, weak popupView] name in
-                self?.petNameChangeSubmittedPublisher.send(name)
+                self?.damagoNameChangeSubmittedPublisher.send(name)
                 popupView?.removeFromSuperview()
             }
             .store(in: &cancellables)
@@ -192,7 +192,7 @@ final class HomeViewController: UIViewController {
             .store(in: &cancellables)
 
         output
-            .mapForUI { $0.petName }
+            .mapForUI { $0.damagoName }
             .sink { [weak self] in self?.mainView.nameLabel.text = $0 }
             .store(in: &cancellables)
 
@@ -206,8 +206,8 @@ final class HomeViewController: UIViewController {
         output
             .mapForUI { $0 }
             .sink { [weak self] state in
-                self?.mainView.updateCharacter(petType: state.petType, isHungry: state.isHungry)
-                self?.currentPetTypeRaw = state.petType
+                self?.mainView.updateDamago(damagoType: state.damagoType, isHungry: state.isHungry)
+                self?.currentDamagoTypeRaw = state.damagoType
             }
             .store(in: &cancellables)
 

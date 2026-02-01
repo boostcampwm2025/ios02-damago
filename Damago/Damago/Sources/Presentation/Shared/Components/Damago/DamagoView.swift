@@ -1,5 +1,5 @@
 //
-//  PetView.swift
+//  DamagoView.swift
 //  Damago
 //
 //  Created by 김재영 on 1/26/26.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class PetView: UIView {
+final class DamagoView: UIView {
     private var contentView: UIView?
     
     override init(frame: CGRect) {
@@ -25,12 +25,12 @@ final class PetView: UIView {
         clipsToBounds = true
     }
     
-    func configure(with petType: DamagoType) {
+    func configure(with damagoType: DamagoType) {
         contentView?.removeFromSuperview()
         
         let newContentView: UIView
-        if petType.isAvailable {
-            newContentView = setupSpriteView(sheetName: petType.imageName)
+        if damagoType.isAvailable {
+            newContentView = setupSpriteView(sheetName: damagoType.imageName)
         } else {
             newContentView = setupPlaceholderView()
         }

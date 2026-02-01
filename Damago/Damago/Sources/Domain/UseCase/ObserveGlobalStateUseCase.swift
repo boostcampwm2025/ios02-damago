@@ -14,14 +14,14 @@ protocol ObserveGlobalStateUseCase {
 
 final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
     private let userRepository: UserRepositoryProtocol
-    private let petRepository: PetRepositoryProtocol
+    private let damagoRepository: DamagoRepositoryProtocol
     
     init(
         userRepository: UserRepositoryProtocol,
-        petRepository: PetRepositoryProtocol
+        damagoRepository: DamagoRepositoryProtocol
     ) {
         self.userRepository = userRepository
-        self.petRepository = petRepository
+        self.damagoRepository = damagoRepository
     }
     
     func execute(uid: String) -> AnyPublisher<GlobalState, Never> {
@@ -50,15 +50,15 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
             coupleStream = Just(nil).eraseToAnyPublisher()
         }
         
-        let petStream: AnyPublisher<PetSnapshotDTO?, Never>
+        let damagoStream: AnyPublisher<DamagoSnapshotDTO?, Never>
         if let damagoID = userSnapshot.damagoID {
-            petStream = petRepository.observePetSnapshot(damagoID: damagoID)
+            damagoStream = damagoRepository.observeDamagoSnapshot(damagoID: damagoID)
                 .map { try? $0.get() }
                 .replaceError(with: nil)
                 .prepend(nil)
                 .eraseToAnyPublisher()
         } else {
-            petStream = Just(nil).eraseToAnyPublisher()
+            damagoStream = Just(nil).eraseToAnyPublisher()
         }
 
         let partnerStream: AnyPublisher<UserSnapshotDTO?, Never>
@@ -72,8 +72,8 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
             partnerStream = Just(nil).eraseToAnyPublisher()
         }
         
-        return Publishers.CombineLatest3(coupleStream, petStream, partnerStream)
-            .map { coupleSnapshot, petSnapshot, partnerSnapshot in
+        return Publishers.CombineLatest3(coupleStream, damagoStream, partnerStream)
+            .map { coupleSnapshot, damagoSnapshot, partnerSnapshot in
                 GlobalState(
                     nickname: userSnapshot.nickname,
                     opponentName: partnerSnapshot?.nickname,
@@ -86,16 +86,16 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
                     foodCount: coupleSnapshot?.foodCount,
                     anniversaryDate: coupleSnapshot?.anniversaryDate,
                     currentQuestionID: coupleSnapshot?.currentQuestionID,
-                    petName: petSnapshot?.petName,
-                    petType: petSnapshot?.petType,
-                    level: petSnapshot?.level,
-                    currentExp: petSnapshot?.currentExp,
-                    maxExp: petSnapshot?.maxExp,
-                    isHungry: petSnapshot?.isHungry,
-                    statusMessage: petSnapshot?.statusMessage,
-                    lastFedAt: petSnapshot?.lastFedAt,
-                    totalPlayTime: petSnapshot?.totalPlayTime,
-                    lastActiveAt: petSnapshot?.lastActiveAt
+                    damagoName: damagoSnapshot?.damagoName,
+                    damagoType: damagoSnapshot?.damagoType,
+                    level: damagoSnapshot?.level,
+                    currentExp: damagoSnapshot?.currentExp,
+                    maxExp: damagoSnapshot?.maxExp,
+                    isHungry: damagoSnapshot?.isHungry,
+                    statusMessage: damagoSnapshot?.statusMessage,
+                    lastFedAt: damagoSnapshot?.lastFedAt,
+                    totalPlayTime: damagoSnapshot?.totalPlayTime,
+                    lastActiveAt: damagoSnapshot?.lastActiveAt
                 )
             }
             .eraseToAnyPublisher()

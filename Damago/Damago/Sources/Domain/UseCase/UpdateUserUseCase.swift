@@ -13,8 +13,8 @@ protocol UpdateUserUseCase {
         anniversaryDate: Date?,
         useFCM: Bool?,
         useLiveActivity: Bool?,
-        petName: String?,
-        petType: String?
+        damagoName: String?,
+        damagoType: String?
     ) async throws
 }
 
@@ -30,16 +30,16 @@ final class UpdateUserUseCaseImpl: UpdateUserUseCase {
         anniversaryDate: Date?,
         useFCM: Bool?,
         useLiveActivity: Bool?,
-        petName: String?,
-        petType: String?
+        damagoName: String?,
+        damagoType: String?
     ) async throws {
         try await userRepository.updateUserInfo(
             nickname: nickname,
             anniversaryDate: anniversaryDate,
             useFCM: useFCM,
             useLiveActivity: useLiveActivity,
-            petName: petName,
-            petType: petType
+            damagoName: damagoName,
+            damagoType: damagoType
         )
     }
 }

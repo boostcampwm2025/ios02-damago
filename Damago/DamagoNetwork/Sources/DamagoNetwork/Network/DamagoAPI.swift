@@ -1,5 +1,5 @@
 //
-//  PetAPI.swift
+//  DamagoAPI.swift
 //  DamagoNetwork
 //
 //  Created by 김재영 on 1/12/26.
@@ -7,11 +7,11 @@
 
 import Foundation
 
-public enum PetAPI {
+public enum DamagoAPI {
     case feed(accessToken: String, damagoID: String)
 }
 
-extension PetAPI: EndPoint {
+extension DamagoAPI: EndPoint {
     public var baseURL: URL {
         URL(string: BaseURL.string)!
     }
