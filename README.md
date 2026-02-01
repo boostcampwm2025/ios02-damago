@@ -64,7 +64,7 @@
 *   **Reason:**
     *   **단발성 작업:** 네트워킹과 같은 단순 비동기 작업에는 `async/await`을 사용하여 코드를 간결하게 작성했습니다.
     *   **UI 이벤트:** 버튼 탭이나 텍스트 입력과 같은 UI 이벤트 스트림은 **Combine**을 사용하여 선언적으로 처리함으로써 MVVM 패턴의 이점을 살렸습니다.
-    *   **데이터 스트림 (Local-First):** 로컬 캐시를 먼저 방출하고 네트워크 데이터를 이어서 처리해야 하는 **순차적 다발 데이터 요청**에서는, 기존 Combine(`Future`, `Merge`)의 복잡한 체이닝 대신 `AsyncStream`을 도입하여 `if`와 `await`을 활용한 가독성 높은 코드를 구현했습니다.
+    *   **데이터 스트림 (Local-First):** 로컬 캐시를 먼저 방출하고 네트워크 데이터를 이어서 처리해야 하는 **순차적 다발 데이터 요청**에서는, 기존 Combine(`Future`, `Merge`)의 복잡한 체이닝 대신 `AsyncStream`을 도입하여 `for-await-in`을 활용한 가독성 높은 코드를 구현했습니다.
 
 ### 3. Data Persistence: SwiftData
 *   **Decision:** 로컬 데이터 저장소로 Core Data 대신 **SwiftData**를 채택했습니다.
