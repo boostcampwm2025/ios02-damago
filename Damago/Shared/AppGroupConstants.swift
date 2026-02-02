@@ -7,6 +7,6 @@
 
 import Foundation
 
-enum AppGroupConstants {
+nonisolated enum AppGroupConstants {
     static let defaultID = "group.kr.codesquad.boostcamp10.Damago"
 }
