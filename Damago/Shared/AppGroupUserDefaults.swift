@@ -11,7 +11,7 @@ import OSLog
 enum AppGroupUserDefaults {
     static let shortcutsKey = "pokeShortcuts"
 
-    static func sharedDefaults(suiteName: String = AppGroupConstants.default) -> UserDefaults {
+    static func sharedDefaults(suiteName: String = AppGroupConstants.defaultID) -> UserDefaults {
         guard let userDefaults = UserDefaults(suiteName: suiteName) else {
             SharedLogger.userDefaults.error("App Group User Defaults 생성 실패 / 설정 및 id  확인")
             return UserDefaults.standard

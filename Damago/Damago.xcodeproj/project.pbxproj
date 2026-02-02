@@ -68,6 +68,7 @@
 				DamagoAttributes.swift,
 				"Date+.swift",
 				"Font+.swift",
+				KeychainSharingConstants.swift,
 				"Spacing+.swift",
 				"UIImage+.swift",
 			);
