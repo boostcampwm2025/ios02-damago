@@ -32,6 +32,7 @@ struct GlobalState: Equatable {
     let lastFedAt: Date?
     let totalPlayTime: Int?
     let lastActiveAt: Date?
+    let ownedDamagoTypes: [DamagoType]?
     
     static let empty = GlobalState(
         nickname: nil,
@@ -52,6 +53,7 @@ struct GlobalState: Equatable {
         statusMessage: nil,
         lastFedAt: nil,
         totalPlayTime: nil,
-        lastActiveAt: nil
+        lastActiveAt: nil,
+        ownedDamagoTypes: nil
     )
 }
