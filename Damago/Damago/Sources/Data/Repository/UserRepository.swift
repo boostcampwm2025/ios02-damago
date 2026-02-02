@@ -87,8 +87,8 @@ final class UserRepository: UserRepositoryProtocol {
         anniversaryDate: Date?,
         useFCM: Bool?,
         useLiveActivity: Bool?,
-        petName: String?,
-        petType: String?
+        damagoName: String?,
+        damagoType: DamagoType?
     ) async throws {
         let token = try await tokenProvider.idToken()
         let dateString = anniversaryDate.map {
@@ -104,8 +104,8 @@ final class UserRepository: UserRepositoryProtocol {
                 anniversaryDate: dateString,
                 useFCM: useFCM,
                 useLiveActivity: useLiveActivity,
-                petName: petName,
-                petType: petType
+                damagoName: damagoName,
+                damagoType: damagoType?.rawValue
             )
         )
     }
@@ -152,7 +152,7 @@ private extension UserInfoResponse {
             coupleID: coupleID,
             partnerUID: partnerUID,
             nickname: nickname,
-            petStatus: petStatus?.toDomain(),
+            damagoStatus: damagoStatus?.toDomain(),
             totalCoin: totalCoin ?? 0,
             lastFedAt: lastFedAt
         )
@@ -160,10 +160,10 @@ private extension UserInfoResponse {
 }
 
 extension DamagoStatusResponse {
-    func toDomain() -> PetStatus {
-        PetStatus(
-            petName: petName,
-            petType: petType,
+    func toDomain() -> DamagoStatus {
+        DamagoStatus(
+            damagoName: damagoName,
+            damagoType: DamagoType(rawValue: damagoType)!,
             level: level,
             currentExp: currentExp,
             maxExp: maxExp,

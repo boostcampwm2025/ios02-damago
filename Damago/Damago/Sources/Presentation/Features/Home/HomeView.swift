@@ -100,7 +100,7 @@ final class HomeView: UIView {
         return view
     }()
 
-    let characterView: SpriteAnimationView = {
+    let damagoView: SpriteAnimationView = {
         let view = SpriteAnimationView(spriteSheetName: "")
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
@@ -154,7 +154,7 @@ final class HomeView: UIView {
     }
 
     private func setupHierarchy() {
-        cardContentContainer.addSubview(characterView)
+        cardContentContainer.addSubview(damagoView)
         cardShadowContainer.addSubview(cardContentContainer)
         [capsuleLabel, dDayLabel, nameStackView, cardShadowContainer, feedButton, pokeButton, expBar]
             .forEach { addSubview($0) }
@@ -183,12 +183,12 @@ final class HomeView: UIView {
             cardContentContainer.trailingAnchor.constraint(equalTo: cardShadowContainer.trailingAnchor),
             cardContentContainer.bottomAnchor.constraint(equalTo: cardShadowContainer.bottomAnchor),
 
-            characterView.topAnchor.constraint(equalTo: cardContentContainer.topAnchor, constant: .spacingM),
-            characterView.leadingAnchor.constraint(equalTo: cardContentContainer.leadingAnchor, constant: .spacingM),
-            characterView.trailingAnchor.constraint(equalTo: cardContentContainer.trailingAnchor, constant: -.spacingM),
-            characterView.bottomAnchor.constraint(equalTo: cardContentContainer.bottomAnchor, constant: -.spacingM),
+            damagoView.topAnchor.constraint(equalTo: cardContentContainer.topAnchor, constant: .spacingM),
+            damagoView.leadingAnchor.constraint(equalTo: cardContentContainer.leadingAnchor, constant: .spacingM),
+            damagoView.trailingAnchor.constraint(equalTo: cardContentContainer.trailingAnchor, constant: -.spacingM),
+            damagoView.bottomAnchor.constraint(equalTo: cardContentContainer.bottomAnchor, constant: -.spacingM),
 
-            expBar.topAnchor.constraint(equalTo: characterView.bottomAnchor, constant: .spacingL),
+            expBar.topAnchor.constraint(equalTo: damagoView.bottomAnchor, constant: .spacingL),
             expBar.leadingAnchor.constraint(equalTo: cardContentContainer.leadingAnchor, constant: .spacingM),
             expBar.trailingAnchor.constraint(equalTo: cardContentContainer.trailingAnchor, constant: -.spacingM),
 
@@ -259,8 +259,8 @@ extension HomeView {
         feedButton.isEnabled = state.isEnabled
     }
     
-    func updateCharacter(petType: String, isHungry: Bool) {
-        let imageName = isHungry ? "\(petType)Hungry" : "\(petType)Base"
-        characterView.animate(spriteSheetName: imageName)
+    func updateDamago(damagoType: DamagoType, isHungry: Bool) {
+        let imageName = isHungry ? "\(damagoType.rawValue)Hungry" : "\(damagoType.rawValue)Base"
+        damagoView.animate(spriteSheetName: imageName)
     }
 }

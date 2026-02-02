@@ -19,8 +19,8 @@ final class RepositoryAssembly: Assembly {
             )
         }
 
-        container.register(PetRepositoryProtocol.self) {
-            PetRepository(
+        container.register(DamagoRepositoryProtocol.self) {
+            DamagoRepository(
                 networkProvider: container.resolve(NetworkProvider.self),
                 tokenProvider: container.resolve(TokenProvider.self),
                 firestoreService: container.resolve(FirestoreService.self)

@@ -22,8 +22,8 @@ protocol UserRepositoryProtocol {
         anniversaryDate: Date?,
         useFCM: Bool?,
         useLiveActivity: Bool?,
-        petName: String?,
-        petType: String?
+        damagoName: String?,
+        damagoType: DamagoType?
     ) async throws
     func signOut() throws
     func withdraw() async throws

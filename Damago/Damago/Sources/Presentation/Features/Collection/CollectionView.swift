@@ -13,7 +13,7 @@ final class CollectionView: UIView {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .background
         collectionView.contentInsetAdjustmentBehavior = .never
-        collectionView.register(PetCell.self, forCellWithReuseIdentifier: PetCell.reuseIdentifier)
+        collectionView.register(DamagoCell.self, forCellWithReuseIdentifier: DamagoCell.reuseIdentifier)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
     }()

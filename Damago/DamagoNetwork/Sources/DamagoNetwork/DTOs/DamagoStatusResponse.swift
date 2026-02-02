@@ -8,8 +8,8 @@
 import Foundation
 
 public struct DamagoStatusResponse: Codable {
-    public let petName: String
-    public let petType: String
+    public let damagoName: String
+    public let damagoType: String
     public let level: Int
     public let currentExp: Int
     public let maxExp: Int
@@ -20,8 +20,8 @@ public struct DamagoStatusResponse: Codable {
     public let lastActiveAt: Date?
     
     public init(
-        petName: String,
-        petType: String,
+        damagoName: String,
+        damagoType: String,
         level: Int,
         currentExp: Int,
         maxExp: Int,
@@ -31,8 +31,8 @@ public struct DamagoStatusResponse: Codable {
         totalPlayTime: Int?,
         lastActiveAt: Date?
     ) {
-        self.petName = petName
-        self.petType = petType
+        self.damagoName = damagoName
+        self.damagoType = damagoType
         self.level = level
         self.currentExp = currentExp
         self.maxExp = maxExp

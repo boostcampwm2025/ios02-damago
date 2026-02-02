@@ -1,5 +1,5 @@
 //
-//  PetSetupViewModel.swift
+//  DamagoSetupViewModel.swift
 //  Damago
 //
 //  Created by 김재영 on 1/26/26.
@@ -8,18 +8,18 @@
 import Combine
 import Foundation
 
-final class PetSetupViewModel: ViewModel {
+final class DamagoSetupViewModel: ViewModel {
     struct Input {
         let viewDidLoad: AnyPublisher<Void, Never>
-        let petSelected: AnyPublisher<DamagoType, Never>
+        let damagoSelected: AnyPublisher<DamagoType, Never>
         let confirmButtonTapped: AnyPublisher<String, Never>
     }
     
     struct State {
-        var pets: [DamagoType] = DamagoType.allCases
-        var selectedPet: DamagoType?
-        var currentPetType: DamagoType?
-        var currentPetName: String?
+        var damagos: [DamagoType] = DamagoType.allCases
+        var selectedDamago: DamagoType?
+        var currentDamagoType: DamagoType?
+        var currentDamagoName: String?
         var coupleID: String?
         var isLoading: Bool = false
         var route: Pulse<Route>?
@@ -27,7 +27,7 @@ final class PetSetupViewModel: ViewModel {
     
     enum Route {
         case home
-        case showPopup(petType: DamagoType)
+        case showPopup(damagoType: DamagoType)
         case error(title: String, message: String)
     }
     
@@ -36,30 +36,30 @@ final class PetSetupViewModel: ViewModel {
     
     private let updateUserUseCase: UpdateUserUseCase
     private let fetchUserInfoUseCase: FetchUserInfoUseCase
-    private let petRepository: PetRepositoryProtocol
+    private let damagoRepository: DamagoRepositoryProtocol
     
     init(
         updateUserUseCase: UpdateUserUseCase,
         fetchUserInfoUseCase: FetchUserInfoUseCase,
-        petRepository: PetRepositoryProtocol
+        damagoRepository: DamagoRepositoryProtocol
     ) {
         self.updateUserUseCase = updateUserUseCase
         self.fetchUserInfoUseCase = fetchUserInfoUseCase
-        self.petRepository = petRepository
+        self.damagoRepository = damagoRepository
     }
     
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
         input.viewDidLoad
             .sink { [weak self] in
-                self?.loadCurrentPetInfo()
+                self?.loadCurrentDamagoInfo()
             }
             .store(in: &cancellables)
 
-        input.petSelected
-            .sink { [weak self] petType in
-                if petType.isAvailable {
-                    self?.state.selectedPet = petType
-                    self?.state.route = Pulse(.showPopup(petType: petType))
+        input.damagoSelected
+            .sink { [weak self] damagoType in
+                if damagoType.isAvailable {
+                    self?.state.selectedDamago = damagoType
+                    self?.state.route = Pulse(.showPopup(damagoType: damagoType))
                 } else {
                     self?.state.route = Pulse(.error(title: "🙌 추후 업데이트 예정입니다!", message: "더 좋은 서비스로 찾아뵙겠습니다."))
                 }
@@ -67,47 +67,47 @@ final class PetSetupViewModel: ViewModel {
             .store(in: &cancellables)
             
         input.confirmButtonTapped
-            .sink { [weak self] petName in
-                self?.savePet(name: petName)
+            .sink { [weak self] damagoName in
+                self?.saveDamago(name: damagoName)
             }
             .store(in: &cancellables)
             
         return $state.eraseToAnyPublisher()
     }
     
-    func prefillName(for petType: DamagoType) -> String? {
-        guard petType == state.currentPetType else { return nil }
-        return state.currentPetName
+    func prefillName(for damagoType: DamagoType) -> String? {
+        guard damagoType == state.currentDamagoType else { return nil }
+        return state.currentDamagoName
     }
 
-    func observePrefillName(for petType: DamagoType) -> AnyPublisher<String, Never> {
+    func observePrefillName(for damagoType: DamagoType) -> AnyPublisher<String, Never> {
         guard let coupleID = state.coupleID else {
             return Empty().eraseToAnyPublisher()
         }
-        let damagoID = "\(coupleID)_\(petType.rawValue)"
-        return petRepository.observePetSnapshot(damagoID: damagoID)
-            .compactMap { try? $0.get().petName }
+        let damagoID = "\(coupleID)_\(damagoType.rawValue)"
+        return damagoRepository.observeDamagoSnapshot(damagoID: damagoID)
+            .compactMap { try? $0.get().damagoName }
             .removeDuplicates()
             .eraseToAnyPublisher()
     }
 
-    private func loadCurrentPetInfo() {
+    private func loadCurrentDamagoInfo() {
         Task {
             do {
                 let userInfo = try await fetchUserInfoUseCase.execute()
                 state.coupleID = userInfo.coupleID
-                state.currentPetType = userInfo.petStatus.flatMap { DamagoType(rawValue: $0.petType) }
-                state.currentPetName = userInfo.petStatus?.petName
+                state.currentDamagoType = userInfo.damagoStatus.flatMap { $0.damagoType }
+                state.currentDamagoName = userInfo.damagoStatus?.damagoName
             } catch {
                 state.coupleID = nil
-                state.currentPetType = nil
-                state.currentPetName = nil
+                state.currentDamagoType = nil
+                state.currentDamagoName = nil
             }
         }
     }
 
-    private func savePet(name: String) {
-        guard let selectedPet = state.selectedPet else { return }
+    private func saveDamago(name: String) {
+        guard let selectedDamago = state.selectedDamago else { return }
         
         Task {
             state.isLoading = true
@@ -119,8 +119,8 @@ final class PetSetupViewModel: ViewModel {
                     anniversaryDate: nil,
                     useFCM: true,
                     useLiveActivity: true,
-                    petName: name,
-                    petType: selectedPet.rawValue
+                    damagoName: name,
+                    damagoType: selectedDamago
                 )
                 UserDefaults.standard.set(true, forKey: "isOnboardingCompleted")
                 state.route = Pulse(.home)
@@ -130,7 +130,7 @@ final class PetSetupViewModel: ViewModel {
         }
     }
     
-    func selectPet(_ pet: DamagoType) {
-        state.selectedPet = pet
+    func selectDamago(_ damago: DamagoType) {
+        state.selectedDamago = damago
     }
 }

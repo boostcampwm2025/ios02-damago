@@ -1,5 +1,5 @@
 //
-//  PetSnapshotDTO.swift
+//  DamagoSnapshotDTO.swift
 //  Damago
 //
 //  Created by 박현수 on 1/21/26.
@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct PetSnapshotDTO: Decodable {
-    let petName: String
-    let petType: String
+struct DamagoSnapshotDTO: Decodable {
+    let damagoName: String
+    let damagoType: DamagoType
     let isHungry: Bool
     let statusMessage: String
     let level: Int

@@ -1,5 +1,5 @@
 //
-//  PetRepository.swift
+//  DamagoRepository.swift
 //  Damago
 //
 //  Created by 김재영 on 1/12/26.
@@ -8,7 +8,7 @@
 import Combine
 import DamagoNetwork
 
-final class PetRepository: PetRepositoryProtocol {
+final class DamagoRepository: DamagoRepositoryProtocol {
     private let networkProvider: NetworkProvider
     private let tokenProvider: TokenProvider
     private let firestoreService: FirestoreService
@@ -25,10 +25,10 @@ final class PetRepository: PetRepositoryProtocol {
     
     func feed(damagoID: String) async throws -> Bool {
         let token = try await tokenProvider.idToken()
-        return try await networkProvider.requestSuccess(PetAPI.feed(accessToken: token, damagoID: damagoID))
+        return try await networkProvider.requestSuccess(DamagoAPI.feed(accessToken: token, damagoID: damagoID))
     }
 
-    func observePetSnapshot(damagoID: String) -> AnyPublisher<Result<PetSnapshotDTO, Error>, Never> {
+    func observeDamagoSnapshot(damagoID: String) -> AnyPublisher<Result<DamagoSnapshotDTO, Error>, Never> {
         firestoreService.observe(collection: "damagos", document: damagoID)
     }
 }

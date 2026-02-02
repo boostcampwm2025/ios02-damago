@@ -13,7 +13,7 @@ from utils.middleware import get_uid_from_request
 
 def feed(req: https_fn.Request) -> https_fn.Response:
     """
-    펫에게 먹이를 줍니다.
+    다마고에게 먹이를 줍니다.
     경험치를 증가시키고, 레벨업 여부를 판단하여 DB를 업데이트합니다.
     이후 Cloud Tasks를 통해 4시간(또는 테스트 모드 시 10초) 뒤 배고픔 상태로 전환되도록 예약합니다.
     """
@@ -46,9 +46,9 @@ def feed(req: https_fn.Request) -> https_fn.Response:
         couple_id = data.get("coupleID")
         
         # --- [Ownership Validation] ---
-        # 펫의 주인이 맞는지 검증
+        # 다마고의 주인이 맞는지 검증
         if not couple_id:
-             raise ValueError("This pet has no couple owner")
+             raise ValueError("This damago has no couple owner")
 
         couple_ref = db.collection("couples").document(couple_id)
         couple_snapshot = couple_ref.get(transaction=transaction)
@@ -62,7 +62,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
         user2 = couple_data.get("user2UID")
 
         if uid != user1 and uid != user2:
-             raise PermissionError("You are not the owner of this pet")
+             raise PermissionError("You are not the owner of this damago")
 
         # --- [Food Consumption Logic] ---
         current_food_count = couple_data.get("foodCount", 0)
@@ -118,9 +118,9 @@ def feed(req: https_fn.Request) -> https_fn.Response:
             "foodCount": new_food_count,
             "user1UID": user1,
             "user2UID": user2,
-            "petType": data.get("petType", "Bunny"),
+            "damagoType": data.get("damagoType", "Bunny"),
             "statusMessage": update_data["statusMessage"],
-            "petName": data.get("petName", "이름 없는 펫")
+            "damagoName": data.get("damagoName", "이름 없는 다마고")
         }
 
     try:
@@ -135,7 +135,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
             now_str = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
             
             content_state = {
-                "petType": result.get("petType"),
+                "damagoType": result.get("damagoType"),
                 "isHungry": False,
                 "statusMessage": result.get("statusMessage"),
                 "level": result.get("level"),
@@ -145,7 +145,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
             }
             
             attributes = {
-                "petName": result.get("petName")
+                "damagoName": result.get("damagoName")
             }
 
             for target_uid in users:
@@ -219,7 +219,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
 @https_fn.on_request()
 def make_hungry(req: https_fn.Request) -> https_fn.Response:
     """
-    Cloud Tasks에 의해 호출되어 펫을 배고픔 상태로 변경합니다.
+    Cloud Tasks에 의해 호출되어 다마고를 배고픔 상태로 변경합니다.
     마지막으로 밥을 먹은 지 충분한 시간이 지났는지 검증합니다.
     """
     data = req.get_json(silent=True) or req.args
@@ -235,14 +235,14 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
     if not doc.exists:
         return https_fn.Response("Damago not found", status=404)
         
-    pet_data = doc.to_dict()
+    damago_data = doc.to_dict()
     
     # 이미 배고프면 패스
-    if pet_data.get("isHungry", False):
+    if damago_data.get("isHungry", False):
         return https_fn.Response("Already hungry", status=200)
 
     # --- [Validation: 중복 실행 방지] ---
-    last_fed_at = pet_data.get("lastFedAt")
+    last_fed_at = damago_data.get("lastFedAt")
     if last_fed_at:
         # DB의 lastFedAt은 datetime 객체 (timezone 정보 포함 가능)
         # 비교를 위해 UTC 기준으로 통일
@@ -270,8 +270,8 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
     })
     
     # --- [Notify Users] ---
-    # 해당 펫을 보고 있는 커플 유저들을 찾아 알림 전송
-    couple_id = pet_data.get("coupleID")
+    # 해당 다마고를 보고 있는 커플 유저들을 찾아 알림 전송
+    couple_id = damago_data.get("coupleID")
     if couple_id:
         couple_doc = db.collection("couples").document(couple_id).get()
         if couple_doc.exists:
@@ -279,22 +279,22 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
             # 변경된 필드명 사용 (user1UDID -> user1UID)
             users = [couple_data.get("user1UID"), couple_data.get("user2UID")]
             
-            last_fed_at = pet_data.get("lastFedAt")
+            last_fed_at = damago_data.get("lastFedAt")
             last_fed_at_str = last_fed_at.isoformat(timespec='seconds') if last_fed_at else None
             
             # Live Activity Payload
             content_state = {
-                "petType": pet_data.get("petType", "Bunny"),
+                "damagoType": damago_data.get("damagoType", "Bunny"),
                 "isHungry": True,
                 "statusMessage": new_status,
-                "level": pet_data.get("level"),
-                "currentExp": pet_data.get("currentExp"),
-                "maxExp": pet_data.get("maxExp"),
+                "level": damago_data.get("level"),
+                "currentExp": damago_data.get("currentExp"),
+                "maxExp": damago_data.get("maxExp"),
                 "lastFedAt": last_fed_at_str
             }
             
             attributes = {
-                "petName": pet_data.get("petName", "이름 없는 펫")
+                "damagoName": damago_data.get("damagoName", "이름 없는 다마고")
             }
             
             for uid in users:

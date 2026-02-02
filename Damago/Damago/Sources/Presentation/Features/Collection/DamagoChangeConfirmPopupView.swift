@@ -1,5 +1,5 @@
 //
-//  CharacterChangeConfirmPopupView.swift
+//  DamagoChangeConfirmPopupView.swift
 //  Damago
 //
 //  Created by loyH on 1/28/26.
@@ -8,7 +8,7 @@
 import UIKit
 import Combine
 
-final class CharacterChangeConfirmPopupView: UIView {
+final class DamagoChangeConfirmPopupView: UIView {
     let confirmButtonTappedSubject = PassthroughSubject<Void, Never>()
     let cancelButtonTappedSubject = PassthroughSubject<Void, Never>()
 
@@ -21,7 +21,7 @@ final class CharacterChangeConfirmPopupView: UIView {
         return view
     }()
 
-    private let petBackgroundView: UIView = {
+    private let damagoBackgroundView: UIView = {
         let view = UIView()
         view.backgroundColor = .white
         view.layer.cornerRadius = .mediumButton
@@ -31,15 +31,15 @@ final class CharacterChangeConfirmPopupView: UIView {
         return view
     }()
 
-    private let petView: PetView = {
-        let view = PetView()
+    private let damagoView: DamagoView = {
+        let view = DamagoView()
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "이 캐릭터로 변경할까요?"
+        label.text = "이 다마고로 변경할까요?"
         label.font = .body1
         label.textColor = .textPrimary
         label.textAlignment = .center
@@ -95,8 +95,8 @@ final class CharacterChangeConfirmPopupView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func configure(with petType: DamagoType) {
-        petView.configure(with: petType)
+    func configure(with damagoType: DamagoType) {
+        damagoView.configure(with: damagoType)
     }
 
     private func setupUI() {
@@ -112,7 +112,8 @@ final class CharacterChangeConfirmPopupView: UIView {
         addGestureRecognizer(tapGesture)
     }
     
-    @objc private func handleBackgroundTap(_ gesture: UITapGestureRecognizer) {
+    @objc
+    private func handleBackgroundTap(_ gesture: UITapGestureRecognizer) {
         let location = gesture.location(in: self)
         // containerView 밖을 터치했을 때만 팝업 닫기
         if !containerView.frame.contains(location) {
@@ -136,10 +137,10 @@ final class CharacterChangeConfirmPopupView: UIView {
 
     private func setupHierarchy() {
         addSubview(containerView)
-        [petBackgroundView, titleLabel, buttonStackView].forEach {
+        [damagoBackgroundView, titleLabel, buttonStackView].forEach {
             containerView.addSubview($0)
         }
-        petBackgroundView.addSubview(petView)
+        damagoBackgroundView.addSubview(damagoView)
 
         buttonStackView.addArrangedSubview(cancelButton)
         buttonStackView.addArrangedSubview(confirmButton)
@@ -151,17 +152,17 @@ final class CharacterChangeConfirmPopupView: UIView {
             containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
             containerView.widthAnchor.constraint(equalToConstant: 300),
 
-            petBackgroundView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: .spacingL),
-            petBackgroundView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            petBackgroundView.widthAnchor.constraint(equalToConstant: 150),
-            petBackgroundView.heightAnchor.constraint(equalTo: petBackgroundView.widthAnchor),
+            damagoBackgroundView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: .spacingL),
+            damagoBackgroundView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            damagoBackgroundView.widthAnchor.constraint(equalToConstant: 150),
+            damagoBackgroundView.heightAnchor.constraint(equalTo: damagoBackgroundView.widthAnchor),
 
-            petView.topAnchor.constraint(equalTo: petBackgroundView.topAnchor, constant: .spacingS),
-            petView.leadingAnchor.constraint(equalTo: petBackgroundView.leadingAnchor, constant: .spacingS),
-            petView.trailingAnchor.constraint(equalTo: petBackgroundView.trailingAnchor, constant: -.spacingS),
-            petView.bottomAnchor.constraint(equalTo: petBackgroundView.bottomAnchor, constant: -.spacingS),
+            damagoView.topAnchor.constraint(equalTo: damagoBackgroundView.topAnchor, constant: .spacingS),
+            damagoView.leadingAnchor.constraint(equalTo: damagoBackgroundView.leadingAnchor, constant: .spacingS),
+            damagoView.trailingAnchor.constraint(equalTo: damagoBackgroundView.trailingAnchor, constant: -.spacingS),
+            damagoView.bottomAnchor.constraint(equalTo: damagoBackgroundView.bottomAnchor, constant: -.spacingS),
 
-            titleLabel.topAnchor.constraint(equalTo: petBackgroundView.bottomAnchor, constant: .spacingM),
+            titleLabel.topAnchor.constraint(equalTo: damagoBackgroundView.bottomAnchor, constant: .spacingM),
             titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: .spacingM),
             titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -.spacingM),
 
@@ -174,7 +175,7 @@ final class CharacterChangeConfirmPopupView: UIView {
     }
 }
 
-extension CharacterChangeConfirmPopupView: UIGestureRecognizerDelegate {
+extension DamagoChangeConfirmPopupView: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         // containerView 내부를 터치했을 때는 제스처를 무시
         let location = touch.location(in: self)
@@ -182,7 +183,7 @@ extension CharacterChangeConfirmPopupView: UIGestureRecognizerDelegate {
     }
 }
 
-extension CharacterChangeConfirmPopupView {
+extension DamagoChangeConfirmPopupView {
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         let hitView = super.hitTest(point, with: event)
         

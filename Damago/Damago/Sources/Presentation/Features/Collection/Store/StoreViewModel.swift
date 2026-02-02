@@ -22,7 +22,7 @@ final class StoreViewModel: ViewModel {
     struct DrawResult: Equatable {
         let id = UUID()
         let itemName: String
-        let petType: DamagoType
+        let damagoType: DamagoType
     }
     
     @Published private var state = State()
@@ -48,10 +48,10 @@ final class StoreViewModel: ViewModel {
         
         state.coinAmount -= drawCost
         
-        let availablePets = DamagoType.allCases.filter { $0.isAvailable }
-        guard let randomPet = availablePets.randomElement() else { return }
+        let availableDamagos = DamagoType.allCases.filter { $0.isAvailable }
+        guard let randomDamago = availableDamagos.randomElement() else { return }
         
-        let result = DrawResult(itemName: "새로운 친구", petType: randomPet)
+        let result = DrawResult(itemName: "새로운 친구", damagoType: randomDamago)
         
         state.drawResult = result
     }

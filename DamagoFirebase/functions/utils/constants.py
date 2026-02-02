@@ -59,7 +59,7 @@ def get_level_up_reward(level: int) -> int:
 
 
 # DamagoAttributes.DamagoType.isAvailable == true 인 타입 (동기화 유지)
-AVAILABLE_PET_TYPES = [
+AVAILABLE_DAMAGO_TYPES = [
     "CatSiamese",
     "CatTiger",
     "CatBatman",
@@ -71,7 +71,7 @@ AVAILABLE_PET_TYPES = [
 ]
 
 # DamagoType rawValue → 기본 이름 (DamagoAttributes.DamagoType.defaultName과 동기화)
-PET_TYPE_DEFAULT_NAMES = {
+DAMAGO_TYPE_DEFAULT_NAMES = {
     "CatSiamese": "샴",
     "CatTiger": "호랑이",
     "CatBatman": "배트맨",
@@ -89,8 +89,8 @@ PET_TYPE_DEFAULT_NAMES = {
 }
 
 
-def get_default_pet_name(pet_type: str | None) -> str:
-    """pet_type에 맞는 기본 이름을 반환합니다. 없으면 '다마고'."""
-    if not pet_type:
+def get_default_damago_name(damago_type: str | None) -> str:
+    """damago_type에 맞는 기본 이름을 반환합니다. 없으면 '다마고'."""
+    if not damago_type:
         return "다마고"
-    return PET_TYPE_DEFAULT_NAMES.get(pet_type, "다마고")
+    return DAMAGO_TYPE_DEFAULT_NAMES.get(damago_type, "다마고")

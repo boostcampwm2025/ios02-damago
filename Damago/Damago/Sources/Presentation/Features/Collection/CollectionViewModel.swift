@@ -13,25 +13,25 @@ final class CollectionViewModel: ViewModel {
 
     struct Input {
         let viewDidLoad: AnyPublisher<Void, Never>
-        let petSelected: AnyPublisher<DamagoType, Never>
+        let damagoSelected: AnyPublisher<DamagoType, Never>
         let confirmChangeTapped: AnyPublisher<Void, Never>
     }
 
     struct State {
-        var pets: [DamagoType] = DamagoType.allCases
-        var selectedPet: DamagoType?
-        var currentPetType: DamagoType?
+        var damagos: [DamagoType] = DamagoType.allCases
+        var selectedDamago: DamagoType?
+        var currentDamagoType: DamagoType?
         var isLoading: Bool = false
         var route: Pulse<Route>?
     }
 
     enum Route {
-        case showChangeConfirmPopup(petType: DamagoType)
+        case showChangeConfirmPopup(damagoType: DamagoType)
         case changeSuccess
         case error(title: String, message: String)
     }
 
-    var pets: [DamagoType] { DamagoType.allCases }
+    var damagos: [DamagoType] { DamagoType.allCases }
 
     @Published private var state = State()
     private var cancellables = Set<AnyCancellable>()
@@ -47,16 +47,16 @@ final class CollectionViewModel: ViewModel {
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
         input.viewDidLoad
             .sink { [weak self] in
-                self?.loadCurrentPet()
+                self?.loadCurrentDamago()
             }
             .store(in: &cancellables)
 
-        input.petSelected
-            .sink { [weak self] petType in
-                if petType == self?.state.currentPetType { return }
-                if petType.isAvailable {
-                    self?.state.selectedPet = petType
-                    self?.state.route = Pulse(.showChangeConfirmPopup(petType: petType))
+        input.damagoSelected
+            .sink { [weak self] damagoType in
+                if damagoType == self?.state.currentDamagoType { return }
+                if damagoType.isAvailable {
+                    self?.state.selectedDamago = damagoType
+                    self?.state.route = Pulse(.showChangeConfirmPopup(damagoType: damagoType))
                 } else {
                     self?.state.route = Pulse(.error(
                         title: "🙌 추후 업데이트 예정입니다!",
@@ -68,15 +68,15 @@ final class CollectionViewModel: ViewModel {
 
         input.confirmChangeTapped
             .sink { [weak self] in
-                self?.changePet()
+                self?.changeDamago()
             }
             .store(in: &cancellables)
 
         return $state.eraseToAnyPublisher()
     }
 
-    private func changePet() {
-        guard let selectedPet = state.selectedPet else { return }
+    private func changeDamago() {
+        guard let selectedDamago = state.selectedDamago else { return }
 
         Task {
             state.isLoading = true
@@ -88,10 +88,10 @@ final class CollectionViewModel: ViewModel {
                     anniversaryDate: nil,
                     useFCM: nil,
                     useLiveActivity: nil,
-                    petName: nil,
-                    petType: selectedPet.rawValue
+                    damagoName: nil,
+                    damagoType: selectedDamago
                 )
-                state.currentPetType = selectedPet
+                state.currentDamagoType = selectedDamago
                 state.route = Pulse(.changeSuccess)
             } catch {
                 state.route = Pulse(.error(title: "오류", message: error.localizedDescription))
@@ -99,13 +99,13 @@ final class CollectionViewModel: ViewModel {
         }
     }
 
-    private func loadCurrentPet() {
+    private func loadCurrentDamago() {
         Task {
             do {
                 let userInfo = try await fetchUserInfoUseCase.execute()
-                state.currentPetType = userInfo.petStatus.flatMap { DamagoType(rawValue: $0.petType) }
+                state.currentDamagoType = userInfo.damagoStatus.flatMap { $0.damagoType }
             } catch {
-                state.currentPetType = nil
+                state.currentDamagoType = nil
             }
         }
     }

@@ -1,5 +1,5 @@
 //
-//  PetSetupView.swift
+//  DamagoSetupView.swift
 //  Damago
 //
 //  Created by 김재영 on 1/26/26.
@@ -8,12 +8,12 @@
 import UIKit
 import Combine
 
-final class PetSetupView: UIView {
+final class DamagoSetupView: UIView {
     let collectionView: UICollectionView = {
-        let layout = PetSetupView.createLayout()
+        let layout = DamagoSetupView.createLayout()
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .background
-        collectionView.register(PetCell.self, forCellWithReuseIdentifier: PetCell.reuseIdentifier)
+        collectionView.register(DamagoCell.self, forCellWithReuseIdentifier: DamagoCell.reuseIdentifier)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         return collectionView
     }()

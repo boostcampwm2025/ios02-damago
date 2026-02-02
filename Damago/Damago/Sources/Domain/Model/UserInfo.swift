@@ -13,7 +13,7 @@ struct UserInfo {
     let coupleID: String?
     let partnerUID: String?
     let nickname: String?
-    let petStatus: PetStatus?
+    let damagoStatus: DamagoStatus?
     let totalCoin: Int
     let lastFedAt: Date?
 }

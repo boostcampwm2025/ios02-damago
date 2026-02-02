@@ -102,8 +102,8 @@ final class EditProfileViewModel: ViewModel {
                     anniversaryDate: state.anniversaryDate,
                     useFCM: nil,
                     useLiveActivity: nil,
-                    petName: nil,
-                    petType: nil
+                    damagoName: nil,
+                    damagoType: nil
                 )
                 state.route = Pulse(.back)
             } catch {

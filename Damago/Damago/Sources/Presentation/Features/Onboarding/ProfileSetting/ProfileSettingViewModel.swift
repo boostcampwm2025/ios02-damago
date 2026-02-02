@@ -27,7 +27,7 @@ final class ProfileSettingViewModel: ViewModel {
     }
     
     enum Route {
-        case petSetup
+        case damagoSetup
         case partnerAlreadySelected
         case error(message: String)
     }
@@ -79,8 +79,8 @@ final class ProfileSettingViewModel: ViewModel {
                     anniversaryDate: state.anniversaryDate,
                     useFCM: nil,
                     useLiveActivity: nil,
-                    petName: nil,
-                    petType: nil
+                    damagoName: nil,
+                    damagoType: nil
                 )
                 
                 // 최신 정보를 직접 조회하여 파트너가 펫을 결정했는지 확인
@@ -89,7 +89,7 @@ final class ProfileSettingViewModel: ViewModel {
                 if userInfo.damagoID != nil {
                     state.route = Pulse(.partnerAlreadySelected)
                 } else {
-                    state.route = Pulse(.petSetup)
+                    state.route = Pulse(.damagoSetup)
                 }
             } catch {
                 state.route = Pulse(.error(message: error.localizedDescription))

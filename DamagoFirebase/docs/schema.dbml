@@ -61,10 +61,10 @@ Table damagos {
   coupleID varchar [ref: > couples.id, note: "소유주 커플 ID"]
   
   // --- 고정 속성 (Static Attributes) ---
-  petName varchar [note: "펫 애칭/이름"]
+  damagoName varchar [note: "펫 애칭/이름"]
 
   // --- 동적 상태 (Dynamic State) ---
-  petType varchar [note: "펫 종류 (예: teddy, cloudy...)"]
+  damagoType varchar [note: "펫 종류 (예: teddy, cloudy...)"]
   isHungry boolean [default: false, note: "배고픔 상태"]
   statusMessage text [note: "상태 메시지 (Live Activity 표시용)"]
 

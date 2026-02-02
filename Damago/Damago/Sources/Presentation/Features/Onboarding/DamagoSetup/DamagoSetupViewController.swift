@@ -1,5 +1,5 @@
 //
-//  PetSetupViewController.swift
+//  DamagoSetupViewController.swift
 //  Damago
 //
 //  Created by 김재영 on 1/26/26.
@@ -8,17 +8,17 @@
 import UIKit
 import Combine
 
-final class PetSetupViewController: UIViewController {
-    private let mainView = PetSetupView()
-    private let viewModel: PetSetupViewModel
+final class DamagoSetupViewController: UIViewController {
+    private let mainView = DamagoSetupView()
+    private let viewModel: DamagoSetupViewModel
     
     private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
-    private let petSelectedPublisher = PassthroughSubject<DamagoType, Never>()
+    private let damagoSelectedPublisher = PassthroughSubject<DamagoType, Never>()
     private let confirmButtonTappedPublisher = PassthroughSubject<String, Never>()
     
     private var cancellables = Set<AnyCancellable>()
     
-    init(viewModel: PetSetupViewModel) {
+    init(viewModel: DamagoSetupViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -40,7 +40,7 @@ final class PetSetupViewController: UIViewController {
     }
     
     private func setupNavigation() {
-        navigationItem.title = "우리의 펫 선택"
+        navigationItem.title = "우리의 다마고 선택"
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationController?.navigationBar.tintColor = .damagoPrimary
         navigationItem.hidesBackButton = false
@@ -52,9 +52,9 @@ final class PetSetupViewController: UIViewController {
     }
     
     private func bind() {
-        let input = PetSetupViewModel.Input(
+        let input = DamagoSetupViewModel.Input(
             viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
-            petSelected: petSelectedPublisher.eraseToAnyPublisher(),
+            damagoSelected: damagoSelectedPublisher.eraseToAnyPublisher(),
             confirmButtonTapped: confirmButtonTappedPublisher.eraseToAnyPublisher()
         )
         
@@ -68,12 +68,12 @@ final class PetSetupViewController: UIViewController {
             .store(in: &cancellables)
     }
     
-    private func handleRoute(_ route: PetSetupViewModel.Route) {
+    private func handleRoute(_ route: DamagoSetupViewModel.Route) {
         switch route {
         case .home:
             NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
-        case .showPopup(let petType):
-            showNamingPopup(for: petType)
+        case .showPopup(let damagoType):
+            showNamingPopup(for: damagoType)
         case .error(let title, let message):
             let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "확인", style: .default))
@@ -81,9 +81,9 @@ final class PetSetupViewController: UIViewController {
         }
     }
     
-    private func showNamingPopup(for petType: DamagoType) {
-        let popupView = PetNamingPopupView()
-        popupView.configure(with: petType, initialName: viewModel.prefillName(for: petType))
+    private func showNamingPopup(for damagoType: DamagoType) {
+        let popupView = DamagoNamingPopupView()
+        popupView.configure(with: damagoType, initialName: viewModel.prefillName(for: damagoType))
         popupView.translatesAutoresizingMaskIntoConstraints = false
         
         guard let targetView = navigationController?.view ?? view else { return }
@@ -98,14 +98,14 @@ final class PetSetupViewController: UIViewController {
         
         popupView.confirmButtonTappedSubject
             .sink { [weak self, weak popupView] name in
-                self?.viewModel.selectPet(petType)
+                self?.viewModel.selectDamago(damagoType)
                 self?.confirmButtonTappedPublisher.send(name)
                 popupView?.removeFromSuperview()
             }
             .store(in: &cancellables)
 
         // 선택한 타입의 기존 이름이 있으면 Firestore에서 가져와 prefill
-        viewModel.observePrefillName(for: petType)
+        viewModel.observePrefillName(for: damagoType)
             .receive(on: DispatchQueue.main)
             .prefix(1)
             .sink { [weak popupView] name in
@@ -151,7 +151,7 @@ final class PetSetupViewController: UIViewController {
     }
 }
 
-extension PetSetupViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+extension DamagoSetupViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         DamagoType.allCases.count
     }
@@ -161,18 +161,18 @@ extension PetSetupViewController: UICollectionViewDataSource, UICollectionViewDe
         cellForItemAt indexPath: IndexPath
     ) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: PetCell.reuseIdentifier,
+            withReuseIdentifier: DamagoCell.reuseIdentifier,
             for: indexPath
-        ) as? PetCell else {
+        ) as? DamagoCell else {
             return UICollectionViewCell()
         }
-        let petType = DamagoType.allCases[indexPath.item]
-        cell.configure(with: petType)
+        let damagoType = DamagoType.allCases[indexPath.item]
+        cell.configure(with: damagoType)
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let petType = DamagoType.allCases[indexPath.item]
-        petSelectedPublisher.send(petType)
+        let damagoType = DamagoType.allCases[indexPath.item]
+        damagoSelectedPublisher.send(damagoType)
     }
 }
