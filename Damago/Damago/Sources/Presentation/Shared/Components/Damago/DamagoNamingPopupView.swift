@@ -6,19 +6,9 @@
 //
 
 import UIKit
-import Combine
 
 final class DamagoNamingPopupView: UIView {
-    enum Mode {
-        case onboarding
-        case edit
-    }
-    
-    let confirmButtonTappedSubject = PassthroughSubject<String, Never>()
-    let cancelButtonTappedSubject = PassthroughSubject<Void, Never>()
-    let requestCancelConfirmationSubject = PassthroughSubject<Void, Never>()
-    
-    private let containerView: UIView = {
+    let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .damagoSecondary
         view.layer.cornerRadius = .largeCard
@@ -43,7 +33,7 @@ final class DamagoNamingPopupView: UIView {
         return view
     }()
     
-    private let titleLabel: UILabel = {
+    let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .body1
         label.textColor = .textPrimary
@@ -88,48 +78,27 @@ final class DamagoNamingPopupView: UIView {
         return button
     }()
     
-    private var mode: Mode = .onboarding
-    private var initialName: String?
-    private var cancellables = Set<AnyCancellable>()
     private var containerViewCenterYConstraint: NSLayoutConstraint?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
-        bind()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(mode: Mode, damagoType: DamagoType?, initialName: String?) {
-        self.mode = mode
-        if let damagoType = damagoType {
-            damagoView.configure(with: damagoType)
-        }
+    func configureInitialState(
+        title: String,
+        placeholder: String,
+        confirmTitle: String,
+        confirmDisabledTitle: String,
+        isEditMode: Bool
+    ) {
+        titleLabel.text = title
+        nameTextField.placeholder = placeholder
         
-        let trimmed = initialName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        self.initialName = trimmed
-        nameTextField.text = trimmed
-        nameTextField.placeholder = mode == .onboarding ? "이름 입력" : "새 이름 입력"
-        titleLabel.text = mode == .onboarding ? "마음을 담아 이름을 선물해주세요." : "이름을 바꿔볼까요?"
-        
-        setupButtonStyles()
-        updateConfirmButtonState(trimmed)
-    }
-    
-    func updateInitialName(_ name: String) {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        initialName = trimmed
-        if nameTextField.text?.isEmpty ?? true {
-            nameTextField.text = trimmed
-            updateConfirmButtonState(trimmed)
-        }
-    }
-    
-    private func setupButtonStyles() {
-        let confirmTitle = mode == .onboarding ? "만나서 반가워!" : "변경하기"
         let confirmConfig = CTAButton.Configuration(
             backgroundColor: .damagoPrimary,
             foregroundColor: .white,
@@ -139,64 +108,43 @@ final class DamagoNamingPopupView: UIView {
         let disabledConfig = CTAButton.Configuration(
             backgroundColor: .disabled,
             foregroundColor: .white,
-            title: "이름을 알려줘!",
+            title: confirmDisabledTitle,
             font: .body2
         )
         confirmButton.configure(enabled: confirmConfig, disabled: disabledConfig)
         
-        let cancelBgColor: UIColor = mode == .onboarding ? .disabled : .textTertiary
-        let cancelConfig = CTAButton.Configuration(
-            backgroundColor: cancelBgColor,
-            foregroundColor: .white,
-            title: "취소",
-            font: .body2
-        )
-        cancelButton.configure(enabled: cancelConfig, disabled: cancelConfig)
+        if isEditMode {
+            let cancelConfig = CTAButton.Configuration(
+                backgroundColor: .textTertiary,
+                foregroundColor: .white,
+                title: "취소",
+                font: .body2
+            )
+            cancelButton.configure(enabled: cancelConfig, disabled: cancelConfig)
+        } else {
+             let cancelConfig = CTAButton.Configuration(
+                 backgroundColor: .disabled,
+                 foregroundColor: .white,
+                 title: "취소",
+                 font: .body2
+             )
+             cancelButton.configure(enabled: cancelConfig, disabled: cancelConfig)
+        }
+    }
+    
+    func configure(with damagoType: DamagoType?) {
+        guard let damagoType = damagoType else { return }
+        damagoView.configure(with: damagoType)
     }
     
     private func setupUI() {
         backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        
         setupHierarchy()
         setupConstraints()
         
         nameTextField.delegate = self
         setupKeyboard()
-    }
-    
-    private func bind() {
-        confirmButton.tapPublisher
-            .sink { [weak self] in
-                guard let self = self, let name = self.nameTextField.text, !name.isEmpty else { return }
-                self.confirmButtonTappedSubject.send(name)
-            }
-            .store(in: &cancellables)
-            
-        cancelButton.tapPublisher
-            .sink { [weak self] in
-                self?.handleCancel()
-            }
-            .store(in: &cancellables)
-            
-        nameTextField.textPublisher
-            .sink { [weak self] text in
-                self?.updateConfirmButtonState(text)
-            }
-            .store(in: &cancellables)
-    }
-    
-    private func updateConfirmButtonState(_ text: String) {
-        confirmButton.isEnabled = !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-    
-    private func handleCancel() {
-        let current = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let original = initialName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        
-        if current.isEmpty || current == original {
-            cancelButtonTappedSubject.send(())
-        } else {
-            requestCancelConfirmationSubject.send(())
-        }
     }
     
     private func setupHierarchy() {
@@ -249,7 +197,7 @@ final class DamagoNamingPopupView: UIView {
         setupKeyboardDismissOnTap { [weak self] location in
             guard let self else { return }
             if !self.containerView.frame.contains(location) {
-                self.handleCancel()
+                self.cancelButton.sendActions(for: .touchUpInside)
             }
         }
         

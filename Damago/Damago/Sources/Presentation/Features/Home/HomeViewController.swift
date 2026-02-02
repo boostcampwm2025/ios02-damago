@@ -86,57 +86,20 @@ final class HomeViewController: UIViewController {
     }
 
     private func showEditDamagoNamePopup() {
-        let popupView = DamagoNamingPopupView()
-        popupView.configure(
+        let popupViewModel = DamagoNamingPopupViewModel(
             mode: .edit,
-            damagoType: currentDamagoType,
             initialName: mainView.nameLabel.text
         )
-        popupView.translatesAutoresizingMaskIntoConstraints = false
+        let popupVC = DamagoNamingPopupViewController(viewModel: popupViewModel)
+        popupVC.configure(with: currentDamagoType)
 
-        let targetView = tabBarController?.view ?? view
-        targetView?.addSubview(popupView)
-
-        NSLayoutConstraint.activate([
-            popupView.topAnchor.constraint(equalTo: targetView!.topAnchor),
-            popupView.leadingAnchor.constraint(equalTo: targetView!.leadingAnchor),
-            popupView.trailingAnchor.constraint(equalTo: targetView!.trailingAnchor),
-            popupView.bottomAnchor.constraint(equalTo: targetView!.bottomAnchor)
-        ])
-        
-        popupView.confirmButtonTappedSubject
-            .sink { [weak self, weak popupView] name in
+        popupVC.confirmAction
+            .sink { [weak self] name in
                 self?.damagoNameChangeSubmittedPublisher.send(name)
-                popupView?.removeFromSuperview()
             }
             .store(in: &cancellables)
-
-        popupView.cancelButtonTappedSubject
-            .sink { [weak popupView] in
-                popupView?.removeFromSuperview()
-            }
-            .store(in: &cancellables)
-
-        popupView.requestCancelConfirmationSubject
-            .sink { [weak self, weak popupView] in
-                guard let self, let popupView else { return }
-                let alert = UIAlertController(
-                    title: "취소할까요?",
-                    message: "입력한 내용이 저장되지 않아요.",
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: "계속 입력", style: .cancel))
-                alert.addAction(UIAlertAction(title: "취소", style: .destructive) { _ in
-                    popupView.removeFromSuperview()
-                })
-                self.present(alert, animated: true)
-            }
-            .store(in: &cancellables)
-
-        popupView.alpha = 0
-        UIView.animate(withDuration: 0.2) {
-            popupView.alpha = 1
-        }
+            
+        present(popupVC, animated: true)
     }
     
     private func showLevelUpAlert(level: Int) {
