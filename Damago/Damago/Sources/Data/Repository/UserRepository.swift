@@ -8,6 +8,7 @@
 import Combine
 import DamagoNetwork
 import Foundation
+import OSLog
 
 final class UserRepository: UserRepositoryProtocol {
     private let networkProvider: NetworkProvider
@@ -161,9 +162,14 @@ private extension UserInfoResponse {
 
 extension DamagoStatusResponse {
     func toDomain() -> DamagoStatus {
-        DamagoStatus(
+        guard let damagoType = DamagoType(rawValue: damagoType) else {
+            SharedLogger.common.error("invalid damagoType: \(damagoType)")
+            fatalError()
+        }
+        
+        return DamagoStatus(
             damagoName: damagoName,
-            damagoType: DamagoType(rawValue: damagoType)!,
+            damagoType: damagoType,
             level: level,
             currentExp: currentExp,
             maxExp: maxExp,
