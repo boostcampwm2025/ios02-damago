@@ -88,7 +88,7 @@ final class UserRepository: UserRepositoryProtocol {
         useFCM: Bool?,
         useLiveActivity: Bool?,
         damagoName: String?,
-        damagoType: String?
+        damagoType: DamagoType?
     ) async throws {
         let token = try await tokenProvider.idToken()
         let dateString = anniversaryDate.map {
@@ -105,7 +105,7 @@ final class UserRepository: UserRepositoryProtocol {
                 useFCM: useFCM,
                 useLiveActivity: useLiveActivity,
                 damagoName: damagoName,
-                damagoType: damagoType
+                damagoType: damagoType?.rawValue
             )
         )
     }

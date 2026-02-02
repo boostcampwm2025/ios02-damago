@@ -14,7 +14,7 @@ protocol UpdateUserUseCase {
         useFCM: Bool?,
         useLiveActivity: Bool?,
         damagoName: String?,
-        damagoType: String?
+        damagoType: DamagoType?
     ) async throws
 }
 
@@ -31,7 +31,7 @@ final class UpdateUserUseCaseImpl: UpdateUserUseCase {
         useFCM: Bool?,
         useLiveActivity: Bool?,
         damagoName: String?,
-        damagoType: String?
+        damagoType: DamagoType?
     ) async throws {
         try await userRepository.updateUserInfo(
             nickname: nickname,

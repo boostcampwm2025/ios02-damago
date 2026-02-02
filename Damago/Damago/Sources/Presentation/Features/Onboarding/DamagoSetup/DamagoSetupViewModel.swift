@@ -120,7 +120,7 @@ final class DamagoSetupViewModel: ViewModel {
                     useFCM: true,
                     useLiveActivity: true,
                     damagoName: name,
-                    damagoType: selectedDamago.rawValue
+                    damagoType: selectedDamago
                 )
                 UserDefaults.standard.set(true, forKey: "isOnboardingCompleted")
                 state.route = Pulse(.home)

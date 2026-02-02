@@ -23,7 +23,7 @@ protocol UserRepositoryProtocol {
         useFCM: Bool?,
         useLiveActivity: Bool?,
         damagoName: String?,
-        damagoType: String?
+        damagoType: DamagoType?
     ) async throws
     func signOut() throws
     func withdraw() async throws

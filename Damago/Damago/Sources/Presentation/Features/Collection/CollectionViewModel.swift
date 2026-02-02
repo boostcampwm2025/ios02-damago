@@ -89,7 +89,7 @@ final class CollectionViewModel: ViewModel {
                     useFCM: nil,
                     useLiveActivity: nil,
                     damagoName: nil,
-                    damagoType: selectedDamago.rawValue
+                    damagoType: selectedDamago
                 )
                 state.currentDamagoType = selectedDamago
                 state.route = Pulse(.changeSuccess)
