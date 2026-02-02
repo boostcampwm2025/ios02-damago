@@ -15,13 +15,12 @@ platform :ios do
     end
 
     configs_to_test.each do |config|
-      puts "🚀 Validating #{config} build..."
-      xcodebuild(
-        build: true,
+      puts "🚀 Testing #{config} build..."
+      scan(
         project: "./Damago/Damago.xcodeproj",
         scheme: "Damago",
         configuration: config,
-        destination: "generic/platform=iOS Simulator", # 특정 시뮬레이터가 아닌 일반적인 시뮬레이터 사용
+        devices: ["iPhone 16 Pro"], # 테스트에서는 최신 기종 시뮬레이터 지정
         clean: true,
         # CI 환경에서 SwiftLint 등 빌드 툴 플러그인 신뢰 문제 해결
         xcargs: "-skipPackagePluginValidation"
