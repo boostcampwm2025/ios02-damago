@@ -72,8 +72,18 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
             partnerStream = Just(nil).eraseToAnyPublisher()
         }
         
-        return Publishers.CombineLatest3(coupleStream, damagoStream, partnerStream)
-            .map { coupleSnapshot, damagoSnapshot, partnerSnapshot in
+        let ownedDamagosStream: AnyPublisher<[DamagoSnapshotDTO], Never>
+        if let coupleID = userSnapshot.coupleID {
+            ownedDamagosStream = damagoRepository.observeOwnedDamagos(coupleID: coupleID)
+                .map { (try? $0.get()) ?? [] }
+                .replaceError(with: [])
+                .eraseToAnyPublisher()
+        } else {
+            ownedDamagosStream = Just([]).eraseToAnyPublisher()
+        }
+        
+        return Publishers.CombineLatest4(coupleStream, damagoStream, partnerStream, ownedDamagosStream)
+            .map { coupleSnapshot, damagoSnapshot, partnerSnapshot, ownedDamagos in
                 GlobalState(
                     nickname: userSnapshot.nickname,
                     opponentName: partnerSnapshot?.nickname,
@@ -95,7 +105,8 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
                     statusMessage: damagoSnapshot?.statusMessage,
                     lastFedAt: damagoSnapshot?.lastFedAt,
                     totalPlayTime: damagoSnapshot?.totalPlayTime,
-                    lastActiveAt: damagoSnapshot?.lastActiveAt
+                    lastActiveAt: damagoSnapshot?.lastActiveAt,
+                    ownedDamagoTypes: ownedDamagos.compactMap { $0.damagoType }
                 )
             }
             .eraseToAnyPublisher()

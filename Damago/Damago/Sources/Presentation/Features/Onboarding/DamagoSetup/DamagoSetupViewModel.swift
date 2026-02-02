@@ -21,6 +21,7 @@ final class DamagoSetupViewModel: ViewModel {
         var currentDamagoType: DamagoType?
         var currentDamagoName: String?
         var coupleID: String?
+        var ownedDamagoTypes: [DamagoType] = []
         var isLoading: Bool = false
         var route: Pulse<Route>?
     }
@@ -31,21 +32,24 @@ final class DamagoSetupViewModel: ViewModel {
         case error(title: String, message: String)
     }
     
-    @Published private var state = State()
+    @Published private(set) var state = State()
     private var cancellables = Set<AnyCancellable>()
     
     private let updateUserUseCase: UpdateUserUseCase
     private let fetchUserInfoUseCase: FetchUserInfoUseCase
     private let damagoRepository: DamagoRepositoryProtocol
+    private let globalStore: GlobalStoreProtocol
     
     init(
         updateUserUseCase: UpdateUserUseCase,
         fetchUserInfoUseCase: FetchUserInfoUseCase,
-        damagoRepository: DamagoRepositoryProtocol
+        damagoRepository: DamagoRepositoryProtocol,
+        globalStore: GlobalStoreProtocol
     ) {
         self.updateUserUseCase = updateUserUseCase
         self.fetchUserInfoUseCase = fetchUserInfoUseCase
         self.damagoRepository = damagoRepository
+        self.globalStore = globalStore
     }
     
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
@@ -55,14 +59,16 @@ final class DamagoSetupViewModel: ViewModel {
             }
             .store(in: &cancellables)
 
+        globalStore.globalState
+            .map { $0.ownedDamagoTypes ?? [] }
+            .assign(to: \.state.ownedDamagoTypes, on: self)
+            .store(in: &cancellables)
+
         input.damagoSelected
             .sink { [weak self] damagoType in
-                if damagoType.isAvailable {
-                    self?.state.selectedDamago = damagoType
-                    self?.state.route = Pulse(.showPopup(damagoType: damagoType))
-                } else {
-                    self?.state.route = Pulse(.error(title: "🙌 추후 업데이트 예정입니다!", message: "더 좋은 서비스로 찾아뵙겠습니다."))
-                }
+                guard let self = self else { return }
+                self.state.selectedDamago = damagoType
+                self.state.route = Pulse(.showPopup(damagoType: damagoType))
             }
             .store(in: &cancellables)
             

@@ -35,8 +35,8 @@ final class DamagoCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func configure(with damagoType: DamagoType, isCurrentDamago: Bool = false) {
-        damagoView.configure(with: damagoType)
+    func configure(with damagoType: DamagoType, isCurrentDamago: Bool = false, showTemplete: Bool = false) {
+        damagoView.configure(with: damagoType, showTemplete: showTemplete)
         usingBadgeLabel.isHidden = !isCurrentDamago
         contentView.layer.borderColor = (isCurrentDamago ? UIColor.damagoPrimary : .systemGray5).cgColor
         contentView.layer.borderWidth = isCurrentDamago ? 2 : 1

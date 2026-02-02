@@ -105,9 +105,11 @@ final class TabBarViewController: UITabBarController {
         case .collection:
             let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
             let fetchUserInfoUseCase = AppDIContainer.shared.resolve(FetchUserInfoUseCase.self)
+            let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
             let viewModel = CollectionViewModel(
                 updateUserUseCase: updateUserUseCase,
-                fetchUserInfoUseCase: fetchUserInfoUseCase
+                fetchUserInfoUseCase: fetchUserInfoUseCase,
+                globalStore: globalStore
             )
             return CollectionViewController(viewModel: viewModel)
         case .home:

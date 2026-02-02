@@ -21,6 +21,7 @@ final class CollectionViewModel: ViewModel {
         var damagos: [DamagoType] = DamagoType.allCases
         var selectedDamago: DamagoType?
         var currentDamagoType: DamagoType?
+        var ownedDamagoTypes: [DamagoType] = []
         var isLoading: Bool = false
         var route: Pulse<Route>?
     }
@@ -38,10 +39,16 @@ final class CollectionViewModel: ViewModel {
 
     private let updateUserUseCase: UpdateUserUseCase
     private let fetchUserInfoUseCase: FetchUserInfoUseCase
+    private let globalStore: GlobalStoreProtocol
 
-    init(updateUserUseCase: UpdateUserUseCase, fetchUserInfoUseCase: FetchUserInfoUseCase) {
+    init(
+        updateUserUseCase: UpdateUserUseCase,
+        fetchUserInfoUseCase: FetchUserInfoUseCase,
+        globalStore: GlobalStoreProtocol
+    ) {
         self.updateUserUseCase = updateUserUseCase
         self.fetchUserInfoUseCase = fetchUserInfoUseCase
+        self.globalStore = globalStore
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
@@ -51,16 +58,22 @@ final class CollectionViewModel: ViewModel {
             }
             .store(in: &cancellables)
 
+        globalStore.globalState
+            .map { $0.ownedDamagoTypes ?? [] }
+            .assign(to: \.state.ownedDamagoTypes, on: self)
+            .store(in: &cancellables)
+
         input.damagoSelected
             .sink { [weak self] damagoType in
-                if damagoType == self?.state.currentDamagoType { return }
-                if damagoType.isAvailable {
-                    self?.state.selectedDamago = damagoType
-                    self?.state.route = Pulse(.showChangeConfirmPopup(damagoType: damagoType))
+                guard let self = self else { return }
+                if damagoType == self.state.currentDamagoType { return }
+                if self.state.ownedDamagoTypes.contains(damagoType) {
+                    self.state.selectedDamago = damagoType
+                    self.state.route = Pulse(.showChangeConfirmPopup(damagoType: damagoType))
                 } else {
-                    self?.state.route = Pulse(.error(
-                        title: "🙌 추후 업데이트 예정입니다!",
-                        message: "더 좋은 서비스로 찾아뵙겠습니다."
+                    self.state.route = Pulse(.error(
+                        title: "미보유 다마고입니다.",
+                        message: "코인을 모아 상점해서 획득해보세요!"
                     ))
                 }
             }

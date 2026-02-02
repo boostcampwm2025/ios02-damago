@@ -132,7 +132,9 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
             switch result {
             case .success(let dto):
                 if dto.lastAnsweredAt == nil && dto.bothAnswered == true {
-                    SharedLogger.interaction.debug("Repository: bothAnswered는 true인데 lastAnsweredAt이 nil입니다. 데이터 확인 필요.")
+                    SharedLogger.interaction.debug(
+                        "Repository: bothAnswered는 true인데 lastAnsweredAt이 nil입니다. 데이터 확인 필요."
+                    )
                 }
                 
                 let combinedDTO = BalanceGameDTO(

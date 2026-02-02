@@ -31,4 +31,8 @@ final class DamagoRepository: DamagoRepositoryProtocol {
     func observeDamagoSnapshot(damagoID: String) -> AnyPublisher<Result<DamagoSnapshotDTO, Error>, Never> {
         firestoreService.observe(collection: "damagos", document: damagoID)
     }
+
+    func observeOwnedDamagos(coupleID: String) -> AnyPublisher<Result<[DamagoSnapshotDTO], Error>, Never> {
+        firestoreService.observeQuery(collection: "damagos", field: "coupleID", value: coupleID)
+    }
 }

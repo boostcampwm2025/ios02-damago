@@ -4,7 +4,7 @@ from nanoid import generate
 import google.cloud.firestore
 import json
 
-from utils.constants import AVAILABLE_DAMAGO_TYPES, get_default_damago_name, XP_TABLE
+from utils.constants import AVAILABLE_DAMAGO_TYPES, BASIC_DAMAGO_TYPES, get_default_damago_name, XP_TABLE
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
 
@@ -178,8 +178,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             "updatedAt": firestore.SERVER_TIMESTAMP
         })
 
-        # visible인 모든 다마고 생성 (기본 이름 사용)
-        for damago_type in AVAILABLE_DAMAGO_TYPES:
+        # 기본 다마고 생성 (기본 이름 사용)
+        for damago_type in BASIC_DAMAGO_TYPES:
             damago_id = f"{couple_ref.id}_{damago_type}"
             damago_ref = db.collection("damagos").document(damago_id)
             transaction.set(damago_ref, {
