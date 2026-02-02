@@ -53,11 +53,20 @@ final class UserRepository: UserRepositoryProtocol {
         return response.toDomain()
     }
     
-    func updateFCMToken(fcmToken: String) async throws {
-        let token = try await tokenProvider.idToken()
+    func updateFCMToken(fcmToken: String?) async throws {
+        guard let fcmToken = fcmToken ?? UserDefaults.standard.string(forKey: "fcmToken") else {
+            SharedLogger.apns.error("fcm 토큰을 가져오지 못했습니다.")
+            return
+        }
+
+        guard let idToken = try? await tokenProvider.idToken() else {
+            SharedLogger.apns.log("fcm 토큰 업데이트 중 id token을 가져오지 못했습니다. 로그인 상태가 아닙니다.")
+            return
+        }
+
         try await networkProvider.requestSuccess(
             UserAPI.updateFCMToken(
-                accessToken: token,
+                accessToken: idToken,
                 fcmToken: fcmToken
             )
         )
