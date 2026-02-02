@@ -125,7 +125,7 @@ def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
     if la_update_token: update_data["laUpdateToken"] = la_update_token
     if la_start_token: update_data["laStartToken"] = la_start_token
 
-    user_ref.update(update_data)
+    user_ref.set(update_data, merge=True)
 
     return https_fn.Response("Live Activity Token Saved")
 

@@ -33,6 +33,6 @@ final class DamagoRepository: DamagoRepositoryProtocol {
     }
 
     func observeOwnedDamagos(coupleID: String) -> AnyPublisher<Result<[DamagoSnapshotDTO], Error>, Never> {
-        return firestoreService.observeQuery(collection: "damagos", field: "coupleID", value: coupleID)
+        firestoreService.observeQuery(collection: "damagos", field: "coupleID", value: coupleID)
     }
 }

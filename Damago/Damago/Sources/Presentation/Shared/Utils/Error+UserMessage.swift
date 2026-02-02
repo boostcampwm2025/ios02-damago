@@ -14,7 +14,7 @@ extension Error {
         // NetworkError 처리
         if let networkError = self as? NetworkError {
             switch networkError {
-            case .invalidStatusCode(let code, let body):
+            case .invalidStatusCode(let code, _):
                 if code == 401 {
                     return "로그인이 필요합니다.\n다시 로그인해주세요."
                 } else if code == 403 {

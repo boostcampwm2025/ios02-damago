@@ -61,7 +61,7 @@ final class StoreViewModel: ViewModel {
         
         let availableDamagos = DamagoType.allCases.filter { !state.ownedDamagoTypes.contains($0) }
 
-        guard let randomDamago = (availableDamagos.isEmpty ? DamagoType.allCases : availableDamagos).randomElement() else { return }
+        guard let randomDamago = availableDamagos.randomElement() else { return }
         
         let result = DrawResult(itemName: "새로운 친구", damagoType: randomDamago)
         

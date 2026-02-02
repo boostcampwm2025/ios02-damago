@@ -2,19 +2,29 @@ import Combine
 import FirebaseFirestore
 
 protocol FirestoreService {
-    func observe<T: Decodable>(collection: String, document: String) -> AnyPublisher<Result<T, Error>, Never>
-    func observeQuery<T: Decodable>(collection: String, field: String, value: Any) -> AnyPublisher<Result<[T], Error>, Never>
+    func observe<T: Decodable>(
+        collection: String,
+        document: String
+    ) -> AnyPublisher<Result<T, Error>, Never>
+    func observeQuery<T: Decodable>(
+        collection: String,
+        field: String,
+        value: Any
+    ) -> AnyPublisher<Result<[T], Error>, Never>
 }
 
 final class FirestoreServiceImpl: FirestoreService {
     private var observers: [String: Any] = [:]
     private let lock = NSRecursiveLock()
 
-    func observe<T: Decodable>(collection: String, document: String) -> AnyPublisher<Result<T, Error>, Never> {
+    func observe<T: Decodable>(
+        collection: String,
+        document: String
+    ) -> AnyPublisher<Result<T, Error>, Never> {
         let path = "\(collection)/\(document)"
         
         return createPublisher(path: path) { completion in
-            return Firestore.firestore()
+            Firestore.firestore()
                 .collection(collection)
                 .document(document)
                 .addSnapshotListener { snapshot, error in
@@ -35,11 +45,15 @@ final class FirestoreServiceImpl: FirestoreService {
         }
     }
 
-    func observeQuery<T: Decodable>(collection: String, field: String, value: Any) -> AnyPublisher<Result<[T], Error>, Never> {
+    func observeQuery<T: Decodable>(
+        collection: String,
+        field: String,
+        value: Any
+    ) -> AnyPublisher<Result<[T], Error>, Never> {
         let path = "\(collection)/where/\(field)==\(value)"
 
         return createPublisher(path: path) { completion in
-            return Firestore.firestore()
+            Firestore.firestore()
                 .collection(collection)
                 .whereField(field, isEqualTo: value)
                 .addSnapshotListener { snapshot, error in
