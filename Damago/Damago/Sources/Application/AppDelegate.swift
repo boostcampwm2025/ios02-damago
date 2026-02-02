@@ -28,7 +28,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         FirebaseApp.configure()
 
         do {
-            try Auth.auth().useUserAccessGroup("B3PWYBKFUK.kr.codesquad.boostcamp10.Damago.SharedKeychain")
+            try Auth.auth().useUserAccessGroup(KeychainSharingConstants.defaultID)
         } catch {
             SharedLogger.firebase.error("키체인 그룹 에러: \(error.localizedDescription)")
         }
