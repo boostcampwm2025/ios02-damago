@@ -25,10 +25,10 @@ final class DamagoView: UIView {
         clipsToBounds = true
     }
     
-    func configure(with damagoType: DamagoType) {
+    func configure(with damagoType: DamagoType, showTemplete: Bool = false) {
         contentView?.removeFromSuperview()
         
-        let newContentView = setupSpriteView(sheetName: damagoType.imageName, showTemplete: !damagoType.isAvailable)
+        let newContentView = setupSpriteView(sheetName: damagoType.imageName, showTemplete: showTemplete)
         
         addSubview(newContentView)
         self.contentView = newContentView

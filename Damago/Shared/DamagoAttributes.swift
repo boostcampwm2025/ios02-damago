@@ -44,7 +44,7 @@ public enum DamagoType: String, CaseIterable, Codable {
     case basicBlack = "CatBasicBlack"
     case basicPink = "CatBasicPink"
     case basicYellow = "CatBasicYellow"
-    
+
     case siamese = "CatSiamese"
     case tiger = "CatTiger"
     case batman = "CatBatman"
@@ -66,17 +66,9 @@ public enum DamagoType: String, CaseIterable, Codable {
             return false
         }
     }
-
-    // TODO: 서버에서 받아오기
-    public var isAvailable: Bool {
-        switch self {
-        case .siamese, .tiger, .batman, .christmas, .egypt, .oddEye, .threeColored, .wizard:
-            return true
-        default:
-            return false
-        }
-    }
 }
+
+public let totalDamagos: [DamagoType] = DamagoType.allCases
 
 extension DamagoAttributes {
     public enum Screen: String, Codable, Hashable {

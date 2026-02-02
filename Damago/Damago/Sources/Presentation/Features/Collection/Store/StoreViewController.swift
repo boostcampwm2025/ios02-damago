@@ -14,6 +14,8 @@ final class StoreViewController: UIViewController {
     private let viewModel: StoreViewModel
     private var cancellables = Set<AnyCancellable>()
 
+    private var ownedDamagoTypes: [DamagoType]?
+
     init(viewModel: StoreViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -54,6 +56,11 @@ final class StoreViewController: UIViewController {
                 guard let self = self else { return }
                 self.triggerGachaAnimation(result: result)
             }
+            .store(in: &cancellables)
+
+        output
+            .map { $0.ownedDamagoTypes }
+            .assign(to: \.ownedDamagoTypes, on: self)
             .store(in: &cancellables)
         
         output

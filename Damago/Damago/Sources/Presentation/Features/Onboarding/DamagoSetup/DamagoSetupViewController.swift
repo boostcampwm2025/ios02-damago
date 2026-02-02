@@ -153,7 +153,7 @@ final class DamagoSetupViewController: UIViewController {
 
 extension DamagoSetupViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        DamagoType.allCases.count
+        totalDamagos.filter { $0.isBasic }.count
     }
     
     func collectionView(
@@ -166,7 +166,9 @@ extension DamagoSetupViewController: UICollectionViewDataSource, UICollectionVie
         ) as? DamagoCell else {
             return UICollectionViewCell()
         }
-        let damagoType = DamagoType.allCases[indexPath.item]
+        
+        let damagoType = totalDamagos.filter { $0.isBasic }[indexPath.item]
+        
         cell.configure(with: damagoType)
         return cell
     }

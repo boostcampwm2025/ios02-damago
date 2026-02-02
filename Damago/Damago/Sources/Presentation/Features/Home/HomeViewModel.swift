@@ -33,6 +33,7 @@ final class HomeViewModel: ViewModel {
         var totalCoin = 0
         var foodCount = 0
         var lastFedAt: Date?
+        var ownedDamagoTypes: [DamagoType] = []
 
         var isFeedButtonEnabled: Bool { foodCount > 0 && !isFeeding }
         var isPokeButtonEnabled: Bool { true }
@@ -44,7 +45,7 @@ final class HomeViewModel: ViewModel {
         case error(message: String)
     }
 
-    @Published private var state = State()
+    @Published private(set) var state = State()
     private var cancellables = Set<AnyCancellable>()
     private var damagoID: String?
 
@@ -194,6 +195,11 @@ final class HomeViewModel: ViewModel {
                 self.state.damagoType = damagoType
                 self.state.isHungry = isHungry
             }
+            .store(in: &cancellables)
+        
+        globalStore.globalState
+            .map { $0.ownedDamagoTypes ?? [] }
+            .assign(to: \.state.ownedDamagoTypes, on: self)
             .store(in: &cancellables)
 
         globalStore.globalState

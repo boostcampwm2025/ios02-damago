@@ -18,6 +18,7 @@ final class CollectionViewController: UIViewController {
 
     private var cancellables = Set<AnyCancellable>()
     private var currentDamagoType: DamagoType?
+    private var ownedDamagoTypes: [DamagoType] = []
 
     init(viewModel: CollectionViewModel) {
         self.viewModel = viewModel
@@ -89,6 +90,14 @@ final class CollectionViewController: UIViewController {
                 self?.mainView.collectionView.reloadData()
             }
             .store(in: &cancellables)
+        
+        output
+            .map(\.ownedDamagoTypes)
+            .sink { [weak self] in
+                self?.ownedDamagoTypes = $0
+                self?.mainView.collectionView.reloadData()
+            }
+            .store(in: &cancellables)
     }
 
     private func handleRoute(_ route: CollectionViewModel.Route) {
@@ -141,7 +150,8 @@ final class CollectionViewController: UIViewController {
 
     @objc
     private func shopButtonTapped() {
-        let storeViewModel = StoreViewModel()
+        let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
+        let storeViewModel = StoreViewModel(globalStore: globalStore)
         let storeVC = StoreViewController(viewModel: storeViewModel)
         storeVC.modalPresentationStyle = .fullScreen
         self.present(storeVC, animated: true)
@@ -164,7 +174,13 @@ extension CollectionViewController: UICollectionViewDataSource, UICollectionView
             return UICollectionViewCell()
         }
         let damagoType = viewModel.damagos[indexPath.item]
-        cell.configure(with: damagoType, isCurrentDamago: currentDamagoType == damagoType)
+        let isAvailable = ownedDamagoTypes.contains(damagoType)
+        
+        cell.configure(
+            with: damagoType,
+            isCurrentDamago: currentDamagoType == damagoType,
+            showTemplete: !isAvailable
+        )
         return cell
     }
 
