@@ -57,9 +57,18 @@ def get_level_up_reward(level: int) -> int:
 
     return 50 + (level * 10)
 
+BASIC_DAMAGO_TYPES = [
+    "CatBasicBlack",
+    "CatBasicPink",
+    "CatBasicYellow",
+]
 
 # DamagoAttributes.DamagoType.isAvailable == true 인 타입 (동기화 유지)
 AVAILABLE_DAMAGO_TYPES = [
+    "CatBasicBlack",
+    "CatBasicPink",
+    "CatBasicYellow",
+
     "CatSiamese",
     "CatTiger",
     "CatBatman",
@@ -72,6 +81,10 @@ AVAILABLE_DAMAGO_TYPES = [
 
 # DamagoType rawValue → 기본 이름 (DamagoAttributes.DamagoType.defaultName과 동기화)
 DAMAGO_TYPE_DEFAULT_NAMES = {
+    "CatBasicBlack": "검정냥",
+    "CatBasicPink": "핑크냥",
+    "CatBasicYellow": "노랑냥",
+
     "CatSiamese": "샴",
     "CatTiger": "호랑이",
     "CatBatman": "배트맨",
