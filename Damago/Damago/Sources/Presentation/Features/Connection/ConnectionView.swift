@@ -263,7 +263,10 @@ final class ConnectionView: UIView {
                 ),
                 opponentCodeTextField.centerYAnchor.constraint(equalTo: opponentCodeContainer.centerYAnchor),
 
-                connectButton.topAnchor.constraint(greaterThanOrEqualTo: cardContainer.bottomAnchor, constant: .spacingL),
+                connectButton.topAnchor.constraint(
+                    greaterThanOrEqualTo: cardContainer.bottomAnchor,
+                    constant: .spacingL
+                ),
                 connectButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: .spacingM),
                 connectButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
                 connectButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -.spacingL)

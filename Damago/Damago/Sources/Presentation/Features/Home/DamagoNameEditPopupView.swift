@@ -249,4 +249,3 @@ extension DamagoNameEditPopupView: UITextFieldDelegate {
         return true
     }
 }
-

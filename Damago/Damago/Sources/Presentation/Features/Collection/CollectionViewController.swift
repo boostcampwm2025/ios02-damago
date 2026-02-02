@@ -139,7 +139,8 @@ final class CollectionViewController: UIViewController {
         }
     }
 
-    @objc private func shopButtonTapped() {
+    @objc
+    private func shopButtonTapped() {
         let storeViewModel = StoreViewModel()
         let storeVC = StoreViewController(viewModel: storeViewModel)
         storeVC.modalPresentationStyle = .fullScreen

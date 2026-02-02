@@ -112,7 +112,8 @@ final class DamagoChangeConfirmPopupView: UIView {
         addGestureRecognizer(tapGesture)
     }
     
-    @objc private func handleBackgroundTap(_ gesture: UITapGestureRecognizer) {
+    @objc
+    private func handleBackgroundTap(_ gesture: UITapGestureRecognizer) {
         let location = gesture.location(in: self)
         // containerView 밖을 터치했을 때만 팝업 닫기
         if !containerView.frame.contains(location) {
