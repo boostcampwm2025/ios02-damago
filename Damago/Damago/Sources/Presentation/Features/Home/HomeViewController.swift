@@ -86,8 +86,12 @@ final class HomeViewController: UIViewController {
     }
 
     private func showEditDamagoNamePopup() {
-        let popupView = DamagoNameEditPopupView()
-        popupView.configure(damagoType: currentDamagoType, initialName: mainView.nameLabel.text)
+        let popupView = DamagoNamingPopupView()
+        popupView.configure(
+            mode: .edit,
+            damagoType: currentDamagoType,
+            initialName: mainView.nameLabel.text
+        )
         popupView.translatesAutoresizingMaskIntoConstraints = false
 
         let targetView = tabBarController?.view ?? view
@@ -99,7 +103,7 @@ final class HomeViewController: UIViewController {
             popupView.trailingAnchor.constraint(equalTo: targetView!.trailingAnchor),
             popupView.bottomAnchor.constraint(equalTo: targetView!.bottomAnchor)
         ])
-
+        
         popupView.confirmButtonTappedSubject
             .sink { [weak self, weak popupView] name in
                 self?.damagoNameChangeSubmittedPublisher.send(name)

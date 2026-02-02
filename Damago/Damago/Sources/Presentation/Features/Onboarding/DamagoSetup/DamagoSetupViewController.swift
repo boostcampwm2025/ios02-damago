@@ -83,7 +83,11 @@ final class DamagoSetupViewController: UIViewController {
     
     private func showNamingPopup(for damagoType: DamagoType) {
         let popupView = DamagoNamingPopupView()
-        popupView.configure(with: damagoType, initialName: viewModel.prefillName(for: damagoType))
+        popupView.configure(
+            mode: .onboarding,
+            damagoType: damagoType,
+            initialName: viewModel.prefillName(for: damagoType)
+        )
         popupView.translatesAutoresizingMaskIntoConstraints = false
         
         guard let targetView = navigationController?.view ?? view else { return }
@@ -109,9 +113,7 @@ final class DamagoSetupViewController: UIViewController {
             .receive(on: DispatchQueue.main)
             .prefix(1)
             .sink { [weak popupView] name in
-                let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return }
-                popupView?.updateInitialName(trimmed)
+                popupView?.updateInitialName(name)
             }
             .store(in: &cancellables)
             
