@@ -9,7 +9,9 @@ import ActivityKit
 import Foundation
 
 struct DamagoAttributes: ActivityAttributes {
-    static let feedCooldown: TimeInterval = 10
+    // test 환경에서는 10초, 배포에선 4시간
+    static let feedCooldown: TimeInterval =
+        (ProcessInfo.processInfo.environment["USE_LOCAL_EMULATOR"] != nil) ? 10 : 4 * 60 * 60
 
     // MARK: - Dynamic State
     public struct ContentState: Codable, Hashable {
