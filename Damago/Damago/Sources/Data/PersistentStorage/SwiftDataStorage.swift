@@ -15,13 +15,12 @@ final class SwiftDataStorage {
     let context: ModelContext
     
     @MainActor
-    private init() {
+    init(appGroupID: String = AppGroupConstants.defaultID) {
         do {
             let schema = Schema([
                 DailyQuestionEntity.self
             ])
             
-            let appGroupID = "group.kr.codesquad.boostcamp10.Damago"
             guard let containerURL = FileManager.default.containerURL(
                 forSecurityApplicationGroupIdentifier: appGroupID
             ) else {

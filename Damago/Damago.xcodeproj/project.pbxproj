@@ -63,6 +63,7 @@
 		4B1E304C2EF1700E00EB96A1 /* Exceptions for "Shared" folder in "DamagoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AppGroupConstants.swift,
 				AppGroupUserDefaults.swift,
 				DamagoAttributes.swift,
 				"Date+.swift",
