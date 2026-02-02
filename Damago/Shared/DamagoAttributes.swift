@@ -67,6 +67,7 @@ public enum DamagoType: String, CaseIterable, Codable {
         }
     }
     
+    // TODO: 서버에서 받아오기
     public var isAvailable: Bool {
         switch self {
         case .siamese, .tiger, .batman, .christmas, .egypt, .oddEye, .threeColored, .wizard:

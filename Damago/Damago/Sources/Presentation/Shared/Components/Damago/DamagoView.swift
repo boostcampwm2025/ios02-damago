@@ -28,12 +28,7 @@ final class DamagoView: UIView {
     func configure(with damagoType: DamagoType) {
         contentView?.removeFromSuperview()
         
-        let newContentView: UIView
-        if damagoType.isAvailable {
-            newContentView = setupSpriteView(sheetName: damagoType.imageName)
-        } else {
-            newContentView = setupPlaceholderView()
-        }
+        let newContentView = setupSpriteView(sheetName: damagoType.imageName, showTemplete: !damagoType.isAvailable)
         
         addSubview(newContentView)
         self.contentView = newContentView
@@ -46,30 +41,16 @@ final class DamagoView: UIView {
         ])
     }
     
-    private func setupSpriteView(sheetName: String) -> SpriteAnimationView {
+    private func setupSpriteView(sheetName: String, showTemplete: Bool = false) -> SpriteAnimationView {
         let spriteView = SpriteAnimationView(spriteSheetName: sheetName)
         spriteView.backgroundColor = .clear
         spriteView.translatesAutoresizingMaskIntoConstraints = false
+        
+        if showTemplete {
+            spriteView.tintColor = .black
+            spriteView.renderingMode = .alwaysTemplate
+        }
+        
         return spriteView
-    }
-    
-    private func setupPlaceholderView() -> UIView {
-        let container = UIView()
-        container.backgroundColor = .clear
-        container.translatesAutoresizingMaskIntoConstraints = false
-        
-        let config = UIImage.SymbolConfiguration(pointSize: 30, weight: .bold)
-        let imageView = UIImageView(image: UIImage(systemName: "questionmark", withConfiguration: config))
-        imageView.tintColor = .systemGray2
-        imageView.contentMode = .scaleAspectFit
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(imageView)
-        
-        NSLayoutConstraint.activate([
-            imageView.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            imageView.centerYAnchor.constraint(equalTo: container.centerYAnchor)
-        ])
-        
-        return container
     }
 }
