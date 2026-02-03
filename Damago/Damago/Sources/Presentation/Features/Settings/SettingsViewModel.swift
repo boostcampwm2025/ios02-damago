@@ -18,6 +18,7 @@ final class SettingsViewModel: ViewModel {
         var anniversaryDate: String
         var dDay: Int
         var opponentName: String
+        var damagoBackgroundOption: DamagoBackgroundColorOption
         let privacyPolicyURL: URL?
         let termsURL: URL?
     }
@@ -26,6 +27,7 @@ final class SettingsViewModel: ViewModel {
         let viewDidLoad: AnyPublisher<Void, Never>
         let toggleChanged: AnyPublisher<(ToggleType, Bool), Never>
         let itemSelected: AnyPublisher<SettingsItem, Never>
+        let damagoBackgroundChanged: AnyPublisher<DamagoBackgroundColorOption, Never>
         let alertActionDidConfirm: AnyPublisher<AlertActionType, Never>
     }
 
@@ -36,6 +38,7 @@ final class SettingsViewModel: ViewModel {
         var anniversaryDate: String = ""
         var dDay: Int = 0
         var opponentName: String = ""
+        var damagoBackgroundOption: DamagoBackgroundColorOption = .defaultOption
         let privacyPolicyURL: URL? = URL(string: "https://example.com")
         let termsURL: URL? = URL(string: "https://example.com")
         var route: Pulse<Route>?
@@ -51,6 +54,7 @@ final class SettingsViewModel: ViewModel {
                 anniversaryDate: anniversaryDate,
                 dDay: dDay,
                 opponentName: opponentName,
+                damagoBackgroundOption: damagoBackgroundOption,
                 privacyPolicyURL: privacyPolicyURL,
                 termsURL: termsURL
             )
@@ -61,6 +65,7 @@ final class SettingsViewModel: ViewModel {
         case editProfile
         case connection
         case webLink(url: URL?)
+        case damagoBackgroundPicker(current: DamagoBackgroundColorOption)
         case alert(type: AlertActionType)
         case error(message: String)
         case openSettings
@@ -88,6 +93,7 @@ final class SettingsViewModel: ViewModel {
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
         input.viewDidLoad
             .sink { [weak self] in
+                self?.loadDamagoBackgroundOption()
                 self?.refreshPermissionsAndBind()
             }
             .store(in: &cancellables)
@@ -101,6 +107,12 @@ final class SettingsViewModel: ViewModel {
         input.itemSelected
             .sink { [weak self] item in
                 self?.handleSelection(item: item)
+            }
+            .store(in: &cancellables)
+
+        input.damagoBackgroundChanged
+            .sink { [weak self] option in
+                self?.handleDamagoBackgroundChange(option)
             }
             .store(in: &cancellables)
 
@@ -245,6 +257,8 @@ final class SettingsViewModel: ViewModel {
             state.route = Pulse(.editProfile)
         case .relationship:
             state.route = Pulse(.connection)
+        case .damagoBackground(let option):
+            state.route = Pulse(.damagoBackgroundPicker(current: option))
         case .link(_, let url):
             state.route = Pulse(.webLink(url: url))
         case .action(let type):
@@ -252,6 +266,20 @@ final class SettingsViewModel: ViewModel {
         default:
             break
         }
+    }
+
+    private func loadDamagoBackgroundOption() {
+        let defaults = AppGroupUserDefaults.sharedDefaults()
+        let rawValue = defaults.string(forKey: AppGroupUserDefaults.damagoBackgroundColorKey)
+        state.damagoBackgroundOption = DamagoBackgroundColorOption(rawValue: rawValue ?? "")
+            ?? DamagoBackgroundColorOption.defaultOption
+    }
+
+    private func handleDamagoBackgroundChange(_ option: DamagoBackgroundColorOption) {
+        let defaults = AppGroupUserDefaults.sharedDefaults()
+        defaults.set(option.rawValue, forKey: AppGroupUserDefaults.damagoBackgroundColorKey)
+        state.damagoBackgroundOption = option
+        LiveActivityManager.shared.synchronizeActivity()
     }
 
     private func handleAccountAction(_ type: AlertActionType) {

@@ -35,9 +35,16 @@ final class DamagoCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func configure(with damagoType: DamagoType, isCurrentDamago: Bool = false, showTemplete: Bool = false) {
+    func configure(
+        with damagoType: DamagoType,
+        isCurrentDamago: Bool = false,
+        showTemplete: Bool = false,
+        isHighLevel: Bool = false
+    ) {
         damagoView.configure(with: damagoType, showTemplete: showTemplete)
         usingBadgeLabel.isHidden = !isCurrentDamago
+        damagoView.layer.borderWidth = isHighLevel ? 2 : 0
+        damagoView.layer.borderColor = UIColor.damagoYellow.cgColor
         contentView.layer.borderColor = (isCurrentDamago ? UIColor.damagoPrimary : .systemGray5).cgColor
         contentView.layer.borderWidth = isCurrentDamago ? 2 : 1
     }
@@ -69,5 +76,11 @@ final class DamagoCell: UICollectionViewCell {
             usingBadgeLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -.spacingS),
             usingBadgeLabel.heightAnchor.constraint(equalToConstant: 20)
         ])
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        damagoView.layer.cornerRadius = .mediumButton
+        damagoView.clipsToBounds = true
     }
 }

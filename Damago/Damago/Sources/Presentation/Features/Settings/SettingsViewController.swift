@@ -13,10 +13,12 @@ final class SettingsViewController: UIViewController {
     private let mainView = SettingsView()
     private let viewModel: SettingsViewModel
     private var cancellables = Set<AnyCancellable>()
+    private var popupCancellables = Set<AnyCancellable>()
 
     private let viewDidLoadSubject = PassthroughSubject<Void, Never>()
     private let toggleSubject = PassthroughSubject<(ToggleType, Bool), Never>()
     private let itemSelectedSubject = PassthroughSubject<SettingsItem, Never>()
+    private let damagoBackgroundSelectedSubject = PassthroughSubject<DamagoBackgroundColorOption, Never>()
     private let alertConfirmSubject = PassthroughSubject<AlertActionType, Never>()
 
     private lazy var dataSource: SettingsDataSource = createDataSource()
@@ -70,6 +72,7 @@ final class SettingsViewController: UIViewController {
             viewDidLoad: viewDidLoadSubject.eraseToAnyPublisher(),
             toggleChanged: toggleSubject.eraseToAnyPublisher(),
             itemSelected: itemSelectedSubject.eraseToAnyPublisher(),
+            damagoBackgroundChanged: damagoBackgroundSelectedSubject.eraseToAnyPublisher(),
             alertActionDidConfirm: alertConfirmSubject.eraseToAnyPublisher()
         )
 
@@ -103,6 +106,7 @@ final class SettingsViewController: UIViewController {
         )
         snapshot.appendItems(
             [
+                .damagoBackground(option: state.damagoBackgroundOption),
                 .toggle(type: .liveActivity, isOn: state.isLiveActivityEnabled),
                 .toggle(type: .notification, isOn: state.isNotificationEnabled)
             ],
@@ -151,6 +155,9 @@ final class SettingsViewController: UIViewController {
             guard let url else { return }
             UIApplication.shared.open(url)
 
+        case .damagoBackgroundPicker(let current):
+            presentDamagoBackgroundPopup(current: current)
+
         case .alert(let type):
             let alert = UIAlertController(title: type.title, message: type.message, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "취소", style: .cancel))
@@ -169,6 +176,41 @@ final class SettingsViewController: UIViewController {
             if UIApplication.shared.canOpenURL(url) {
                 UIApplication.shared.open(url)
             }
+        }
+    }
+
+    private func presentDamagoBackgroundPopup(current: DamagoBackgroundColorOption) {
+        popupCancellables.removeAll()
+
+        let popupView = DamagoBackgroundColorPopupView(initialOption: current)
+        popupView.translatesAutoresizingMaskIntoConstraints = false
+
+        let targetView = tabBarController?.view ?? view
+        targetView?.addSubview(popupView)
+
+        NSLayoutConstraint.activate([
+            popupView.topAnchor.constraint(equalTo: targetView!.topAnchor),
+            popupView.leadingAnchor.constraint(equalTo: targetView!.leadingAnchor),
+            popupView.trailingAnchor.constraint(equalTo: targetView!.trailingAnchor),
+            popupView.bottomAnchor.constraint(equalTo: targetView!.bottomAnchor)
+        ])
+
+        popupView.confirmButtonTappedSubject
+            .sink { [weak self, weak popupView] option in
+                self?.damagoBackgroundSelectedSubject.send(option)
+                popupView?.removeFromSuperview()
+            }
+            .store(in: &popupCancellables)
+
+        popupView.cancelButtonTappedSubject
+            .sink { [weak popupView] in
+                popupView?.removeFromSuperview()
+            }
+            .store(in: &popupCancellables)
+
+        popupView.alpha = 0
+        UIView.animate(withDuration: 0.2) {
+            popupView.alpha = 1
         }
     }
 }
@@ -226,6 +268,21 @@ extension SettingsViewController: UITableViewDelegate {
                         self?.toggleSubject.send((type, isOn))
                     }
                     .store(in: &cell.cancellables)
+                return cell
+
+            case .damagoBackground(let option):
+                let cell = tableView.dequeueReusableCell(
+                    withIdentifier: UITableViewCell.reuseIdentifier,
+                    for: indexPath
+                )
+                var content = cell.defaultContentConfiguration()
+                content.text = "다이나믹 아일랜드 배경색"
+                content.textProperties.color = .textPrimary
+                content.secondaryText = option.displayName
+                content.secondaryTextProperties.color = .textSecondary
+                cell.contentConfiguration = content
+                cell.accessoryType = .disclosureIndicator
+                cell.selectionStyle = .default
                 return cell
 
             case .link(let title, _):
