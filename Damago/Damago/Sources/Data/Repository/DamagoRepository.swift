@@ -7,6 +7,7 @@
 
 import Combine
 import DamagoNetwork
+import Foundation
 
 final class DamagoRepository: DamagoRepositoryProtocol {
     private let networkProvider: NetworkProvider
@@ -25,7 +26,24 @@ final class DamagoRepository: DamagoRepositoryProtocol {
     
     func feed(damagoID: String) async throws -> Bool {
         let token = try await tokenProvider.idToken()
-        return try await networkProvider.requestSuccess(DamagoAPI.feed(accessToken: token, damagoID: damagoID))
+        let response: DamagoStatusResponse = try await networkProvider.request(DamagoAPI.feed(accessToken: token, damagoID: damagoID))
+        
+        // 로컬 Live Activity 즉시 업데이트
+        let status = DamagoStatus(
+            damagoName: response.damagoName,
+            damagoType: DamagoType(rawValue: response.damagoType) ?? .basicBlack,
+            level: response.level,
+            currentExp: response.currentExp,
+            maxExp: response.maxExp,
+            isHungry: response.isHungry,
+            statusMessage: response.statusMessage,
+            lastFedAt: response.lastFedAt,
+            totalPlayTime: response.totalPlayTime ?? 0,
+            lastActiveAt: response.lastActiveAt
+        )
+        LiveActivityManager.shared.updateActivity(with: status)
+        
+        return true
     }
 
     func observeDamagoSnapshot(damagoID: String) -> AnyPublisher<Result<DamagoSnapshotDTO, Error>, Never> {

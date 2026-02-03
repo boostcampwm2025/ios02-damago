@@ -54,33 +54,39 @@ final class LiveActivityManager {
             return
         }
         
-        fetchActivityData { damagoStatus in
+        fetchActivityData { [weak self] damagoStatus in
             guard let damagoStatus else {
                 // 서버로 받은 데이터가 없으면 실행 중인 모든 Live Activity를 종료합니다.
-                self.endAllActivities()
+                self?.endAllActivities()
                 return
             }
+            self?.updateActivity(with: damagoStatus)
+        }
+    }
 
-            let latestContentState = DamagoAttributes.ContentState(
-                damagoType: damagoStatus.damagoType,
-                isHungry: damagoStatus.isHungry,
-                statusMessage: damagoStatus.statusMessage,
-                level: damagoStatus.level,
-                currentExp: damagoStatus.currentExp,
-                maxExp: damagoStatus.maxExp,
-                lastFedAt: damagoStatus.lastFedAt?.ISO8601Format()
-            )
-            let attributes = DamagoAttributes(
-                damagoName: damagoStatus.damagoName
-            )
+    func updateActivity(with status: DamagoStatus) {
+        guard isLiveActivityEnabled else { return }
 
-            if let activity = Activity<DamagoAttributes>.activities.first {
-                Task {
-                    await activity.update(.init(state: latestContentState, staleDate: nil))
-                }
-            } else {
-                self.startActivity(attributes: attributes, contentState: latestContentState)
+        let latestContentState = DamagoAttributes.ContentState(
+            damagoType: status.damagoType,
+            isHungry: status.isHungry,
+            statusMessage: status.statusMessage,
+            level: status.level,
+            currentExp: status.currentExp,
+            maxExp: status.maxExp,
+            lastFedAt: status.lastFedAt?.ISO8601Format()
+        )
+        let attributes = DamagoAttributes(
+            damagoName: status.damagoName
+        )
+
+        if let activity = Activity<DamagoAttributes>.activities.first {
+            Task {
+                await activity.update(.init(state: latestContentState, staleDate: nil))
+                SharedLogger.liveActivityManger.info("Live Activity 로컬 업데이트 완료")
             }
+        } else {
+            self.startActivity(attributes: attributes, contentState: latestContentState)
         }
     }
     
