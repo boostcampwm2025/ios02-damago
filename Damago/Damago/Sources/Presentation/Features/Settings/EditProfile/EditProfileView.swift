@@ -59,6 +59,7 @@ final class EditProfileView: UIView {
         textField.placeholder = "닉네임을 입력해 주세요"
         textField.returnKeyType = .done
         textField.delegate = self
+        textField.maxLength = 5
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }()
