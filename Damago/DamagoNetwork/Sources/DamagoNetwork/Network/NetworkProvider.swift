@@ -56,20 +56,51 @@ public final class NetworkProviderImpl: NetworkProvider {
         request.allHTTPHeaderFields = endpoint.headers
         request.httpBody = endpoint.body
         
-        let (data, response) = try await session.data(for: request)
+        var retryCount = 0
+        let maxRetries = 3
         
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.invalidResponse
-        }
-        
-        guard (200...299).contains(httpResponse.statusCode) else {
-            if httpResponse.statusCode == 401 {
-                onAuthenticationFailed?()
+        while true {
+            do {
+                let (data, response) = try await session.data(for: request)
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw NetworkError.invalidResponse
+                }
+                
+                guard (200...299).contains(httpResponse.statusCode) else {
+                    if httpResponse.statusCode == 401 {
+                        onAuthenticationFailed?()
+                    }
+                    let body = String(data: data, encoding: .utf8) ?? "Unknown Server Error"
+                    throw NetworkError.invalidStatusCode(httpResponse.statusCode, body)
+                }
+                
+                return data
+            } catch {
+                let isRetryable: Bool
+                
+                switch error {
+                case is URLError:
+                    isRetryable = true
+                    
+                case let nsError as NSError where nsError.domain == NSPOSIXErrorDomain:
+                    #if DEBUG
+                    isRetryable = nsError.code == 53
+                    #else
+                    isRetryable = false
+                    #endif
+                default:
+                    isRetryable = false
+                }
+                
+                if isRetryable && retryCount < maxRetries {
+                    retryCount += 1
+                    try? await Task.sleep(for: .seconds(1))
+                    continue
+                }
+                
+                throw NetworkError.connectionError(error)
             }
-            let body = String(data: data, encoding: .utf8) ?? "Unknown Server Error"
-            throw NetworkError.invalidStatusCode(httpResponse.statusCode, body)
         }
-        
-        return data
     }
 }
