@@ -95,7 +95,6 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol, DataSyncStrate
         )
     }
     
-    // swiftlint:disable trailing_closure
     func observeAnswer(
         coupleID: String,
         gameID: String,
@@ -104,48 +103,40 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol, DataSyncStrate
         option2: String,
         isUser1: Bool
     ) -> AnyPublisher<Result<BalanceGameDTO, Error>, Never> {
-        firestoreService.observe(
-            collection: "couples/\(coupleID)/balanceGameAnswers",
-            document: gameID
-        )
-        .handleEvents(receiveOutput: { [weak self] result in
-            if case .success(let response) = result {
-                Task {
-                    await self?.updateLocalChoice(
-                        gameID: gameID,
-                        response: response
-                    )
-                }
-            }
-        })
-        .map { (result: Result<FirestoreBalanceGameAnswerDTO, Error>) in
-            switch result {
-            case .success(let dto):
-                if dto.lastAnsweredAt == nil && dto.bothAnswered == true {
+        createObservePublisher(
+            observe: {
+                firestoreService.observe(
+                    collection: "couples/\(coupleID)/balanceGameAnswers",
+                    document: gameID
+                )
+            },
+            updateLocal: { [weak self] response in
+                await self?.updateLocalChoice(
+                    gameID: gameID,
+                    response: response
+                )
+            },
+            mapToResult: { response in
+                if response.lastAnsweredAt == nil && response.bothAnswered == true {
                     SharedLogger.interaction.debug(
                         "Repository: bothAnswered는 true인데 lastAnsweredAt이 nil입니다. 데이터 확인 필요."
                     )
                 }
                 
-                let combinedDTO = BalanceGameDTO(
+                return BalanceGameDTO(
                     gameID: gameID,
                     questionContent: questionContent,
                     option1: option1,
                     option2: option2,
-                    myChoice: isUser1 ? dto.user1Answer : dto.user2Answer,
-                    opponentChoice: isUser1 ? dto.user2Answer : dto.user1Answer,
+                    myChoice: isUser1 ? response.user1Answer : response.user2Answer,
+                    opponentChoice: isUser1 ? response.user2Answer : response.user1Answer,
                     isUser1: isUser1,
-                    lastAnsweredAt: dto.lastAnsweredAt
+                    lastAnsweredAt: response.lastAnsweredAt
                 )
-                return .success(combinedDTO)
-            case .failure(let error):
-                return .failure(error)
             }
-        }
-        .eraseToAnyPublisher()
+        )
     }
-    // swiftlint:enable trailing_closure
-
+    
     @MainActor
     private func saveToLocalGame(dto: BalanceGameDTO) async {
         do {

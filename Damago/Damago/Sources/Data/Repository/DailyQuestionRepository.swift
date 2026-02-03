@@ -96,49 +96,38 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol, DataSyncSt
         )
     }
 
-    // swiftlint:disable trailing_closure
     func observeAnswer(
         coupleID: String,
         questionID: String,
         questionContent: String,
         isUser1: Bool
     ) -> AnyPublisher<Result<DailyQuestionDTO, Error>, Never> {
-        firestoreService.observe(
-            collection: "couples/\(coupleID)/dailyQuestionAnswers",
-            document: questionID
-        )
-        .handleEvents(receiveOutput: { [weak self] result in
-            if case .success(let response) = result {
-                Task {
-                    await self?.updateLocalAnswer(
-                        questionID: questionID,
-                        response: response
-                    )
-                }
-            }
-        })
-        .map { (result: Result<FirestoreAnswerDTO, Error>) in
-            switch result {
-            case .success(let dto):
-                let combinedDTO = DailyQuestionDTO(
+        createObservePublisher(
+            observe: {
+                firestoreService.observe(
+                    collection: "couples/\(coupleID)/dailyQuestionAnswers",
+                    document: questionID
+                )
+            },
+            updateLocal: { [weak self] response in
+                await self?.updateLocalAnswer(
+                    questionID: questionID,
+                    response: response
+                )
+            },
+            mapToResult: { response in
+                DailyQuestionDTO(
                     questionID: questionID,
                     questionContent: questionContent,
-                    user1Answer: dto.user1Answer,
-                    user2Answer: dto.user2Answer,
-                    bothAnswered: dto.bothAnswered,
-                    lastAnsweredAt: dto.lastAnsweredAt,
+                    user1Answer: response.user1Answer,
+                    user2Answer: response.user2Answer,
+                    bothAnswered: response.bothAnswered,
+                    lastAnsweredAt: response.lastAnsweredAt,
                     isUser1: isUser1
                 )
-                return .success(combinedDTO)
-
-            case .failure(let error):
-                SharedLogger.interaction.error("답변 조회 실패: \(error.localizedDescription)")
-                return .failure(error)
             }
-        }
-        .eraseToAnyPublisher()
+        )
     }
-    // swiftlint:enable trailing_closure
 
     @MainActor
     private func saveToLocalAnswer(dto: DailyQuestionDTO) async {
