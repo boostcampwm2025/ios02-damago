@@ -103,17 +103,14 @@ final class StoreViewModel: ViewModel {
             return
         }
         
-        let availableDamagos = DamagoType.allCases.filter { !state.ownedDamagos.keys.contains($0) }
-        guard let randomDamago = availableDamagos.randomElement() else { return }
-        
         state.isLoading = true
         
         Task {
             do {
-                try await createDamagoUseCase.execute(damagoType: randomDamago)
+                let pickedDamago = try await createDamagoUseCase.execute()
                 state.drawResult = DrawResult(
                     itemName: StoreStrings.drawResultItemName,
-                    damagoType: randomDamago
+                    damagoType: pickedDamago
                 )
             } catch {
                 state.error = Pulse(.creationFailed)

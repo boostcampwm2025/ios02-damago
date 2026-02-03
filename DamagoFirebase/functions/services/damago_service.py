@@ -1,15 +1,28 @@
+import os
+import json
+import datetime
+import random
 from firebase_functions import https_fn
 from firebase_admin import firestore
 import google.cloud.firestore
+from google.cloud.firestore import FieldFilter
 from google.cloud import tasks_v2
 from google.protobuf import timestamp_pb2
-import json
-import datetime
-import os
+
 from utils.firestore import get_db
-from utils.constants import get_required_exp, get_level_up_reward, FEED_EXP, IS_EMULATOR, PROJECT_ID, LOCATION, QUEUE_NAME, HUNGER_DELAY_SECONDS
-from services.push_service import update_live_activity_internal
 from utils.middleware import get_uid_from_request
+from utils.constants import (
+    get_required_exp, 
+    get_level_up_reward, 
+    FEED_EXP, 
+    IS_EMULATOR, 
+    PROJECT_ID, 
+    LOCATION, 
+    QUEUE_NAME, 
+    HUNGER_DELAY_SECONDS,
+    AVAILABLE_DAMAGO_TYPES
+)
+from services.push_service import update_live_activity_internal
 
 def feed(req: https_fn.Request) -> https_fn.Response:
     """
@@ -307,35 +320,46 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
 def create_damago(req: https_fn.Request) -> https_fn.Response:
     """
     새로운 다마고를 생성합니다 (뽑기).
-    커플의 코인을 100 차감하고, 새로운 다마고 문서를 생성합니다.
+    서버에서 랜덤으로 다마고를 결정하며, 커플의 코인을 100 차감합니다.
     """
     try:
         uid = get_uid_from_request(req)
     except ValueError as e:
         return https_fn.Response(str(e), status=401)
         
-    data = req.get_json(silent=True) or req.args
-    damago_type = data.get("damagoType")
-    
-    if not damago_type:
-        return https_fn.Response("Missing damagoType", status=400)
-        
     db = get_db()
     
-    # 유저 -> 커플 조회 (보안을 위해 클라이언트가 보낸 coupleID 대신 DB에서 직접 조회합니다)
-    user_ref = db.collection("users").document(uid)
+    # 1. 유저 및 커플 ID 조회 (Transaction 밖에서 조회하여 쿼리 기반 마련)
+    user_doc = db.collection("users").document(uid).get()
+    if not user_doc.exists:
+        return https_fn.Response("User not found", status=404)
+        
+    couple_id = user_doc.to_dict().get("coupleID")
+    if not couple_id:
+        return https_fn.Response("User has no couple", status=400)
+        
+    # 2. 보유 중인 다마고 조회 (랜덤 선택을 위해)
+    #    Note: 동시성 이슈로 인해 Transaction 내에서 다시 한 번 중복 체크를 수행함.
+    owned_docs = db.collection("damagos").where(filter=FieldFilter("coupleID", "==", couple_id)).stream()
+    owned_types = set()
+    for doc in owned_docs:
+        d_type = doc.to_dict().get("damagoType")
+        if d_type:
+            owned_types.add(d_type)
+            
+    # 3. 뽑기 가능 목록 산출
+    available_types = [t for t in AVAILABLE_DAMAGO_TYPES if t not in owned_types]
+    
+    if not available_types:
+        return https_fn.Response("All collected", status=400)
+        
+    # 4. 랜덤 선택
+    target_type = random.choice(available_types)
+    
+    couple_ref = db.collection("couples").document(couple_id)
     
     @google.cloud.firestore.transactional
     def run_create_transaction(transaction):
-        user_snapshot = user_ref.get(transaction=transaction)
-        if not user_snapshot.exists:
-            raise ValueError("User not found")
-            
-        couple_id = user_snapshot.to_dict().get("coupleID")
-        if not couple_id:
-            raise ValueError("User has no couple")
-            
-        couple_ref = db.collection("couples").document(couple_id)
         couple_snapshot = couple_ref.get(transaction=transaction)
         if not couple_snapshot.exists:
             raise ValueError("Couple not found")
@@ -343,13 +367,15 @@ def create_damago(req: https_fn.Request) -> https_fn.Response:
         couple_data = couple_snapshot.to_dict()
         current_coin = couple_data.get("totalCoin", 0)
         
-        # 중복 확인
-        new_damago_id = f"{couple_id}_{damago_type}"
+        # 중복 확인 (ID 기반)
+        new_damago_id = f"{couple_id}_{target_type}"
         new_damago_ref = db.collection("damagos").document(new_damago_id)
         
         existing_damago = new_damago_ref.get(transaction=transaction)
         if existing_damago.exists:
-             raise ValueError("Already owned")
+             # Transaction 내에서 중복이 발견되면(극악의 확률로 동시 성공 시),
+             # 에러를 던져서 재시도하거나 실패하게 함.
+             raise ValueError("Already owned (Retry)")
 
         # 코인 확인
         draw_cost = 100
@@ -365,7 +391,7 @@ def create_damago(req: https_fn.Request) -> https_fn.Response:
             "id": new_damago_id,
             "coupleID": couple_id,
             "damagoName": "이름 없는 다마고",
-            "damagoType": damago_type,
+            "damagoType": target_type,
             "isHungry": False,
             "statusMessage": "안녕! 만나서 반가워!",
             "level": 1,
@@ -382,7 +408,7 @@ def create_damago(req: https_fn.Request) -> https_fn.Response:
         return {
             "id": new_damago_id,
             "totalCoin": new_coin,
-            "damagoType": damago_type
+            "damagoType": target_type
         }
 
     try:

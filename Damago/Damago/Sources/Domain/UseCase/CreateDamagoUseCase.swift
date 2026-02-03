@@ -8,7 +8,7 @@
 import Foundation
 
 protocol CreateDamagoUseCase {
-    func execute(damagoType: DamagoType) async throws
+    func execute() async throws -> DamagoType
 }
 
 final class CreateDamagoUseCaseImpl: CreateDamagoUseCase {
@@ -18,7 +18,7 @@ final class CreateDamagoUseCaseImpl: CreateDamagoUseCase {
         self.repository = damagoRepository
     }
     
-    func execute(damagoType: DamagoType) async throws {
-        _ = try await repository.create(damagoType: damagoType)
+    func execute() async throws -> DamagoType {
+        try await repository.create()
     }
 }

@@ -9,7 +9,7 @@ import Foundation
 
 public enum DamagoAPI {
     case feed(accessToken: String, damagoID: String)
-    case create(accessToken: String, damagoType: String)
+    case create(accessToken: String)
 }
 
 extension DamagoAPI: EndPoint {
@@ -33,7 +33,7 @@ extension DamagoAPI: EndPoint {
         switch self {
         case .feed(let token, _):
             headers["Authorization"] = "Bearer \(token)"
-        case .create(let token, _):
+        case .create(let token):
             headers["Authorization"] = "Bearer \(token)"
         }
         return headers
@@ -45,8 +45,8 @@ extension DamagoAPI: EndPoint {
         switch self {
         case .feed(_, let damagoID):
             parameters = ["damagoID": damagoID]
-        case .create(_, let damagoType):
-            parameters = ["damagoType": damagoType]
+        case .create:
+            return nil
         }
         
         let validParameters = parameters.compactMapValues { $0 }

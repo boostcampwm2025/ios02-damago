@@ -28,9 +28,15 @@ final class DamagoRepository: DamagoRepositoryProtocol {
         return try await networkProvider.requestSuccess(DamagoAPI.feed(accessToken: token, damagoID: damagoID))
     }
 
-    func create(damagoType: DamagoType) async throws -> Bool {
+    func create() async throws -> DamagoType {
         let token = try await tokenProvider.idToken()
-        return try await networkProvider.requestSuccess(DamagoAPI.create(accessToken: token, damagoType: damagoType.rawValue))
+        let response: CreateDamagoResponse = try await networkProvider.request(
+            DamagoAPI.create(accessToken: token)
+        )
+        guard let type = DamagoType(rawValue: response.damagoType) else {
+            throw NetworkError.invalidResponse
+        }
+        return type
     }
 
     func observeDamagoSnapshot(damagoID: String) -> AnyPublisher<Result<DamagoSnapshotDTO, Error>, Never> {

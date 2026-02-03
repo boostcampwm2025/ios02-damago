@@ -94,12 +94,6 @@ DAMAGO_TYPE_DEFAULT_NAMES = {
     "CatOddEye": "오드아이",
     "CatThreeColored": "삼색",
     "CatWizard": "위자드",
-    "Dog": "강아지",
-    "Fish": "물고기",
-    "Lizard": "도마뱀",
-    "Owl": "부엉이",
-    "Parrot": "앵무새",
-    "Rabbit": "토끼",
 }
 
 
