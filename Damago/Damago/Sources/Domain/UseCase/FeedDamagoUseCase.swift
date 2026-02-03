@@ -19,8 +19,21 @@ final class FeedDamagoUseCaseImpl: FeedDamagoUseCase {
     }
     
     func execute(damagoID: String) async throws {
-        let latestStatus = try await damagoRepository.feed(damagoID: damagoID)
+        var latestStatus = try await damagoRepository.feed(damagoID: damagoID)
         
-        LiveActivityManager.shared.updateActivity(with: latestStatus)
+        let updatedStatus = DamagoStatus(
+            damagoName: latestStatus.damagoName,
+            damagoType: latestStatus.damagoType,
+            level: latestStatus.level,
+            currentExp: latestStatus.currentExp,
+            maxExp: latestStatus.maxExp,
+            isHungry: latestStatus.isHungry,
+            statusMessage: latestStatus.statusMessage,
+            lastFedAt: Date(),
+            totalPlayTime: latestStatus.totalPlayTime,
+            lastActiveAt: latestStatus.lastActiveAt
+        )
+        
+        LiveActivityManager.shared.updateActivity(with: updatedStatus)
     }
 }
