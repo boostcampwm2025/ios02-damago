@@ -1,15 +1,35 @@
+import os
+import json
+import datetime
+import random
 from firebase_functions import https_fn
 from firebase_admin import firestore
 import google.cloud.firestore
+from google.cloud.firestore import FieldFilter
 from google.cloud import tasks_v2
 from google.protobuf import timestamp_pb2
-import json
-import datetime
-import os
+
 from utils.firestore import get_db
-from utils.constants import get_required_exp, get_level_up_reward, FEED_EXP, IS_EMULATOR, PROJECT_ID, LOCATION, QUEUE_NAME, HUNGER_DELAY_SECONDS
-from services.push_service import update_live_activity_internal
 from utils.middleware import get_uid_from_request
+from utils.constants import (
+    get_required_exp, 
+    get_level_up_reward, 
+    FEED_EXP, 
+    IS_EMULATOR, 
+    PROJECT_ID, 
+    LOCATION, 
+    QUEUE_NAME, 
+    HUNGER_DELAY_SECONDS,
+    AVAILABLE_DAMAGO_TYPES
+)
+from services.push_service import update_live_activity_internal
+
+def pick_random_damago() -> str:
+    """
+    뽑기 로직을 수행하여 다마고 타입을 반환합니다.
+    현재는 모든 타입에 대해 균등한 확률(Uniform Distribution)을 가집니다.
+    """
+    return random.choice(AVAILABLE_DAMAGO_TYPES)
 
 def feed(req: https_fn.Request) -> https_fn.Response:
     """
@@ -302,3 +322,96 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
                     update_live_activity_internal(uid, content_state, attributes)
 
     return https_fn.Response("Made hungry and notified", status=200)
+
+@https_fn.on_request()
+def create_damago(req: https_fn.Request) -> https_fn.Response:
+    """
+    새로운 다마고를 생성합니다 (뽑기).
+    서버에서 랜덤으로 다마고를 결정하며, 커플의 코인을 100 차감합니다.
+    """
+    try:
+        uid = get_uid_from_request(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+        
+    db = get_db()
+    
+    # 1. 유저 및 커플 ID 조회 (Transaction 밖에서 조회하여 쿼리 기반 마련)
+    user_doc = db.collection("users").document(uid).get()
+    if not user_doc.exists:
+        return https_fn.Response("User not found", status=404)
+        
+    couple_id = user_doc.to_dict().get("coupleID")
+    if not couple_id:
+        return https_fn.Response("User has no couple", status=400)
+        
+    # 2. 랜덤 선택 (전체 목록에서 무작위 선택)
+    target_type = pick_random_damago()
+    
+    couple_ref = db.collection("couples").document(couple_id)
+    
+    @google.cloud.firestore.transactional
+    def run_create_transaction(transaction):
+        couple_snapshot = couple_ref.get(transaction=transaction)
+        if not couple_snapshot.exists:
+            raise ValueError("Couple not found")
+            
+        couple_data = couple_snapshot.to_dict()
+        current_coin = couple_data.get("totalCoin", 0)
+        
+        # 중복 확인 (ID 기반)
+        new_damago_id = f"{couple_id}_{target_type}"
+        new_damago_ref = db.collection("damagos").document(new_damago_id)
+        existing_damago = new_damago_ref.get(transaction=transaction)
+
+        # 코인 확인
+        draw_cost = 100
+        if current_coin < draw_cost:
+            raise ValueError("Not enough coins")
+            
+        is_new = not existing_damago.exists
+        
+        # 코인 차감 (공통)
+        new_coin = current_coin - draw_cost
+        couple_updates = {"totalCoin": new_coin}
+        
+        if is_new:
+            # 신규 캐릭터: 다마고 생성
+            new_damago_data = {
+                "id": new_damago_id,
+                "coupleID": couple_id,
+                "damagoName": "이름 없는 다마고",
+                "damagoType": target_type,
+                "isHungry": False,
+                "statusMessage": "안녕! 만나서 반가워!",
+                "level": 1,
+                "currentExp": 0,
+                "maxExp": get_required_exp(1),
+                "lastFedAt": firestore.SERVER_TIMESTAMP,
+                "lastUpdatedAt": firestore.SERVER_TIMESTAMP,
+                "createdAt": firestore.SERVER_TIMESTAMP,
+                "totalPlayTime": 0,
+                "lastActiveAt": firestore.SERVER_TIMESTAMP
+            }
+            transaction.set(new_damago_ref, new_damago_data)
+        else:
+            # 중복 캐릭터: 먹이 5개 지급
+            couple_updates["foodCount"] = firestore.Increment(5)
+        
+        # 커플 문서 업데이트
+        transaction.update(couple_ref, couple_updates)
+        
+        return {
+            "id": new_damago_id,
+            "totalCoin": new_coin,
+            "damagoType": target_type,
+            "isNew": is_new
+        }
+
+    try:
+        result = run_create_transaction(db.transaction())
+        return https_fn.Response(json.dumps(result), mimetype="application/json")
+    except ValueError as ve:
+        return https_fn.Response(str(ve), status=400)
+    except Exception as e:
+        return https_fn.Response(f"Transaction failed: {str(e)}", status=500)

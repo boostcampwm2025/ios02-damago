@@ -9,62 +9,89 @@ import Combine
 import Foundation
 
 final class StoreViewModel: ViewModel {
+    enum StorePolicy {
+        static let drawCost = 100
+    }
+    
+    enum StoreStrings {
+        static let notEnoughCoinLabel = "코인이 부족해요"
+        static func drawButtonTitle(cost: Int) -> String { "\(cost) 코인" }
+    }
+    
     struct Input {
         let drawButtonDidTap: AnyPublisher<Void, Never>
     }
     
     struct State {
-        var coinAmount: Int = 1000
+        var coinAmount: Int = 0
         var drawResult: DrawResult?
-        var error: Pulse<String>?
+        var error: Pulse<StoreError>?
         var ownedDamagos: [DamagoType: Int] = [:]
-    }
-    
-    struct DrawResult: Equatable {
-        let id = UUID()
-        let itemName: String
-        let damagoType: DamagoType
+        var isLoading: Bool = false
+        
+        var isDrawButtonEnabled: Bool {
+            let isCoinEnough = coinAmount >= StorePolicy.drawCost
+            return isCoinEnough && !isLoading
+        }
+        
+        var drawButtonTitle: String {
+             if coinAmount < StorePolicy.drawCost {
+                 return StoreStrings.notEnoughCoinLabel
+             }
+             return StoreStrings.drawButtonTitle(cost: StorePolicy.drawCost)
+        }
     }
     
     @Published private(set) var state = State()
     private var cancellables = Set<AnyCancellable>()
     
-    private let drawCost = 100
     private let globalStore: GlobalStoreProtocol
+    private let createDamagoUseCase: CreateDamagoUseCase
     
-    init(globalStore: GlobalStoreProtocol) {
+    init(
+        globalStore: GlobalStoreProtocol,
+        createDamagoUseCase: CreateDamagoUseCase
+    ) {
         self.globalStore = globalStore
+        self.createDamagoUseCase = createDamagoUseCase
     }
     
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
         input.drawButtonDidTap
+            .throttle(for: .seconds(0.5), scheduler: DispatchQueue.main, latest: false)
             .sink { [weak self] _ in
                 self?.tryDraw()
             }
             .store(in: &cancellables)
-
+        
         globalStore.globalState
             .map { $0.ownedDamagos ?? [:] }
             .assign(to: \.state.ownedDamagos, on: self)
+            .store(in: &cancellables)
+        
+        globalStore.globalState
+            .map { $0.totalCoin ?? 0 }
+            .assign(to: \.state.coinAmount, on: self)
             .store(in: &cancellables)
         
         return $state.eraseToAnyPublisher()
     }
     
     private func tryDraw() {
-        guard state.coinAmount >= drawCost else {
-            state.error = Pulse("코인이 부족해요!")
+        guard state.coinAmount >= StorePolicy.drawCost else {
+            state.error = Pulse(.notEnoughCoin)
             return
         }
         
-        state.coinAmount -= drawCost
+        state.isLoading = true
         
-        let availableDamagos = DamagoType.allCases.filter { !state.ownedDamagos.keys.contains($0) }
-
-        guard let randomDamago = availableDamagos.randomElement() else { return }
-        
-        let result = DrawResult(itemName: "새로운 친구", damagoType: randomDamago)
-        
-        state.drawResult = result
+        Task {
+            do {
+                state.drawResult = try await createDamagoUseCase.execute()
+            } catch {
+                state.error = Pulse(.creationFailed)
+            }
+            state.isLoading = false
+        }
     }
 }

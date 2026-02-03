@@ -18,6 +18,7 @@ final class StoreResultView: UIView {
         let label = UILabel()
         label.font = .title2
         label.textColor = .white
+        label.numberOfLines = 0
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -43,7 +44,7 @@ final class StoreResultView: UIView {
         setupUI()
     }
     
-    func configure(with result: StoreViewModel.DrawResult) {
+    func configure(with result: DrawResult) {
         damagoView.configure(with: result.damagoType)
         nameLabel.text = result.itemName
         startBlinkingInfoLabel()

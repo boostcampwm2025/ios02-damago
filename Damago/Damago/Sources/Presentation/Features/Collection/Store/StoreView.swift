@@ -45,7 +45,7 @@ final class StoreView: UIView {
         let disabledConfig = CTAButton.Configuration(
             backgroundColor: .textTertiary,
             foregroundColor: .white,
-            image: UIImage(systemName: "dollarsign.circle"),
+            image: UIImage(systemName: "dollarsign.circle")?.withTintColor(.white, renderingMode: .alwaysOriginal),
             title: "100 코인"
         )
         
@@ -130,7 +130,7 @@ final class StoreView: UIView {
             
             drawButton.topAnchor.constraint(equalTo: machineImageView.bottomAnchor, constant: .spacingXL),
             drawButton.centerXAnchor.constraint(equalTo: centerXAnchor),
-            drawButton.widthAnchor.constraint(equalToConstant: 200),
+            drawButton.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.7),
             
             resultView.topAnchor.constraint(equalTo: topAnchor),
             resultView.leadingAnchor.constraint(equalTo: leadingAnchor),

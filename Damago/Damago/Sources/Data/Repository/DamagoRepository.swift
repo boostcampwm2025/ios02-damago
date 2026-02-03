@@ -44,6 +44,17 @@ final class DamagoRepository: DamagoRepositoryProtocol {
         )
     }
 
+    func create() async throws -> DrawResult {
+        let token = try await tokenProvider.idToken()
+        let response: CreateDamagoResponse = try await networkProvider.request(
+            DamagoAPI.create(accessToken: token)
+        )
+        guard let type = DamagoType(rawValue: response.damagoType) else {
+            throw NetworkError.invalidResponse
+        }
+        return DrawResult(damagoType: type, isNew: response.isNew)
+    }
+
     func observeDamagoSnapshot(damagoID: String) -> AnyPublisher<Result<DamagoSnapshotDTO, Error>, Never> {
         firestoreService.observe(collection: "damagos", document: damagoID)
     }
