@@ -343,6 +343,14 @@ def create_damago(req: https_fn.Request) -> https_fn.Response:
         couple_data = couple_snapshot.to_dict()
         current_coin = couple_data.get("totalCoin", 0)
         
+        # 중복 확인
+        new_damago_id = f"{couple_id}_{damago_type}"
+        new_damago_ref = db.collection("damagos").document(new_damago_id)
+        
+        existing_damago = new_damago_ref.get(transaction=transaction)
+        if existing_damago.exists:
+             raise ValueError("Already owned")
+
         # 코인 확인
         draw_cost = 100
         if current_coin < draw_cost:
@@ -353,9 +361,8 @@ def create_damago(req: https_fn.Request) -> https_fn.Response:
         transaction.update(couple_ref, {"totalCoin": new_coin})
         
         # 다마고 생성
-        new_damago_ref = db.collection("damagos").document()
         new_damago_data = {
-            "id": new_damago_ref.id,
+            "id": new_damago_id,
             "coupleID": couple_id,
             "damagoName": "이름 없는 다마고",
             "damagoType": damago_type,
@@ -373,7 +380,7 @@ def create_damago(req: https_fn.Request) -> https_fn.Response:
         transaction.set(new_damago_ref, new_damago_data)
         
         return {
-            "id": new_damago_ref.id,
+            "id": new_damago_id,
             "totalCoin": new_coin,
             "damagoType": damago_type
         }
