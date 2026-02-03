@@ -37,18 +37,18 @@ final class DamagoSetupViewModel: ViewModel {
     
     private let updateUserUseCase: UpdateUserUseCase
     private let fetchUserInfoUseCase: FetchUserInfoUseCase
-    private let damagoRepository: DamagoRepositoryProtocol
+    private let observeDamagoSnapshotUseCase: ObserveDamagoSnapshotUseCase
     private let globalStore: GlobalStoreProtocol
     
     init(
         updateUserUseCase: UpdateUserUseCase,
         fetchUserInfoUseCase: FetchUserInfoUseCase,
-        damagoRepository: DamagoRepositoryProtocol,
+        observeDamagoSnapshotUseCase: ObserveDamagoSnapshotUseCase,
         globalStore: GlobalStoreProtocol
     ) {
         self.updateUserUseCase = updateUserUseCase
         self.fetchUserInfoUseCase = fetchUserInfoUseCase
-        self.damagoRepository = damagoRepository
+        self.observeDamagoSnapshotUseCase = observeDamagoSnapshotUseCase
         self.globalStore = globalStore
     }
     
@@ -91,7 +91,7 @@ final class DamagoSetupViewModel: ViewModel {
             return Empty().eraseToAnyPublisher()
         }
         let damagoID = "\(coupleID)_\(damagoType.rawValue)"
-        return damagoRepository.observeDamagoSnapshot(damagoID: damagoID)
+        return observeDamagoSnapshotUseCase.execute(damagoID: damagoID)
             .compactMap { try? $0.get().damagoName }
             .removeDuplicates()
             .eraseToAnyPublisher()
