@@ -120,7 +120,7 @@ final class HomeViewModel: ViewModel {
                     state.isHungry = damagoStatus.isHungry
                 }
             } catch {
-                print("Error fetching user info: \(error)")
+                SharedLogger.home.error("Error fetching user info: \(error)")
             }
         }
     }
@@ -133,7 +133,7 @@ final class HomeViewModel: ViewModel {
                 state.isFeeding = true
                 try await feedDamagoUseCase.execute(damagoID: damagoID)
             } catch {
-                print("Error feeding damago: \(error)")
+                SharedLogger.home.error("Error feeding damago: \(error)")
                 state.isFeeding = false
             }
         }
@@ -143,9 +143,9 @@ final class HomeViewModel: ViewModel {
         Task {
             do {
                 _ = try await pushRepository.poke(message: message)
-                print("Poke sent with message: \(message)")
+                SharedLogger.home.info("Poke sent with message: \(message)")
             } catch {
-                print("Error poking damago: \(error)")
+                SharedLogger.home.error("Error poking damago: \(error)")
             }
         }
     }
