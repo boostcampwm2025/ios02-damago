@@ -17,6 +17,7 @@ final class LiveActivityManager {
     private var cancellables = Set<AnyCancellable>()
     
     private var isLiveActivityEnabled: Bool = true
+    private var currentStatus: DamagoStatus?
     
     private init() {}
     
@@ -33,6 +34,8 @@ final class LiveActivityManager {
                 self?.isLiveActivityEnabled = isEnabled
                 if !isEnabled {
                     self?.endAllActivities()
+                } else {
+                    self?.synchronizeActivity()
                 }
             }
             .store(in: &cancellables)
@@ -42,12 +45,22 @@ final class LiveActivityManager {
             .removeDuplicates()
             .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
             .sink { [weak self] status in
+                self?.currentStatus = status
                 self?.updateActivity(with: status)
             }
             .store(in: &cancellables)
     }
 
     private var monitoredActivityIDs: Set<String> = []
+
+    func synchronizeActivity() {
+        guard let currentStatus else {
+            SharedLogger.liveActivityManger.info("⚠️ 동기화할 캐시된 상태가 없습니다.")
+            return
+        }
+        SharedLogger.liveActivityManger.info("✅ 캐시된 상태로 LiveActivity 동기화")
+        updateActivity(with: currentStatus)
+    }
     
     private func toDamagoStatus(from state: GlobalState) -> DamagoStatus? {
         guard let damagoType = state.damagoType,
