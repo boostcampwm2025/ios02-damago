@@ -5,6 +5,7 @@
 //  Created by Eden Landelyse on 2/3/26.
 //
 
+import Combine
 import Foundation
 
 protocol DataSyncStrategy {
@@ -23,6 +24,12 @@ protocol DataSyncStrategy {
         rollbackLocal: (T?) async throws -> Void,
         onFailure: (Error) -> Void
     ) async throws -> Bool
+
+    func createObservePublisher<FirestoreDTO: Decodable, ResultDTO>(
+        observe: () -> AnyPublisher<Result<FirestoreDTO, Error>, Never>,
+        updateLocal: @escaping (FirestoreDTO) async -> Void,
+        mapToResult: @escaping (FirestoreDTO) -> ResultDTO
+    ) -> AnyPublisher<Result<ResultDTO, Error>, Never>
 }
 
 extension DataSyncStrategy {
@@ -74,4 +81,30 @@ extension DataSyncStrategy {
             throw error
         }
     }
+
+    // swiftlint:disable trailing_closure
+    func createObservePublisher<FirestoreDTO: Decodable, ResultDTO>(
+        observe: () -> AnyPublisher<Result<FirestoreDTO, Error>, Never>,
+        updateLocal: @escaping (FirestoreDTO) async -> Void,
+        mapToResult: @escaping (FirestoreDTO) -> ResultDTO
+    ) -> AnyPublisher<Result<ResultDTO, Error>, Never> {
+        observe()
+            .handleEvents(receiveOutput: { result in
+                if case .success(let dto) = result {
+                    Task {
+                        await updateLocal(dto)
+                    }
+                }
+            })
+            .map { result in
+                switch result {
+                case .success(let dto):
+                    return .success(mapToResult(dto))
+                case .failure(let error):
+                    return .failure(error)
+                }
+            }
+            .eraseToAnyPublisher()
+    }
+    // swiftlint:enable trailing_closure
 }
