@@ -28,6 +28,11 @@ final class DamagoRepository: DamagoRepositoryProtocol {
         return try await networkProvider.requestSuccess(DamagoAPI.feed(accessToken: token, damagoID: damagoID))
     }
 
+    func create(damagoType: DamagoType) async throws -> Bool {
+        let token = try await tokenProvider.idToken()
+        return try await networkProvider.requestSuccess(DamagoAPI.create(accessToken: token, damagoType: damagoType.rawValue))
+    }
+
     func observeDamagoSnapshot(damagoID: String) -> AnyPublisher<Result<DamagoSnapshotDTO, Error>, Never> {
         firestoreService.observe(collection: "damagos", document: damagoID)
     }

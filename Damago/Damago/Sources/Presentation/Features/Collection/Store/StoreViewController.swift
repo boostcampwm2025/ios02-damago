@@ -69,6 +69,20 @@ final class StoreViewController: UIViewController {
                 self?.showErrorAlert(message: errorMessage)
             }
             .store(in: &cancellables)
+            
+        output
+            .mapForUI { $0.isDrawButtonEnabled }
+            .sink { [weak self] isEnabled in
+                self?.mainView.drawButton.isEnabled = isEnabled
+            }
+            .store(in: &cancellables)
+            
+        output
+            .mapForUI { $0.drawButtonTitle }
+            .sink { [weak self] title in
+                self?.mainView.drawButton.setTitle(title)
+            }
+            .store(in: &cancellables)
     }
 
     private func setupActions() {

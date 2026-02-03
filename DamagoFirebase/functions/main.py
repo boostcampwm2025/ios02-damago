@@ -48,6 +48,10 @@ def feed(req: https_fn.Request) -> https_fn.Response:
     return damago_service.feed(req)
 
 @https_fn.on_request()
+def create_damago(req: https_fn.Request) -> https_fn.Response:
+    return damago_service.create_damago(req)
+
+@https_fn.on_request()
 def make_hungry(req: https_fn.Request) -> https_fn.Response:
     return damago_service.make_hungry(req)
 

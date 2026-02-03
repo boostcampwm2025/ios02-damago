@@ -302,3 +302,86 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
                     update_live_activity_internal(uid, content_state, attributes)
 
     return https_fn.Response("Made hungry and notified", status=200)
+
+@https_fn.on_request()
+def create_damago(req: https_fn.Request) -> https_fn.Response:
+    """
+    새로운 다마고를 생성합니다 (뽑기).
+    커플의 코인을 100 차감하고, 새로운 다마고 문서를 생성합니다.
+    """
+    try:
+        uid = get_uid_from_request(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+        
+    data = req.get_json(silent=True) or req.args
+    damago_type = data.get("damagoType")
+    
+    if not damago_type:
+        return https_fn.Response("Missing damagoType", status=400)
+        
+    db = get_db()
+    
+    # 유저 -> 커플 조회 (보안을 위해 클라이언트가 보낸 coupleID 대신 DB에서 직접 조회합니다)
+    user_ref = db.collection("users").document(uid)
+    
+    @google.cloud.firestore.transactional
+    def run_create_transaction(transaction):
+        user_snapshot = user_ref.get(transaction=transaction)
+        if not user_snapshot.exists:
+            raise ValueError("User not found")
+            
+        couple_id = user_snapshot.to_dict().get("coupleID")
+        if not couple_id:
+            raise ValueError("User has no couple")
+            
+        couple_ref = db.collection("couples").document(couple_id)
+        couple_snapshot = couple_ref.get(transaction=transaction)
+        if not couple_snapshot.exists:
+            raise ValueError("Couple not found")
+            
+        couple_data = couple_snapshot.to_dict()
+        current_coin = couple_data.get("totalCoin", 0)
+        
+        # 코인 확인
+        draw_cost = 100
+        if current_coin < draw_cost:
+            raise ValueError("Not enough coins")
+            
+        # 코인 차감
+        new_coin = current_coin - draw_cost
+        transaction.update(couple_ref, {"totalCoin": new_coin})
+        
+        # 다마고 생성
+        new_damago_ref = db.collection("damagos").document()
+        new_damago_data = {
+            "id": new_damago_ref.id,
+            "coupleID": couple_id,
+            "damagoName": "이름 없는 다마고",
+            "damagoType": damago_type,
+            "isHungry": False,
+            "statusMessage": "안녕! 만나서 반가워!",
+            "level": 1,
+            "currentExp": 0,
+            "maxExp": get_required_exp(1),
+            "lastFedAt": firestore.SERVER_TIMESTAMP,
+            "lastUpdatedAt": firestore.SERVER_TIMESTAMP,
+            "createdAt": firestore.SERVER_TIMESTAMP,
+            "totalPlayTime": 0,
+            "lastActiveAt": firestore.SERVER_TIMESTAMP
+        }
+        transaction.set(new_damago_ref, new_damago_data)
+        
+        return {
+            "id": new_damago_ref.id,
+            "totalCoin": new_coin,
+            "damagoType": damago_type
+        }
+
+    try:
+        result = run_create_transaction(db.transaction())
+        return https_fn.Response(json.dumps(result), mimetype="application/json")
+    except ValueError as ve:
+        return https_fn.Response(str(ve), status=400)
+    except Exception as e:
+        return https_fn.Response(f"Transaction failed: {str(e)}", status=500)

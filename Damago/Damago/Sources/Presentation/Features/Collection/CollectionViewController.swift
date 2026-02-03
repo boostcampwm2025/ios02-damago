@@ -151,7 +151,11 @@ final class CollectionViewController: UIViewController {
     @objc
     private func shopButtonTapped() {
         let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
-        let storeViewModel = StoreViewModel(globalStore: globalStore)
+        let createDamagoUseCase = AppDIContainer.shared.resolve(CreateDamagoUseCase.self)
+        let storeViewModel = StoreViewModel(
+            globalStore: globalStore,
+            createDamagoUseCase: createDamagoUseCase
+        )
         let storeVC = StoreViewController(viewModel: storeViewModel)
         storeVC.modalPresentationStyle = .fullScreen
         self.present(storeVC, animated: true)

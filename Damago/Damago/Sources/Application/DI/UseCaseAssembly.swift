@@ -119,5 +119,9 @@ final class UseCaseAssembly: Assembly {
         container.register(PokeDamagoUseCase.self) {
             PokeDamagoUseCaseImpl(repository: container.resolve(PushRepositoryProtocol.self))
         }
+        
+        container.register(CreateDamagoUseCase.self) {
+            CreateDamagoUseCaseImpl(damagoRepository: container.resolve(DamagoRepositoryProtocol.self))
+        }
     }
 }
