@@ -8,16 +8,19 @@
 import Combine
 import UIKit
 
+// maxLength 및 카운터 UI를 위한 Obj-C 연관 저장 키
 private var textInputMaxLengthKey: UInt8 = 0
 private var textInputObserverTokenKey: UInt8 = 0
 private var textInputCounterLabelKey: UInt8 = 0
 private var textInputCounterContainerKey: UInt8 = 0
 
+// UITextField/UITextView 텍스트 변경을 공통으로 퍼블리시
 protocol TextInputPublishing: AnyObject {
     static var textDidChangeNotificationName: Notification.Name { get }
     func currentText() -> String?
 }
 
+// 최대 길이 제한 + 카운터 라벨 지원
 protocol TextInputLengthLimiting: AnyObject {
     func setText(_ text: String)
     func didEnforceMaxLength(_ length: Int)
@@ -34,12 +37,14 @@ extension TextInputPublishing {
         .eraseToAnyPublisher()
     }
 
+    // 공백 제거된 문자열 퍼블리셔
     var trimmedTextPublisher: AnyPublisher<String, Never> {
         textPublisher
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .eraseToAnyPublisher()
     }
 
+    // 비어있지 않은 상태 퍼블리셔
     var nonEmptyTextPublisher: AnyPublisher<Bool, Never> {
         trimmedTextPublisher
             .map { !$0.isEmpty }
@@ -49,8 +54,7 @@ extension TextInputPublishing {
 }
 
 extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting {
-    /// 텍스트 입력의 최대 길이를 설정합니다.
-    /// nil이면 길이 제한이 없습니다.
+    // 입력 최대 길이. `nil`이면 제한 없음
     var maxLength: Int? {
         get {
             objc_getAssociatedObject(self, &textInputMaxLengthKey) as? Int
@@ -73,6 +77,7 @@ extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting {
         }
     }
 
+    // 변경 알림은 1회만 등록
     private func registerMaxLengthObserverIfNeeded() {
         guard maxLengthObserverToken == nil else { return }
         let token = NotificationCenter.default.addObserver(
@@ -86,6 +91,7 @@ extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting {
         maxLengthObserverToken = token
     }
 
+    // maxLength 해제 시 옵저버 제거
     private func removeMaxLengthObserverIfNeeded() {
         guard let token = maxLengthObserverToken else { return }
         NotificationCenter.default.removeObserver(token)
@@ -104,6 +110,7 @@ extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting {
         }
     }
 
+    // 길이 초과 시 잘라내기
     private func enforceMaxLengthIfNeeded() {
         guard let maxLength, maxLength >= 0 else { return }
         guard let text = currentText(), text.count > maxLength else { return }
@@ -112,6 +119,7 @@ extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting {
         didEnforceMaxLength(limited.count)
     }
 
+    // 카운터 라벨 갱신
     private func updateCounterLabelIfNeeded() {
         guard let maxLength, maxLength >= 0 else { return }
         let current = currentText()?.count ?? 0
@@ -127,10 +135,12 @@ extension UITextField: TextInputPublishing, TextInputLengthLimiting {
     func currentText() -> String? { text }
     func setText(_ text: String) { self.text = text }
     func didEnforceMaxLength(_ length: Int) {
+        // 프로그램 변경 후 UIControl 이벤트 동기화
         sendActions(for: .editingChanged)
     }
 
     func updateCounterLabel(current: Int, max: Int) {
+        // bounds 미준비 시 재시도
         if bounds.height == 0 {
             DispatchQueue.main.async { [weak self] in
                 self?.updateCounterLabel(current: current, max: max)
@@ -202,6 +212,7 @@ extension UITextView: TextInputPublishing, TextInputLengthLimiting {
     func currentText() -> String? { text }
     func setText(_ text: String) { self.text = text }
     func didEnforceMaxLength(_ length: Int) {
+        // 잘라낸 뒤 커서를 끝으로 이동
         selectedRange = NSRange(location: length, length: 0)
     }
 
@@ -209,6 +220,7 @@ extension UITextView: TextInputPublishing, TextInputLengthLimiting {
         let label = counterLabel
         label.text = "\(current) / \(max)"
         guard let parent = superview else {
+            // 뷰 계층이 준비될 때까지 대기
             DispatchQueue.main.async { [weak self] in
                 self?.updateCounterLabel(current: current, max: max)
             }
@@ -228,7 +240,7 @@ extension UITextView: TextInputPublishing, TextInputLengthLimiting {
         if let label = objc_getAssociatedObject(self, &textInputCounterLabelKey) as? UILabel {
             return label
         }
-        
+
         let label = UILabel()
         label.font = .caption
         label.textColor = .textTertiary
