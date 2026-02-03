@@ -114,16 +114,16 @@ final class TabBarViewController: UITabBarController {
             return CollectionViewController(viewModel: viewModel)
         case .home:
             let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
-            let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+            let fetchUserInfoUseCase = AppDIContainer.shared.resolve(FetchUserInfoUseCase.self)
             let feedDamagoUseCase = AppDIContainer.shared.resolve(FeedDamagoUseCase.self)
-            let pushRepository = AppDIContainer.shared.resolve(PushRepositoryProtocol.self)
+            let pokeDamagoUseCase = AppDIContainer.shared.resolve(PokeDamagoUseCase.self)
             let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
 
             let vm = HomeViewModel(
                 globalStore: globalStore,
-                userRepository: userRepository,
+                fetchUserInfoUseCase: fetchUserInfoUseCase,
                 feedDamagoUseCase: feedDamagoUseCase,
-                pushRepository: pushRepository,
+                pokeDamagoUseCase: pokeDamagoUseCase,
                 updateUserUseCase: updateUserUseCase
             )
             let vc = HomeViewController(viewModel: vm)
@@ -136,7 +136,6 @@ final class TabBarViewController: UITabBarController {
             let fetchBalanceGameUseCase = AppDIContainer.shared.resolve(FetchBalanceGameUseCase.self)
             let observeBalanceGameAnswerUseCase = AppDIContainer.shared.resolve(ObserveBalanceGameAnswerUseCase.self)
             let submitBalanceGameChoiceUseCase = AppDIContainer.shared.resolve(SubmitBalanceGameChoiceUseCase.self)
-            let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
             let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
 
             let vm = InteractionViewModel(
@@ -145,7 +144,6 @@ final class TabBarViewController: UITabBarController {
                 fetchBalanceGameUseCase: fetchBalanceGameUseCase,
                 observeBalanceGameAnswerUseCase: observeBalanceGameAnswerUseCase,
                 submitBalanceGameChoiceUseCase: submitBalanceGameChoiceUseCase,
-                userRepository: userRepository,
                 globalStore: globalStore
             )
             let vc = InteractionViewController(viewModel: vm)

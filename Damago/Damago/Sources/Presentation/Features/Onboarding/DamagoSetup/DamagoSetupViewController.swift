@@ -82,25 +82,17 @@ final class DamagoSetupViewController: UIViewController {
     }
     
     private func showNamingPopup(for damagoType: DamagoType) {
-        let popupView = DamagoNamingPopupView()
-        popupView.configure(with: damagoType, initialName: viewModel.prefillName(for: damagoType))
-        popupView.translatesAutoresizingMaskIntoConstraints = false
+        let popupViewModel = DamagoNamingPopupViewModel(
+            mode: .onboarding,
+            initialName: viewModel.prefillName(for: damagoType)
+        )
+        let popupVC = DamagoNamingPopupViewController(viewModel: popupViewModel)
+        popupVC.configure(with: damagoType)
         
-        guard let targetView = navigationController?.view ?? view else { return }
-        targetView.addSubview(popupView)
-        
-        NSLayoutConstraint.activate([
-            popupView.topAnchor.constraint(equalTo: targetView.topAnchor),
-            popupView.leadingAnchor.constraint(equalTo: targetView.leadingAnchor),
-            popupView.trailingAnchor.constraint(equalTo: targetView.trailingAnchor),
-            popupView.bottomAnchor.constraint(equalTo: targetView.bottomAnchor)
-        ])
-        
-        popupView.confirmButtonTappedSubject
-            .sink { [weak self, weak popupView] name in
+        popupVC.confirmAction
+            .sink { [weak self] name in
                 self?.viewModel.selectDamago(damagoType)
                 self?.confirmButtonTappedPublisher.send(name)
-                popupView?.removeFromSuperview()
             }
             .store(in: &cancellables)
 
@@ -108,31 +100,12 @@ final class DamagoSetupViewController: UIViewController {
         viewModel.observePrefillName(for: damagoType)
             .receive(on: DispatchQueue.main)
             .prefix(1)
-            .sink { [weak popupView] name in
-                let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return }
-                popupView?.updateInitialName(trimmed)
+            .sink { [weak popupVC] name in
+                popupVC?.updateInitialNameSubject.send(name)
             }
             .store(in: &cancellables)
             
-        popupView.cancelButtonTappedSubject
-            .sink { [weak popupView] in
-                popupView?.removeFromSuperview()
-            }
-            .store(in: &cancellables)
-            
-        popupView.requestCancelConfirmationSubject
-            .sink { [weak self, weak popupView] in
-                self?.showCancelConfirmationAlert {
-                    popupView?.removeFromSuperview()
-                }
-            }
-            .store(in: &cancellables)
-            
-        popupView.alpha = 0
-        UIView.animate(withDuration: 0.2) {
-            popupView.alpha = 1
-        }
+        present(popupVC, animated: true)
     }
     
     private func showCancelConfirmationAlert(confirmHandler: @escaping () -> Void) {

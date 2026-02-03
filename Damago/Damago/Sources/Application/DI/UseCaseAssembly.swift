@@ -95,10 +95,29 @@ final class UseCaseAssembly: Assembly {
         container.register(AdjustCoinAmountUseCase.self) {
             AdjustCoinAmountUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }
+        
+        container.register(SaveLiveActivityTokenUseCase.self) {
+            SaveLiveActivityTokenUseCaseImpl(repository: container.resolve(PushRepositoryProtocol.self))
+        }
+        
+        container.register(ObserveDamagoSnapshotUseCase.self) {
+            ObserveDamagoSnapshotUseCaseImpl(repository: container.resolve(DamagoRepositoryProtocol.self))
+        }
+        
+        container.register(GetPokeShortcutsUseCase.self) {
+            GetPokeShortcutsUseCaseImpl(repository: container.resolve(PokeShortcutRepositoryProtocol.self))
+        }
+        
+        container.register(UpdatePokeShortcutUseCase.self) {
+            UpdatePokeShortcutUseCaseImpl(repository: container.resolve(PokeShortcutRepositoryProtocol.self))
+        }
+        
         container.register(FeedDamagoUseCase.self) {
-            FeedDamagoUseCaseImpl(
-                damagoRepository: container.resolve(DamagoRepositoryProtocol.self)
-            )
+            FeedDamagoUseCaseImpl(repository: container.resolve(DamagoRepositoryProtocol.self))
+        }
+        
+        container.register(PokeDamagoUseCase.self) {
+            PokeDamagoUseCaseImpl(repository: container.resolve(PushRepositoryProtocol.self))
         }
     }
 }

@@ -32,7 +32,6 @@ final class InteractionViewModel: ViewModel {
 
     private let fetchDailyQuestionUseCase: FetchDailyQuestionUseCase
     private let observeDailyQuestionAnswerUseCase: ObserveDailyQuestionAnswerUseCase
-    private let userRepository: UserRepositoryProtocol
     private let globalStore: GlobalStoreProtocol
 
     private let fetchBalanceGameUseCase: FetchBalanceGameUseCase
@@ -65,7 +64,6 @@ final class InteractionViewModel: ViewModel {
         fetchBalanceGameUseCase: FetchBalanceGameUseCase,
         observeBalanceGameAnswerUseCase: ObserveBalanceGameAnswerUseCase,
         submitBalanceGameChoiceUseCase: SubmitBalanceGameChoiceUseCase,
-        userRepository: UserRepositoryProtocol,
         globalStore: GlobalStoreProtocol
     ) {
         self.fetchDailyQuestionUseCase = fetchDailyQuestionUseCase
@@ -73,7 +71,6 @@ final class InteractionViewModel: ViewModel {
         self.fetchBalanceGameUseCase = fetchBalanceGameUseCase
         self.observeBalanceGameAnswerUseCase = observeBalanceGameAnswerUseCase
         self.submitBalanceGameChoiceUseCase = submitBalanceGameChoiceUseCase
-        self.userRepository = userRepository
         self.globalStore = globalStore
     }
 

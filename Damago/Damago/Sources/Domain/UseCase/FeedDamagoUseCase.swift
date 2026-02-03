@@ -2,7 +2,7 @@
 //  FeedDamagoUseCase.swift
 //  Damago
 //
-//  Created by 김재영 on 2/3/26.
+//  Created by 박현수 on 2/3/26.
 //
 
 import Foundation
@@ -12,14 +12,14 @@ protocol FeedDamagoUseCase {
 }
 
 final class FeedDamagoUseCaseImpl: FeedDamagoUseCase {
-    private let damagoRepository: DamagoRepositoryProtocol
-    
-    init(damagoRepository: DamagoRepositoryProtocol) {
-        self.damagoRepository = damagoRepository
+    private let repository: DamagoRepositoryProtocol
+
+    init(repository: DamagoRepositoryProtocol) {
+        self.repository = repository
     }
     
     func execute(damagoID: String) async throws {
-        var latestStatus = try await damagoRepository.feed(damagoID: damagoID)
+        let latestStatus = try await repository.feed(damagoID: damagoID)
         
         let updatedStatus = DamagoStatus(
             damagoName: latestStatus.damagoName,

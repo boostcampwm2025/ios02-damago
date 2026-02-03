@@ -42,15 +42,20 @@ final class PokePopupViewModel: ViewModel {
     
     @Published private var state = State()
     private var cancellables = Set<AnyCancellable>()
-    private let shortcutRepository: PokeShortcutRepositoryProtocol
+    private let getPokeShortcutsUseCase: GetPokeShortcutsUseCase
+    private let updatePokeShortcutUseCase: UpdatePokeShortcutUseCase
     private var originalShortcuts: [PokeShortcut] = [] // 편집 모드 진입 시 원본 데이터 저장
     
     var onMessageSelected: ((String) -> Void)?
     var onCancel: (() -> Void)?
     var onRequestCancelConfirmation: ((@escaping () -> Void) -> Void)?
     
-    init(shortcutRepository: PokeShortcutRepositoryProtocol) {
-        self.shortcutRepository = shortcutRepository
+    init(
+        getPokeShortcutsUseCase: GetPokeShortcutsUseCase,
+        updatePokeShortcutUseCase: UpdatePokeShortcutUseCase
+    ) {
+        self.getPokeShortcutsUseCase = getPokeShortcutsUseCase
+        self.updatePokeShortcutUseCase = updatePokeShortcutUseCase
     }
     
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
@@ -124,7 +129,7 @@ final class PokePopupViewModel: ViewModel {
     }
     
     private func loadShortcuts() {
-        updateState(shortcuts: shortcutRepository.shortcuts)
+        updateState(shortcuts: getPokeShortcutsUseCase.execute())
     }
     
     private func handleSend() {
@@ -206,7 +211,7 @@ final class PokePopupViewModel: ViewModel {
     private func saveShortcuts() {
         // 각 shortcut을 개별적으로 업데이트
         state.shortcuts.enumerated().forEach { index, shortcut in
-            shortcutRepository.updateShortcut(at: index, shortcut: shortcut)
+            updatePokeShortcutUseCase.execute(at: index, shortcut: shortcut)
         }
         updateState(isEditing: false)
     }

@@ -49,22 +49,22 @@ final class HomeViewModel: ViewModel {
     private var damagoID: String?
 
     private let globalStore: GlobalStoreProtocol
-    private let userRepository: UserRepositoryProtocol
+    private let fetchUserInfoUseCase: FetchUserInfoUseCase
     private let feedDamagoUseCase: FeedDamagoUseCase
-    private let pushRepository: PushRepositoryProtocol
+    private let pokeDamagoUseCase: PokeDamagoUseCase
     private let updateUserUseCase: UpdateUserUseCase
     
     init(
         globalStore: GlobalStoreProtocol,
-        userRepository: UserRepositoryProtocol,
+        fetchUserInfoUseCase: FetchUserInfoUseCase,
         feedDamagoUseCase: FeedDamagoUseCase,
-        pushRepository: PushRepositoryProtocol,
+        pokeDamagoUseCase: PokeDamagoUseCase,
         updateUserUseCase: UpdateUserUseCase
     ) {
         self.globalStore = globalStore
-        self.userRepository = userRepository
+        self.fetchUserInfoUseCase = fetchUserInfoUseCase
         self.feedDamagoUseCase = feedDamagoUseCase
-        self.pushRepository = pushRepository
+        self.pokeDamagoUseCase = pokeDamagoUseCase
         self.updateUserUseCase = updateUserUseCase
     }
 
@@ -106,7 +106,7 @@ final class HomeViewModel: ViewModel {
                 state.isLoading = false
             }
             do {
-                let userInfo = try await userRepository.getUserInfo()
+                let userInfo = try await fetchUserInfoUseCase.execute()
 
                 self.damagoID = userInfo.damagoID
                 state.totalCoin = userInfo.totalCoin
@@ -142,7 +142,7 @@ final class HomeViewModel: ViewModel {
     private func pokeDamago(with message: String) {
         Task {
             do {
-                _ = try await pushRepository.poke(message: message)
+                _ = try await pokeDamagoUseCase.execute(message: message)
                 SharedLogger.home.info("Poke sent with message: \(message)")
             } catch {
                 SharedLogger.home.error("Error poking damago: \(error)")
@@ -179,6 +179,11 @@ final class HomeViewModel: ViewModel {
     }
 
     private func bindGlobalState() {
+        globalStore.globalState
+            .compactMap { $0.damagoID }
+            .sink { [weak self] in self?.damagoID = $0 }
+            .store(in: &cancellables)
+
         globalStore.globalState
             .compactMapForUI { $0 }
             .sink { [weak self] state in
