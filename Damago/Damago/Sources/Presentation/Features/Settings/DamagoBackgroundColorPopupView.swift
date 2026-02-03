@@ -13,7 +13,7 @@ final class DamagoBackgroundColorPopupView: UIView {
     let cancelButtonTappedSubject = PassthroughSubject<Void, Never>()
 
     private var selectedOption: DamagoBackgroundColorOption
-    private var optionByButton: [UIButton: DamagoBackgroundColorOption] = [:]
+    private var optionViews: [ColorOptionView] = []
 
     private let containerView: UIView = {
         let view = UIView()
@@ -38,7 +38,7 @@ final class DamagoBackgroundColorPopupView: UIView {
     private let colorStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
-        stackView.spacing = .spacingM
+        stackView.spacing = .spacingS
         stackView.distribution = .equalSpacing
         stackView.alignment = .center
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -110,9 +110,10 @@ final class DamagoBackgroundColorPopupView: UIView {
         buttonStackView.addArrangedSubview(confirmButton)
 
         DamagoBackgroundColorOption.allCases.forEach { option in
-            let button = makeColorButton(for: option)
-            optionByButton[button] = option
-            colorStackView.addArrangedSubview(button)
+            let optionView = ColorOptionView(option: option)
+            optionView.button.addTarget(self, action: #selector(colorButtonTapped(_:)), for: .touchUpInside)
+            optionViews.append(optionView)
+            colorStackView.addArrangedSubview(optionView)
         }
     }
 
@@ -153,36 +154,16 @@ final class DamagoBackgroundColorPopupView: UIView {
             .store(in: &cancellables)
     }
 
-    private func makeColorButton(for option: DamagoBackgroundColorOption) -> UIButton {
-        let button = UIButton(type: .system)
-        button.backgroundColor = option.uiColor
-        button.layer.cornerRadius = 22
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.systemGray4.cgColor
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.widthAnchor.constraint(equalToConstant: 44).isActive = true
-        button.heightAnchor.constraint(equalToConstant: 44).isActive = true
-        button.accessibilityLabel = option.displayName
-        button.addTarget(self, action: #selector(colorButtonTapped(_:)), for: .touchUpInside)
-        return button
-    }
-
     @objc
     private func colorButtonTapped(_ sender: UIButton) {
-        guard let option = optionByButton[sender] else { return }
+        guard let option = optionViews.first(where: { $0.button === sender })?.option else { return }
         updateSelection(to: option)
     }
 
     private func updateSelection(to option: DamagoBackgroundColorOption) {
         selectedOption = option
-        optionByButton.forEach { button, option in
-            if option == selectedOption {
-                button.layer.borderWidth = 2
-                button.layer.borderColor = UIColor.damagoPrimary.cgColor
-            } else {
-                button.layer.borderWidth = 1
-                button.layer.borderColor = UIColor.systemGray4.cgColor
-            }
+        optionViews.forEach { view in
+            view.badge.isHidden = (view.option != selectedOption)
         }
     }
 
