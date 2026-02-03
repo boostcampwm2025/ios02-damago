@@ -11,22 +11,7 @@ import SwiftUI
 import WidgetKit
 
 struct DamagoWidgetLiveActivity: Widget {
-    private let feedButtonBackgroundColor = Color(
-        red: 65.0 / 255.0,
-        green: 74.0 / 255.0,
-        blue: 84.0 / 255.0
-    )   // #414A54
-    private let feedButtonIconColor = Color(
-        red: 234.0 / 255.0,
-        green: 208.0 / 255.0,
-        blue: 73.0 / 255.0
-    )        // #EAD049
     private let characterBackgroundColor: Color = .white
-    private let pokeButtonBackgroundColor = Color(
-        red: 242.0 / 255.0,
-        green: 113.0 / 255.0,
-        blue: 182.0 / 255.0
-    ) // #F271B6
 
     private let charactrerSize: CGFloat = 80
     private let largeIconSize: CGFloat = 26
@@ -160,12 +145,12 @@ struct DamagoWidgetLiveActivity: Widget {
         Button(intent: FeedAppIntent(activityID: activityID)) {
             HStack(spacing: .spacingS) {
                 Image(systemName: "fork.knife")
-                    .foregroundStyle(feedButtonIconColor)
+                    .foregroundStyle(.damagoYellow)
                 Text("밥 주기")
                     .foregroundStyle(.white)
             }
         }
-        .dynamicIslandActionButton(backgroundColor: feedButtonBackgroundColor)
+        .dynamicIslandActionButton(backgroundColor: .textTertiary)
     }
 
     private func pokeButton(activityID: String) -> some View {
@@ -177,7 +162,7 @@ struct DamagoWidgetLiveActivity: Widget {
                     .foregroundStyle(.white)
             }
         }
-        .dynamicIslandActionButton(backgroundColor: pokeButtonBackgroundColor)
+        .dynamicIslandActionButton(backgroundColor: .damagoPink)
     }
 
     // MARK: PokeButtonView
