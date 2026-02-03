@@ -32,7 +32,6 @@ final class HomeViewModel: ViewModel {
         var maxExp = 0
         var totalCoin = 0
         var foodCount = 0
-        var lastFedAt: Date?
         var ownedDamagoTypes: [DamagoType] = []
 
         var isFeedButtonEnabled: Bool { foodCount > 0 && !isFeeding }
@@ -119,7 +118,6 @@ final class HomeViewModel: ViewModel {
                     state.damagoName = damagoStatus.damagoName
                     state.damagoType = damagoStatus.damagoType
                     state.isHungry = damagoStatus.isHungry
-                    state.lastFedAt = damagoStatus.lastFedAt
                 }
             } catch {
                 print("Error fetching user info: \(error)")
@@ -134,7 +132,6 @@ final class HomeViewModel: ViewModel {
             do {
                 state.isFeeding = true
                 try await feedDamagoUseCase.execute(damagoID: damagoID)
-                state.lastFedAt = Date()
             } catch {
                 print("Error feeding damago: \(error)")
                 state.isFeeding = false
@@ -215,11 +212,6 @@ final class HomeViewModel: ViewModel {
         globalStore.globalState
             .compactMapForUI { $0.maxExp }
             .sink { [weak self] in self?.state.maxExp = $0 }
-            .store(in: &cancellables)
-            
-        globalStore.globalState
-            .mapForUI { $0.lastFedAt }
-            .sink { [weak self] in self?.state.lastFedAt = $0 }
             .store(in: &cancellables)
 
         globalStore.globalState
