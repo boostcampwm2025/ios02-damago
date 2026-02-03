@@ -15,6 +15,14 @@ protocol DataSyncStrategy {
         saveToLocal: @escaping (T) async -> Void,
         onNetworkError: @escaping (Error) -> Void
     ) -> AsyncStream<T>
+
+    func submitWithOptimisticUpdate<T>(
+        backupState: T?,
+        updateLocal: () async throws -> Void,
+        networkCall: () async throws -> Bool,
+        rollbackLocal: (T?) async throws -> Void,
+        onFailure: (Error) -> Void
+    ) async throws -> Bool
 }
 
 extension DataSyncStrategy {
@@ -43,6 +51,27 @@ extension DataSyncStrategy {
 
                 continuation.finish()
             }
+        }
+    }
+
+    func submitWithOptimisticUpdate<T>(
+        backupState: T?,
+        updateLocal: () async throws -> Void,
+        networkCall: () async throws -> Bool,
+        rollbackLocal: (T?) async throws -> Void,
+        onFailure: (Error) -> Void
+    ) async throws -> Bool {
+        // 로컬 선반영
+        try await updateLocal()
+
+        do {
+            // 네트워크 요청
+            return try await networkCall()
+        } catch {
+            // 실패 시 롤백
+            onFailure(error)
+            try await rollbackLocal(backupState)
+            throw error
         }
     }
 }
