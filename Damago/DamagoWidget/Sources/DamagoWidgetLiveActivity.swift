@@ -11,7 +11,15 @@ import SwiftUI
 import WidgetKit
 
 struct DamagoWidgetLiveActivity: Widget {
-    private let characterBackgroundColor: Color = .white
+    private var damagoBackgroundColor: Color {
+        let defaults = AppGroupUserDefaults.sharedDefaults()
+        let rawValue = defaults.string(
+            forKey: AppGroupUserDefaults.damagoBackgroundColorKey
+        )
+        let option = DamagoBackgroundColorOption(rawValue: rawValue ?? "")
+            ?? DamagoBackgroundColorOption.defaultOption
+        return option.swiftUIColor
+    }
 
     private let charactrerSize: CGFloat = 80
     private let largeIconSize: CGFloat = 26
@@ -65,7 +73,7 @@ struct DamagoWidgetLiveActivity: Widget {
                 for: context.state.imageName,
                 size: charactrerSize
             )
-            .background(characterBackgroundColor)
+            .background(damagoBackgroundColor)
             .clipShape(Circle())
             actionButtonsView(
                 activityID: context
@@ -103,7 +111,7 @@ struct DamagoWidgetLiveActivity: Widget {
                 size: smallIconSize
             )
             .padding(2)
-            .background(characterBackgroundColor)
+            .background(damagoBackgroundColor)
             .clipShape(Circle())
         }
     }
@@ -127,7 +135,7 @@ struct DamagoWidgetLiveActivity: Widget {
                 for: context.state.imageName,
                 size: smallIconSize
             )
-            .background(characterBackgroundColor)
+            .background(damagoBackgroundColor)
             .clipShape(Circle())
         }
     }
