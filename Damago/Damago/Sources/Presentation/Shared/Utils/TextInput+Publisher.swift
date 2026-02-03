@@ -8,11 +8,44 @@
 import Combine
 import UIKit
 
-// maxLength 및 카운터 UI를 위한 Obj-C 연관 저장 키
-private var textInputMaxLengthKey: UInt8 = 0
-private var textInputObserverTokenKey: UInt8 = 0
-private var textInputCounterLabelKey: UInt8 = 0
-private var textInputCounterContainerKey: UInt8 = 0
+// 텍스트 입력 상태 저장 (maxLength/옵저버/카운터 UI)
+final class TextInputState {
+    var maxLength: Int?
+    var observer: NSObjectProtocol?
+    var counterLabel: UILabel?
+    var counterContainer: UIView?
+}
+
+// 텍스트 입력 상태 접근 프로토콜
+protocol TextInputStateStoring: AnyObject {
+    var textInputState: TextInputState { get }
+}
+
+// UITextField/UITextView별 상태 저장소
+private enum TextInputStateStore {
+    private static let textFieldStore = NSMapTable<UITextField, TextInputState>(
+        keyOptions: .weakMemory,
+        valueOptions: .strongMemory
+    )
+    private static let textViewStore = NSMapTable<UITextView, TextInputState>(
+        keyOptions: .weakMemory,
+        valueOptions: .strongMemory
+    )
+
+    static func state(for textField: UITextField) -> TextInputState {
+        if let state = textFieldStore.object(forKey: textField) { return state }
+        let state = TextInputState()
+        textFieldStore.setObject(state, forKey: textField)
+        return state
+    }
+
+    static func state(for textView: UITextView) -> TextInputState {
+        if let state = textViewStore.object(forKey: textView) { return state }
+        let state = TextInputState()
+        textViewStore.setObject(state, forKey: textView)
+        return state
+    }
+}
 
 // UITextField/UITextView 텍스트 변경을 공통으로 퍼블리시
 protocol TextInputPublishing: AnyObject {
@@ -53,19 +86,14 @@ extension TextInputPublishing {
     }
 }
 
-extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting {
+extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting & TextInputStateStoring {
     // 입력 최대 길이. `nil`이면 제한 없음
     var maxLength: Int? {
         get {
-            objc_getAssociatedObject(self, &textInputMaxLengthKey) as? Int
+            textInputState.maxLength
         }
         set {
-            objc_setAssociatedObject(
-                self,
-                &textInputMaxLengthKey,
-                newValue,
-                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-            )
+            textInputState.maxLength = newValue
 
             if newValue == nil {
                 removeMaxLengthObserverIfNeeded()
@@ -99,15 +127,8 @@ extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting {
     }
 
     private var maxLengthObserverToken: NSObjectProtocol? {
-        get { objc_getAssociatedObject(self, &textInputObserverTokenKey) as? NSObjectProtocol }
-        set {
-            objc_setAssociatedObject(
-                self,
-                &textInputObserverTokenKey,
-                newValue,
-                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-            )
-        }
+        get { textInputState.observer }
+        set { textInputState.observer = newValue }
     }
 
     // 길이 초과 시 잘라내기
@@ -127,7 +148,11 @@ extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting {
     }
 }
 
-extension UITextField: TextInputPublishing, TextInputLengthLimiting {
+extension UITextField: TextInputPublishing, TextInputLengthLimiting, TextInputStateStoring {
+    var textInputState: TextInputState {
+        TextInputStateStore.state(for: self)
+    }
+
     static var textDidChangeNotificationName: Notification.Name {
         UITextField.textDidChangeNotification
     }
@@ -172,39 +197,29 @@ extension UITextField: TextInputPublishing, TextInputLengthLimiting {
     }
 
     private var counterLabel: UILabel {
-        if let label = objc_getAssociatedObject(self, &textInputCounterLabelKey) as? UILabel {
-            return label
-        }
+        if let label = textInputState.counterLabel { return label }
         let label = UILabel()
         label.font = font
         label.textColor = .textTertiary
         label.textAlignment = .right
         label.setContentHuggingPriority(.required, for: .horizontal)
-        objc_setAssociatedObject(
-            self,
-            &textInputCounterLabelKey,
-            label,
-            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-        )
+        textInputState.counterLabel = label
         return label
     }
 
     private var counterContainerView: UIView {
-        if let view = objc_getAssociatedObject(self, &textInputCounterContainerKey) as? UIView {
-            return view
-        }
+        if let view = textInputState.counterContainer { return view }
         let view = UIView()
-        objc_setAssociatedObject(
-            self,
-            &textInputCounterContainerKey,
-            view,
-            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-        )
+        textInputState.counterContainer = view
         return view
     }
 }
 
-extension UITextView: TextInputPublishing, TextInputLengthLimiting {
+extension UITextView: TextInputPublishing, TextInputLengthLimiting, TextInputStateStoring {
+    var textInputState: TextInputState {
+        TextInputStateStore.state(for: self)
+    }
+
     static var textDidChangeNotificationName: Notification.Name {
         UITextView.textDidChangeNotification
     }
@@ -237,22 +252,14 @@ extension UITextView: TextInputPublishing, TextInputLengthLimiting {
     }
 
     private var counterLabel: UILabel {
-        if let label = objc_getAssociatedObject(self, &textInputCounterLabelKey) as? UILabel {
-            return label
-        }
-
+        if let label = textInputState.counterLabel { return label }
         let label = UILabel()
         label.font = .caption
         label.textColor = .textTertiary
         label.textAlignment = .right
         label.isUserInteractionEnabled = false
         label.translatesAutoresizingMaskIntoConstraints = false
-        objc_setAssociatedObject(
-            self,
-            &textInputCounterLabelKey,
-            label,
-            .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-        )
+        textInputState.counterLabel = label
         return label
     }
 }
