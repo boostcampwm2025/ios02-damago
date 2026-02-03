@@ -262,8 +262,8 @@ def withdraw_user(req: https_fn.Request) -> https_fn.Response:
         for doc in db.collection("damagos").where("coupleID", "==", couple_id).stream():
             batch.delete(doc.reference)
 
-    # 4. 파트너 정보 초기화
-    if partner_uid:
+    # 4. 파트너 정보 초기화 (본인이 아닌 경우에만)
+    if partner_uid and partner_uid != uid:
         partner_ref = db.collection("users").document(partner_uid)
         batch.update(partner_ref, {
             "coupleID": firestore.DELETE_FIELD,
