@@ -10,6 +10,7 @@ import OSLog
 
 enum AppGroupUserDefaults {
     static let shortcutsKey = "pokeShortcuts"
+    static let damagoBackgroundColorKey = "damagoBackgroundColorKey"
 
     static func sharedDefaults(suiteName: String = AppGroupConstants.defaultID) -> UserDefaults {
         guard let userDefaults = UserDefaults(suiteName: suiteName) else {

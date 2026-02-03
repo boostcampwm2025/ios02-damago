@@ -21,7 +21,7 @@ final class CollectionViewModel: ViewModel {
         var damagos: [DamagoType] = DamagoType.allCases
         var selectedDamago: DamagoType?
         var currentDamagoType: DamagoType?
-        var ownedDamagoTypes: [DamagoType] = []
+        var ownedDamagos: [DamagoType: Int] = [:]
         var isLoading: Bool = false
         var route: Pulse<Route>?
     }
@@ -59,15 +59,15 @@ final class CollectionViewModel: ViewModel {
             .store(in: &cancellables)
 
         globalStore.globalState
-            .map { $0.ownedDamagoTypes ?? [] }
-            .assign(to: \.state.ownedDamagoTypes, on: self)
+            .map { $0.ownedDamagos ?? [:] }
+            .assign(to: \.state.ownedDamagos, on: self)
             .store(in: &cancellables)
 
         input.damagoSelected
             .sink { [weak self] damagoType in
                 guard let self = self else { return }
                 if damagoType == self.state.currentDamagoType { return }
-                if self.state.ownedDamagoTypes.contains(damagoType) {
+                if self.state.ownedDamagos.keys.contains(damagoType) {
                     self.state.selectedDamago = damagoType
                     self.state.route = Pulse(.showChangeConfirmPopup(damagoType: damagoType))
                 } else {
