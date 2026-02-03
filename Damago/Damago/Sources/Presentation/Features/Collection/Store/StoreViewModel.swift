@@ -12,10 +12,8 @@ final class StoreViewModel: ViewModel {
     enum StorePolicy {
         static let drawCost = 100
     }
-
+    
     enum StoreStrings {
-        static let drawResultItemName = "새로운 친구"
-        static let collectionCompleteLabel = "모든 친구 수집 완료!"
         static let notEnoughCoinLabel = "코인이 부족해요"
         static func drawButtonTitle(cost: Int) -> String { "\(cost) 코인" }
     }
@@ -31,30 +29,17 @@ final class StoreViewModel: ViewModel {
         var ownedDamagos: [DamagoType: Int] = [:]
         var isLoading: Bool = false
         
-        var isCollectionComplete: Bool {
-            DamagoType.allCases.allSatisfy { ownedDamagos.keys.contains($0) }
-        }
-        
         var isDrawButtonEnabled: Bool {
             let isCoinEnough = coinAmount >= StorePolicy.drawCost
-            return isCoinEnough && !isCollectionComplete && !isLoading
+            return isCoinEnough && !isLoading
         }
         
         var drawButtonTitle: String {
-             if isCollectionComplete {
-                 return StoreStrings.collectionCompleteLabel
-             }
              if coinAmount < StorePolicy.drawCost {
                  return StoreStrings.notEnoughCoinLabel
              }
              return StoreStrings.drawButtonTitle(cost: StorePolicy.drawCost)
         }
-    }
-    
-    struct DrawResult: Equatable {
-        let id = UUID()
-        let itemName: String
-        let damagoType: DamagoType
     }
     
     @Published private(set) var state = State()
@@ -78,7 +63,7 @@ final class StoreViewModel: ViewModel {
                 self?.tryDraw()
             }
             .store(in: &cancellables)
-
+        
         globalStore.globalState
             .map { $0.ownedDamagos ?? [:] }
             .assign(to: \.state.ownedDamagos, on: self)
@@ -88,7 +73,7 @@ final class StoreViewModel: ViewModel {
             .map { $0.totalCoin ?? 0 }
             .assign(to: \.state.coinAmount, on: self)
             .store(in: &cancellables)
-            
+        
         return $state.eraseToAnyPublisher()
     }
     
@@ -98,20 +83,11 @@ final class StoreViewModel: ViewModel {
             return
         }
         
-        if state.isCollectionComplete {
-            state.error = Pulse(.collectionComplete)
-            return
-        }
-        
         state.isLoading = true
         
         Task {
             do {
-                let pickedDamago = try await createDamagoUseCase.execute()
-                state.drawResult = DrawResult(
-                    itemName: StoreStrings.drawResultItemName,
-                    damagoType: pickedDamago
-                )
+                state.drawResult = try await createDamagoUseCase.execute()
             } catch {
                 state.error = Pulse(.creationFailed)
             }
@@ -119,4 +95,3 @@ final class StoreViewModel: ViewModel {
         }
     }
 }
-

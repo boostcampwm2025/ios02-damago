@@ -11,4 +11,5 @@ public struct CreateDamagoResponse: Decodable {
     public let id: String
     public let totalCoin: Int
     public let damagoType: String
+    public let isNew: Bool
 }

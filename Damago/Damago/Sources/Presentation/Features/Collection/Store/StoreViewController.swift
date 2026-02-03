@@ -107,7 +107,7 @@ final class StoreViewController: UIViewController {
         present(alert, animated: true)
     }
     
-    private func triggerGachaAnimation(result: StoreViewModel.DrawResult) {
+    private func triggerGachaAnimation(result: DrawResult) {
         mainView.machineImageView.isHidden = true
         mainView.drawButton.isEnabled = false
         mainView.exitButton.isHidden = true
@@ -145,7 +145,7 @@ final class StoreViewController: UIViewController {
         hostingController.didMove(toParent: self)
     }
     
-    private func showResultOverlay(result: StoreViewModel.DrawResult) {
+    private func showResultOverlay(result: DrawResult) {
         mainView.resultView.configure(with: result)
         
         UIView.animate(withDuration: 0.3) {

@@ -24,6 +24,13 @@ from utils.constants import (
 )
 from services.push_service import update_live_activity_internal
 
+def pick_random_damago() -> str:
+    """
+    뽑기 로직을 수행하여 다마고 타입을 반환합니다.
+    현재는 모든 타입에 대해 균등한 확률(Uniform Distribution)을 가집니다.
+    """
+    return random.choice(AVAILABLE_DAMAGO_TYPES)
+
 def feed(req: https_fn.Request) -> https_fn.Response:
     """
     다마고에게 먹이를 줍니다.
@@ -338,23 +345,8 @@ def create_damago(req: https_fn.Request) -> https_fn.Response:
     if not couple_id:
         return https_fn.Response("User has no couple", status=400)
         
-    # 2. 보유 중인 다마고 조회 (랜덤 선택을 위해)
-    #    Note: 동시성 이슈로 인해 Transaction 내에서 다시 한 번 중복 체크를 수행함.
-    owned_docs = db.collection("damagos").where(filter=FieldFilter("coupleID", "==", couple_id)).stream()
-    owned_types = set()
-    for doc in owned_docs:
-        d_type = doc.to_dict().get("damagoType")
-        if d_type:
-            owned_types.add(d_type)
-            
-    # 3. 뽑기 가능 목록 산출
-    available_types = [t for t in AVAILABLE_DAMAGO_TYPES if t not in owned_types]
-    
-    if not available_types:
-        return https_fn.Response("All collected", status=400)
-        
-    # 4. 랜덤 선택
-    target_type = random.choice(available_types)
+    # 2. 랜덤 선택 (전체 목록에서 무작위 선택)
+    target_type = pick_random_damago()
     
     couple_ref = db.collection("couples").document(couple_id)
     
@@ -370,45 +362,50 @@ def create_damago(req: https_fn.Request) -> https_fn.Response:
         # 중복 확인 (ID 기반)
         new_damago_id = f"{couple_id}_{target_type}"
         new_damago_ref = db.collection("damagos").document(new_damago_id)
-        
         existing_damago = new_damago_ref.get(transaction=transaction)
-        if existing_damago.exists:
-             # Transaction 내에서 중복이 발견되면(극악의 확률로 동시 성공 시),
-             # 에러를 던져서 재시도하거나 실패하게 함.
-             raise ValueError("Already owned (Retry)")
 
         # 코인 확인
         draw_cost = 100
         if current_coin < draw_cost:
             raise ValueError("Not enough coins")
             
-        # 코인 차감
-        new_coin = current_coin - draw_cost
-        transaction.update(couple_ref, {"totalCoin": new_coin})
+        is_new = not existing_damago.exists
         
-        # 다마고 생성
-        new_damago_data = {
-            "id": new_damago_id,
-            "coupleID": couple_id,
-            "damagoName": "이름 없는 다마고",
-            "damagoType": target_type,
-            "isHungry": False,
-            "statusMessage": "안녕! 만나서 반가워!",
-            "level": 1,
-            "currentExp": 0,
-            "maxExp": get_required_exp(1),
-            "lastFedAt": firestore.SERVER_TIMESTAMP,
-            "lastUpdatedAt": firestore.SERVER_TIMESTAMP,
-            "createdAt": firestore.SERVER_TIMESTAMP,
-            "totalPlayTime": 0,
-            "lastActiveAt": firestore.SERVER_TIMESTAMP
-        }
-        transaction.set(new_damago_ref, new_damago_data)
+        # 코인 차감 (공통)
+        new_coin = current_coin - draw_cost
+        couple_updates = {"totalCoin": new_coin}
+        
+        if is_new:
+            # 신규 캐릭터: 다마고 생성
+            new_damago_data = {
+                "id": new_damago_id,
+                "coupleID": couple_id,
+                "damagoName": "이름 없는 다마고",
+                "damagoType": target_type,
+                "isHungry": False,
+                "statusMessage": "안녕! 만나서 반가워!",
+                "level": 1,
+                "currentExp": 0,
+                "maxExp": get_required_exp(1),
+                "lastFedAt": firestore.SERVER_TIMESTAMP,
+                "lastUpdatedAt": firestore.SERVER_TIMESTAMP,
+                "createdAt": firestore.SERVER_TIMESTAMP,
+                "totalPlayTime": 0,
+                "lastActiveAt": firestore.SERVER_TIMESTAMP
+            }
+            transaction.set(new_damago_ref, new_damago_data)
+        else:
+            # 중복 캐릭터: 먹이 5개 지급
+            couple_updates["foodCount"] = firestore.Increment(5)
+        
+        # 커플 문서 업데이트
+        transaction.update(couple_ref, couple_updates)
         
         return {
             "id": new_damago_id,
             "totalCoin": new_coin,
-            "damagoType": target_type
+            "damagoType": target_type,
+            "isNew": is_new
         }
 
     try:
