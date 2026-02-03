@@ -24,12 +24,13 @@ final class DamagoRepository: DamagoRepositoryProtocol {
         self.firestoreService = firestoreService
     }
     
-    func feed(damagoID: String) async throws -> Bool {
+    func feed(damagoID: String) async throws -> DamagoStatus {
         let token = try await tokenProvider.idToken()
-        let response: DamagoStatusResponse = try await networkProvider.request(DamagoAPI.feed(accessToken: token, damagoID: damagoID))
+        let response: DamagoStatusResponse = try await networkProvider.request(
+            DamagoAPI.feed(accessToken: token, damagoID: damagoID)
+        )
         
-        // 로컬 Live Activity 즉시 업데이트
-        let status = DamagoStatus(
+        return DamagoStatus(
             damagoName: response.damagoName,
             damagoType: DamagoType(rawValue: response.damagoType) ?? .basicBlack,
             level: response.level,
@@ -41,9 +42,6 @@ final class DamagoRepository: DamagoRepositoryProtocol {
             totalPlayTime: response.totalPlayTime ?? 0,
             lastActiveAt: response.lastActiveAt
         )
-        LiveActivityManager.shared.updateActivity(with: status)
-        
-        return true
     }
 
     func observeDamagoSnapshot(damagoID: String) -> AnyPublisher<Result<DamagoSnapshotDTO, Error>, Never> {

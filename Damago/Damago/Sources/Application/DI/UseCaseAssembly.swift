@@ -95,5 +95,10 @@ final class UseCaseAssembly: Assembly {
         container.register(AdjustCoinAmountUseCase.self) {
             AdjustCoinAmountUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
         }
+        container.register(FeedDamagoUseCase.self) {
+            FeedDamagoUseCaseImpl(
+                damagoRepository: container.resolve(DamagoRepositoryProtocol.self)
+            )
+        }
     }
 }

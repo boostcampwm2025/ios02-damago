@@ -51,20 +51,20 @@ final class HomeViewModel: ViewModel {
 
     private let globalStore: GlobalStoreProtocol
     private let userRepository: UserRepositoryProtocol
-    private let damagoRepository: DamagoRepositoryProtocol
+    private let feedDamagoUseCase: FeedDamagoUseCase
     private let pushRepository: PushRepositoryProtocol
     private let updateUserUseCase: UpdateUserUseCase
     
     init(
         globalStore: GlobalStoreProtocol,
         userRepository: UserRepositoryProtocol,
-        damagoRepository: DamagoRepositoryProtocol,
+        feedDamagoUseCase: FeedDamagoUseCase,
         pushRepository: PushRepositoryProtocol,
         updateUserUseCase: UpdateUserUseCase
     ) {
         self.globalStore = globalStore
         self.userRepository = userRepository
-        self.damagoRepository = damagoRepository
+        self.feedDamagoUseCase = feedDamagoUseCase
         self.pushRepository = pushRepository
         self.updateUserUseCase = updateUserUseCase
     }
@@ -133,13 +133,8 @@ final class HomeViewModel: ViewModel {
         Task {
             do {
                 state.isFeeding = true
-                let success = try await damagoRepository.feed(damagoID: damagoID)
-                if success {
-                    state.lastFedAt = Date()
-                    LiveActivityManager.shared.synchronizeActivity()
-                } else {
-                    state.isFeeding = false
-                }
+                try await feedDamagoUseCase.execute(damagoID: damagoID)
+                state.lastFedAt = Date()
             } catch {
                 print("Error feeding damago: \(error)")
                 state.isFeeding = false
