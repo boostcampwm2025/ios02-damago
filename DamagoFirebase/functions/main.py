@@ -40,6 +40,10 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
     return push_service.start_live_activity(req)
 
 @https_fn.on_request()
+def retry_push_notification(req: https_fn.Request) -> https_fn.Response:
+    return push_service.retry_push_notification(req)
+
+@https_fn.on_request()
 def feed(req: https_fn.Request) -> https_fn.Response:
     return damago_service.feed(req)
 
