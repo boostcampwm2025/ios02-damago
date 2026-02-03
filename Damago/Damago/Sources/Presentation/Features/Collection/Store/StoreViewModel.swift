@@ -9,6 +9,17 @@ import Combine
 import Foundation
 
 final class StoreViewModel: ViewModel {
+    enum StorePolicy {
+        static let drawCost = 100
+    }
+
+    enum StoreStrings {
+        static let drawResultItemName = "새로운 친구"
+        static let collectionCompleteLabel = "모든 친구 수집 완료!"
+        static let notEnoughCoinLabel = "코인이 부족해요"
+        static func drawButtonTitle(cost: Int) -> String { "\(cost) 코인" }
+    }
+    
     struct Input {
         let drawButtonDidTap: AnyPublisher<Void, Never>
     }
@@ -16,25 +27,27 @@ final class StoreViewModel: ViewModel {
     struct State {
         var coinAmount: Int = 0
         var drawResult: DrawResult?
-        var error: Pulse<String>?
+        var error: Pulse<StoreError>?
         var ownedDamagos: [DamagoType: Int] = [:]
         var isLoading: Bool = false
         
+        var isCollectionComplete: Bool {
+            DamagoType.allCases.allSatisfy { ownedDamagos.keys.contains($0) }
+        }
+        
         var isDrawButtonEnabled: Bool {
-            let isCoinEnough = coinAmount >= StoreViewModel.drawCost
-            let isCollectionComplete = DamagoType.allCases.allSatisfy { ownedDamagos.keys.contains($0) }
+            let isCoinEnough = coinAmount >= StorePolicy.drawCost
             return isCoinEnough && !isCollectionComplete && !isLoading
         }
         
         var drawButtonTitle: String {
-             let isCollectionComplete = DamagoType.allCases.allSatisfy { ownedDamagos.keys.contains($0) }
              if isCollectionComplete {
-                 return "모든 친구 수집 완료!"
+                 return StoreStrings.collectionCompleteLabel
              }
-             if coinAmount < StoreViewModel.drawCost {
-                 return "코인이 부족해요"
+             if coinAmount < StorePolicy.drawCost {
+                 return StoreStrings.notEnoughCoinLabel
              }
-             return "\(StoreViewModel.drawCost) 코인"
+             return StoreStrings.drawButtonTitle(cost: StorePolicy.drawCost)
         }
     }
     
@@ -47,7 +60,6 @@ final class StoreViewModel: ViewModel {
     @Published private(set) var state = State()
     private var cancellables = Set<AnyCancellable>()
     
-    static let drawCost = 100
     private let globalStore: GlobalStoreProtocol
     private let createDamagoUseCase: CreateDamagoUseCase
     
@@ -81,28 +93,33 @@ final class StoreViewModel: ViewModel {
     }
     
     private func tryDraw() {
-        guard state.coinAmount >= StoreViewModel.drawCost else {
-            state.error = Pulse("코인이 부족해요!")
+        guard state.coinAmount >= StorePolicy.drawCost else {
+            state.error = Pulse(.notEnoughCoin)
+            return
+        }
+        
+        if state.isCollectionComplete {
+            state.error = Pulse(.collectionComplete)
             return
         }
         
         let availableDamagos = DamagoType.allCases.filter { !state.ownedDamagos.keys.contains($0) }
-        guard let randomDamago = availableDamagos.randomElement() else {
-            state.error = Pulse("모든 친구를 만났어요!")
-            return
-        }
+        guard let randomDamago = availableDamagos.randomElement() else { return }
         
         state.isLoading = true
         
         Task {
             do {
                 try await createDamagoUseCase.execute(damagoType: randomDamago)
-                // 성공 시 애니메이션 트리거
-                state.drawResult = DrawResult(itemName: "새로운 친구", damagoType: randomDamago)
+                state.drawResult = DrawResult(
+                    itemName: StoreStrings.drawResultItemName,
+                    damagoType: randomDamago
+                )
             } catch {
-                state.error = Pulse("친구를 데려오는데 실패했어요.")
+                state.error = Pulse(.creationFailed)
             }
             state.isLoading = false
         }
     }
 }
+

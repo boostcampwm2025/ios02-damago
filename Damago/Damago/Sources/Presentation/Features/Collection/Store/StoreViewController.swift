@@ -65,8 +65,8 @@ final class StoreViewController: UIViewController {
         
         output
             .pulse(\.error)
-            .sink { [weak self] errorMessage in
-                self?.showErrorAlert(message: errorMessage)
+            .sink { [weak self] error in
+                self?.showErrorAlert(message: error.localizedDescription)
             }
             .store(in: &cancellables)
             
