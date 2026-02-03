@@ -10,7 +10,7 @@ import DamagoNetwork
 import Foundation
 import OSLog
 
-final class BalanceGameRepository: BalanceGameRepositoryProtocol {
+final class BalanceGameRepository: BalanceGameRepositoryProtocol, DataSyncStrategy {
     private let networkProvider: NetworkProvider
     private let tokenProvider: TokenProvider
     private let firestoreService: FirestoreService
@@ -174,7 +174,7 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
             SharedLogger.interaction.error("Local save failed: \(error)")
         }
     }
-
+    
     @MainActor
     private func updateLocalChoice(gameID: String, response: FirestoreBalanceGameAnswerDTO) async {
         do {

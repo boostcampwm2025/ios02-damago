@@ -9,12 +9,12 @@ import Combine
 import DamagoNetwork
 import OSLog
 
-final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
+final class DailyQuestionRepository: DailyQuestionRepositoryProtocol, DataSyncStrategy {
     private let networkProvider: NetworkProvider
     private let tokenProvider: TokenProvider
     private let firestoreService: FirestoreService
     private let localDataSource: DailyQuestionLocalDataSourceProtocol
-    
+
     init(
         networkProvider: NetworkProvider,
         tokenProvider: TokenProvider,
@@ -166,7 +166,7 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
             SharedLogger.interaction.error("Local save failed: \(error)")
         }
     }
-    
+
     @MainActor
     private func updateLocalAnswer(questionID: String, response: FirestoreAnswerDTO) async {
         do {
