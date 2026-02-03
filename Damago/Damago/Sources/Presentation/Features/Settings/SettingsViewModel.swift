@@ -20,7 +20,6 @@ final class SettingsViewModel: ViewModel {
         var opponentName: String
         var damagoBackgroundOption: DamagoBackgroundColorOption
         let privacyPolicyURL: URL?
-        let termsURL: URL?
     }
 
     struct Input {
@@ -39,8 +38,7 @@ final class SettingsViewModel: ViewModel {
         var dDay: Int = 0
         var opponentName: String = ""
         var damagoBackgroundOption: DamagoBackgroundColorOption = .defaultOption
-        let privacyPolicyURL: URL? = URL(string: "https://example.com")
-        let termsURL: URL? = URL(string: "https://example.com")
+        let privacyPolicyURL: URL? = URL(string: "https://strong-wren-d65.notion.site/Damago-2fce20acc2ad8056a0f8e16c8f0798b4")
         var route: Pulse<Route>?
 
         var notificationCurrentPermission: Bool = false
@@ -55,8 +53,7 @@ final class SettingsViewModel: ViewModel {
                 dDay: dDay,
                 opponentName: opponentName,
                 damagoBackgroundOption: damagoBackgroundOption,
-                privacyPolicyURL: privacyPolicyURL,
-                termsURL: termsURL
+                privacyPolicyURL: privacyPolicyURL
             )
         }
     }

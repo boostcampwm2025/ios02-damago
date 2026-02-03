@@ -114,8 +114,7 @@ final class SettingsViewController: UIViewController {
         )
         snapshot.appendItems(
             [
-                .link(title: "개인정보 처리방침", url: state.privacyPolicyURL),
-                .link(title: "이용약관", url: state.termsURL)
+                .link(title: "개인정보 처리방침", url: state.privacyPolicyURL)
             ],
             toSection: .legal
         )
