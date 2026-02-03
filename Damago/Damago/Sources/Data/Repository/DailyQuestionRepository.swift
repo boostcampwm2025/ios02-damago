@@ -26,44 +26,32 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol, DataSyncSt
         self.firestoreService = firestoreService
         self.localDataSource = localDataSource
     }
-    
+
     func fetchDailyQuestion() -> AsyncStream<DailyQuestionDTO> {
-        AsyncStream { continuation in
-            Task {
-                // 1. 로컬 데이터 조회 및 즉시 방출 (오늘 데이터인 경우만)
-                if let entity = try? await localDataSource.fetchLatestQuestion(),
-                   let lastUpdated = entity.lastUpdated,
-                   Calendar.current.isDateInToday(lastUpdated) {
-                    
-                    let dto = DailyQuestionDTO(
-                        questionID: entity.questionID,
-                        questionContent: entity.questionContent,
-                        user1Answer: entity.user1Answer,
-                        user2Answer: entity.user2Answer,
-                        bothAnswered: entity.bothAnswered,
-                        lastAnsweredAt: entity.lastAnsweredAt,
-                        isUser1: entity.isUser1
-                    )
-                    continuation.yield(dto)
-                }
-
-                // 2. 네트워크 데이터 조회 및 방출
-                do {
-                    let token = try await tokenProvider.idToken()
-                    let dto: DailyQuestionDTO = try await networkProvider.request(
-                        DailyQuestionAPI.fetch(accessToken: token)
-                    )
-                    await saveToLocalAnswer(dto: dto)
-                    continuation.yield(dto)
-                } catch {
-                    SharedLogger.interaction.error("Daily Question 네트워크 조회 실패: \(error.localizedDescription)")
-                }
-
-                continuation.finish()
+        createFetchStream(
+            fetchLocal: { [weak self] in
+                guard let self else { return nil }
+                guard let entity = try await self.localDataSource.fetchLatestQuestion() else { return nil }
+                return self.mapToDTO(entity: entity)
+            },
+            checkIsUpToDate: { dto in
+                guard let lastAnswered = dto.lastAnsweredAt else { return false }
+                return Calendar.current.isDateInToday(lastAnswered)
+            },
+            fetchNetwork: { [weak self] in
+                guard let self else { throw URLError(.unknown) }
+                let token = try await self.tokenProvider.idToken()
+                return try await self.networkProvider.request(DailyQuestionAPI.fetch(accessToken: token))
+            },
+            saveToLocal: { [weak self] dto in
+                await self?.saveToLocalAnswer(dto: dto)
+            },
+            onNetworkError: { error in
+                SharedLogger.interaction.error("Daily Question 네트워크 조회 실패: \(error.localizedDescription)")
             }
-        }
+        )
     }
-    
+
     func submitAnswer(questionID: String, answer: String, isUser1: Bool) async throws -> Bool {
         let previousEntity = try await localDataSource.fetchQuestion(id: questionID)
         let previousUser1Answer = previousEntity?.user1Answer

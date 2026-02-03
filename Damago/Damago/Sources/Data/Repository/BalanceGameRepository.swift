@@ -29,41 +29,28 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol, DataSyncStrate
     }
     
     func fetchBalanceGame() -> AsyncStream<BalanceGameDTO> {
-        AsyncStream { continuation in
-            Task {
-                // 1. 로컬 데이터 조회 및 즉시 방출 (오늘 데이터인 경우만)
-                if let entity = try? await localDataSource.fetchLatestGame(),
-                   let lastUpdated = entity.lastUpdated,
-                   Calendar.current.isDateInToday(lastUpdated) {
-                    
-                    let dto = BalanceGameDTO(
-                        gameID: entity.gameID,
-                        questionContent: entity.questionContent,
-                        option1: entity.option1,
-                        option2: entity.option2,
-                        myChoice: entity.isUser1 ? entity.user1Choice : entity.user2Choice,
-                        opponentChoice: entity.isUser1 ? entity.user2Choice : entity.user1Choice,
-                        isUser1: entity.isUser1,
-                        lastAnsweredAt: entity.lastAnsweredAt
-                    )
-                    continuation.yield(dto)
-                }
-
-                // 2. 네트워크 데이터 조회 및 방출
-                do {
-                    let token = try await tokenProvider.idToken()
-                    let dto: BalanceGameDTO = try await networkProvider.request(
-                        BalanceGameAPI.fetch(accessToken: token)
-                    )
-                    await saveToLocalGame(dto: dto)
-                    continuation.yield(dto)
-                } catch {
-                    SharedLogger.interaction.error("Balance Game 네트워크 조회 실패: \(error.localizedDescription)")
-                }
-
-                continuation.finish()
+        createFetchStream(
+            fetchLocal: { [weak self] in
+                guard let self else { return nil }
+                guard let entity = try await self.localDataSource.fetchLatestGame() else { return nil }
+                return self.mapToDTO(entity: entity)
+            },
+            checkIsUpToDate: { dto in
+                guard let lastAnswered = dto.lastAnsweredAt else { return false }
+                return Calendar.current.isDateInToday(lastAnswered)
+            },
+            fetchNetwork: { [weak self] in
+                guard let self else { throw URLError(.unknown) }
+                let token = try await self.tokenProvider.idToken()
+                return try await self.networkProvider.request(BalanceGameAPI.fetch(accessToken: token))
+            },
+            saveToLocal: { [weak self] dto in
+                await self?.saveToLocalGame(dto: dto)
+            },
+            onNetworkError: { error in
+                SharedLogger.interaction.error("Balance Game 네트워크 조회 실패: \(error.localizedDescription)")
             }
-        }
+        )
     }
     
     func submitChoice(gameID: String, choice: Int, isUser1: Bool) async throws -> Bool {
