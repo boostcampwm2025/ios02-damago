@@ -33,7 +33,7 @@ final class HomeViewModel: ViewModel {
         var totalCoin = 0
         var foodCount = 0
         var lastFedAt: Date?
-        var ownedDamagoTypes: [DamagoType] = []
+        var ownedDamagos: [DamagoType: Int] = [:]
 
         var isFeedButtonEnabled: Bool { foodCount > 0 && !isFeeding }
         var isPokeButtonEnabled: Bool { true }
@@ -198,8 +198,8 @@ final class HomeViewModel: ViewModel {
             .store(in: &cancellables)
         
         globalStore.globalState
-            .map { $0.ownedDamagoTypes ?? [] }
-            .assign(to: \.state.ownedDamagoTypes, on: self)
+            .map { $0.ownedDamagos ?? [:] }
+            .assign(to: \.state.ownedDamagos, on: self)
             .store(in: &cancellables)
 
         globalStore.globalState

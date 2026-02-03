@@ -14,7 +14,7 @@ final class StoreViewController: UIViewController {
     private let viewModel: StoreViewModel
     private var cancellables = Set<AnyCancellable>()
 
-    private var ownedDamagoTypes: [DamagoType]?
+    private var ownedDamagos: [DamagoType: Int]?
 
     init(viewModel: StoreViewModel) {
         self.viewModel = viewModel
@@ -59,8 +59,8 @@ final class StoreViewController: UIViewController {
             .store(in: &cancellables)
 
         output
-            .map { $0.ownedDamagoTypes }
-            .assign(to: \.ownedDamagoTypes, on: self)
+            .map { $0.ownedDamagos }
+            .assign(to: \.ownedDamagos, on: self)
             .store(in: &cancellables)
         
         output

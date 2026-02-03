@@ -17,7 +17,7 @@ final class StoreViewModel: ViewModel {
         var coinAmount: Int = 1000
         var drawResult: DrawResult?
         var error: Pulse<String>?
-        var ownedDamagoTypes: [DamagoType] = []
+        var ownedDamagos: [DamagoType: Int] = [:]
     }
     
     struct DrawResult: Equatable {
@@ -44,8 +44,8 @@ final class StoreViewModel: ViewModel {
             .store(in: &cancellables)
 
         globalStore.globalState
-            .map { $0.ownedDamagoTypes ?? [] }
-            .assign(to: \.state.ownedDamagoTypes, on: self)
+            .map { $0.ownedDamagos ?? [:] }
+            .assign(to: \.state.ownedDamagos, on: self)
             .store(in: &cancellables)
         
         return $state.eraseToAnyPublisher()
@@ -59,7 +59,7 @@ final class StoreViewModel: ViewModel {
         
         state.coinAmount -= drawCost
         
-        let availableDamagos = DamagoType.allCases.filter { !state.ownedDamagoTypes.contains($0) }
+        let availableDamagos = DamagoType.allCases.filter { !state.ownedDamagos.keys.contains($0) }
 
         guard let randomDamago = availableDamagos.randomElement() else { return }
         

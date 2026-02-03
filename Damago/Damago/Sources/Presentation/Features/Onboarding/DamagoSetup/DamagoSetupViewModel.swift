@@ -21,7 +21,7 @@ final class DamagoSetupViewModel: ViewModel {
         var currentDamagoType: DamagoType?
         var currentDamagoName: String?
         var coupleID: String?
-        var ownedDamagoTypes: [DamagoType] = []
+        var ownedDamagos: [DamagoType: Int] = [:]
         var isLoading: Bool = false
         var route: Pulse<Route>?
     }
@@ -60,8 +60,8 @@ final class DamagoSetupViewModel: ViewModel {
             .store(in: &cancellables)
 
         globalStore.globalState
-            .map { $0.ownedDamagoTypes ?? [] }
-            .assign(to: \.state.ownedDamagoTypes, on: self)
+            .map { $0.ownedDamagos ?? [:] }
+            .assign(to: \.state.ownedDamagos, on: self)
             .store(in: &cancellables)
 
         input.damagoSelected
