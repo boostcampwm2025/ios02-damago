@@ -119,10 +119,9 @@ final class HomeViewModel: ViewModel {
                     state.damagoName = damagoStatus.damagoName
                     state.damagoType = damagoStatus.damagoType
                     state.isHungry = damagoStatus.isHungry
-                    state.lastFedAt = damagoStatus.lastFedAt
                 }
             } catch {
-                print("Error fetching user info: \(error)")
+                SharedLogger.home.error("Error fetching user info: \(error)")
             }
         }
     }
@@ -133,15 +132,9 @@ final class HomeViewModel: ViewModel {
         Task {
             do {
                 state.isFeeding = true
-                let success = try await feedDamagoUseCase.execute(damagoID: damagoID)
-                if success {
-                    state.lastFedAt = Date()
-                    LiveActivityManager.shared.synchronizeActivity()
-                } else {
-                    state.isFeeding = false
-                }
+                try await feedDamagoUseCase.execute(damagoID: damagoID)
             } catch {
-                print("Error feeding damago: \(error)")
+                SharedLogger.home.error("Error feeding damago: \(error)")
                 state.isFeeding = false
             }
         }
@@ -151,9 +144,9 @@ final class HomeViewModel: ViewModel {
         Task {
             do {
                 _ = try await pokeDamagoUseCase.execute(message: message)
-                print("Poke sent with message: \(message)")
+                SharedLogger.home.info("Poke sent with message: \(message)")
             } catch {
-                print("Error poking damago: \(error)")
+                SharedLogger.home.error("Error poking damago: \(error)")
             }
         }
     }
@@ -225,11 +218,6 @@ final class HomeViewModel: ViewModel {
         globalStore.globalState
             .compactMapForUI { $0.maxExp }
             .sink { [weak self] in self?.state.maxExp = $0 }
-            .store(in: &cancellables)
-            
-        globalStore.globalState
-            .mapForUI { $0.lastFedAt }
-            .sink { [weak self] in self?.state.lastFedAt = $0 }
             .store(in: &cancellables)
 
         globalStore.globalState

@@ -7,6 +7,7 @@
 
 import Combine
 import DamagoNetwork
+import Foundation
 
 final class DamagoRepository: DamagoRepositoryProtocol {
     private let networkProvider: NetworkProvider
@@ -23,9 +24,24 @@ final class DamagoRepository: DamagoRepositoryProtocol {
         self.firestoreService = firestoreService
     }
     
-    func feed(damagoID: String) async throws -> Bool {
+    func feed(damagoID: String) async throws -> DamagoStatus {
         let token = try await tokenProvider.idToken()
-        return try await networkProvider.requestSuccess(DamagoAPI.feed(accessToken: token, damagoID: damagoID))
+        let response: DamagoStatusResponse = try await networkProvider.request(
+            DamagoAPI.feed(accessToken: token, damagoID: damagoID)
+        )
+        
+        return DamagoStatus(
+            damagoName: response.damagoName,
+            damagoType: DamagoType(rawValue: response.damagoType) ?? .basicBlack,
+            level: response.level,
+            currentExp: response.currentExp,
+            maxExp: response.maxExp,
+            isHungry: response.isHungry,
+            statusMessage: response.statusMessage,
+            lastFedAt: response.lastFedAt,
+            totalPlayTime: response.totalPlayTime ?? 0,
+            lastActiveAt: response.lastActiveAt
+        )
     }
 
     func create() async throws -> DrawResult {

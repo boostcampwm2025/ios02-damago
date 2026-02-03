@@ -134,6 +134,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
             "currentExp": new_exp,
             "maxExp": get_required_exp(new_level),
             "isLevelUp": new_level > current_level,
+            "isHungry": False,
             "rewardCoin": reward_coin,
             "foodCount": new_food_count,
             "user1UID": user1,
@@ -149,9 +150,9 @@ def feed(req: https_fn.Request) -> https_fn.Response:
              return https_fn.Response("Damago not found", status=404)
         
         # --- [Live Activity Update] ---
-        # 밥 주기 성공 시 파트너(및 본인)에게 Live Activity 업데이트 전송
+        # 밥 주기 성공 시 파트너에게만 Live Activity 업데이트 전송 (본인은 로컬에서 직접 업데이트)
         try:
-            users = [result.get("user1UID"), result.get("user2UID")]
+            partner_uid = result.get("user2UID") if uid == result.get("user1UID") else result.get("user1UID")
             now_str = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
             
             content_state = {
@@ -168,12 +169,11 @@ def feed(req: https_fn.Request) -> https_fn.Response:
                 "damagoName": result.get("damagoName")
             }
 
-            for target_uid in users:
-                if target_uid:
-                    update_live_activity_internal(target_uid, content_state, attributes)
+            if partner_uid:
+                update_live_activity_internal(partner_uid, content_state, attributes)
                     
         except Exception as la_error:
-            print(f"Failed to update Live Activity: {la_error}")
+            print(f"Failed to update Live Activity for partner: {la_error}")
 
         # --- [Cloud Task Scheduling] ---
         try:
