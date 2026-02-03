@@ -38,8 +38,8 @@ final class DamagoBackgroundColorPopupView: UIView {
     private let colorStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
-        stackView.spacing = .spacingS
-        stackView.distribution = .equalSpacing
+        stackView.spacing = .spacingXL
+        stackView.distribution = .fill
         stackView.alignment = .center
         stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
@@ -109,7 +109,8 @@ final class DamagoBackgroundColorPopupView: UIView {
         buttonStackView.addArrangedSubview(cancelButton)
         buttonStackView.addArrangedSubview(confirmButton)
 
-        DamagoBackgroundColorOption.allCases.forEach { option in
+        let selectableOptions: [DamagoBackgroundColorOption] = [.black, .white]
+        selectableOptions.forEach { option in
             let optionView = ColorOptionView(option: option)
             optionView.button.addTarget(self, action: #selector(colorButtonTapped(_:)), for: .touchUpInside)
             optionViews.append(optionView)
@@ -128,8 +129,8 @@ final class DamagoBackgroundColorPopupView: UIView {
             titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -.spacingM),
 
             colorStackView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: .spacingM),
-            colorStackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: .spacingL),
-            colorStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -.spacingL),
+            colorStackView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            colorStackView.widthAnchor.constraint(lessThanOrEqualToConstant: 172),
 
             buttonStackView.topAnchor.constraint(equalTo: colorStackView.bottomAnchor, constant: .spacingL),
             buttonStackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: .spacingM),
