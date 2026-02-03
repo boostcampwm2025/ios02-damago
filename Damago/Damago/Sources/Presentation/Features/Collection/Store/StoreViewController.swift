@@ -124,7 +124,7 @@ final class StoreViewController: UIViewController {
             }
             
             self.mainView.machineImageView.isHidden = false
-            self.mainView.drawButton.isEnabled = true
+            self.mainView.drawButton.isEnabled = self.viewModel.state.isDrawButtonEnabled
             self.mainView.exitButton.isHidden = false
         }
         
