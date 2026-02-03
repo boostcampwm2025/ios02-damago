@@ -40,6 +40,7 @@ final class LiveActivityManager {
         globalStore.globalState
             .compactMap { [weak self] state in self?.toDamagoStatus(from: state) }
             .removeDuplicates()
+            .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
             .sink { [weak self] status in
                 self?.updateActivity(with: status)
             }
