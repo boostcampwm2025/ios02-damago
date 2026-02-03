@@ -12,6 +12,7 @@ import UIKit
 final class TextInputState {
     var maxLength: Int?
     var observer: NSObjectProtocol?
+    var textObservation: NSKeyValueObservation?
     var counterLabel: UILabel?
     var counterContainer: UIView?
 }
@@ -60,6 +61,11 @@ protocol TextInputLengthLimiting: AnyObject {
     func updateCounterLabel(current: Int, max: Int)
 }
 
+// programmatic 텍스트 변경 감지
+protocol TextInputTextObserving: AnyObject {
+    func observeTextChanges(_ handler: @escaping () -> Void)
+}
+
 extension TextInputPublishing {
     var textPublisher: AnyPublisher<String, Never> {
         NotificationCenter.default.publisher(
@@ -86,7 +92,7 @@ extension TextInputPublishing {
     }
 }
 
-extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting & TextInputStateStoring {
+extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting & TextInputStateStoring & TextInputTextObserving {
     // 입력 최대 길이. `nil`이면 제한 없음
     var maxLength: Int? {
         get {
@@ -108,6 +114,12 @@ extension TextInputPublishing where Self: NSObject & TextInputLengthLimiting & T
     // 변경 알림은 1회만 등록
     private func registerMaxLengthObserverIfNeeded() {
         guard maxLengthObserverToken == nil else { return }
+        if textInputState.textObservation == nil {
+            observeTextChanges { [weak self] in
+                self?.enforceMaxLengthIfNeeded()
+                self?.updateCounterLabelIfNeeded()
+            }
+        }
         let token = NotificationCenter.default.addObserver(
             forName: Self.textDidChangeNotificationName,
             object: self,
@@ -215,6 +227,14 @@ extension UITextField: TextInputPublishing, TextInputLengthLimiting, TextInputSt
     }
 }
 
+extension UITextField: TextInputTextObserving {
+    func observeTextChanges(_ handler: @escaping () -> Void) {
+        textInputState.textObservation = observe(\.text, options: [.new]) { _, _ in
+            handler()
+        }
+    }
+}
+
 extension UITextView: TextInputPublishing, TextInputLengthLimiting, TextInputStateStoring {
     var textInputState: TextInputState {
         TextInputStateStore.state(for: self)
@@ -261,5 +281,13 @@ extension UITextView: TextInputPublishing, TextInputLengthLimiting, TextInputSta
         label.translatesAutoresizingMaskIntoConstraints = false
         textInputState.counterLabel = label
         return label
+    }
+}
+
+extension UITextView: TextInputTextObserving {
+    func observeTextChanges(_ handler: @escaping () -> Void) {
+        textInputState.textObservation = observe(\.text, options: [.new]) { _, _ in
+            handler()
+        }
     }
 }
