@@ -18,7 +18,7 @@ final class CollectionViewController: UIViewController {
 
     private var cancellables = Set<AnyCancellable>()
     private var currentDamagoType: DamagoType?
-    private var ownedDamagoTypes: [DamagoType] = []
+    private var ownedDamagos: [DamagoType: Int] = [:]
 
     init(viewModel: CollectionViewModel) {
         self.viewModel = viewModel
@@ -90,11 +90,11 @@ final class CollectionViewController: UIViewController {
                 self?.mainView.collectionView.reloadData()
             }
             .store(in: &cancellables)
-        
+
         output
-            .map(\.ownedDamagoTypes)
+            .map(\.ownedDamagos)
             .sink { [weak self] in
-                self?.ownedDamagoTypes = $0
+                self?.ownedDamagos = $0
                 self?.mainView.collectionView.reloadData()
             }
             .store(in: &cancellables)
@@ -174,12 +174,14 @@ extension CollectionViewController: UICollectionViewDataSource, UICollectionView
             return UICollectionViewCell()
         }
         let damagoType = viewModel.damagos[indexPath.item]
-        let isAvailable = ownedDamagoTypes.contains(damagoType)
+        let isAvailable = ownedDamagos.keys.contains(damagoType)
+        let isHighLevel = (ownedDamagos[damagoType] ?? 0) >= 30
         
         cell.configure(
             with: damagoType,
             isCurrentDamago: currentDamagoType == damagoType,
-            showTemplete: !isAvailable
+            showTemplete: !isAvailable,
+            isHighLevel: isHighLevel
         )
         return cell
     }

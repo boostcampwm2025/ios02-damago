@@ -19,8 +19,14 @@ final class PokePopupViewController: UIViewController {
     var onMessageSelected: ((String) -> Void)?
     var onCancel: (() -> Void)?
     
-    init(shortcutRepository: PokeShortcutRepositoryProtocol) {
-        self.viewModel = PokePopupViewModel(shortcutRepository: shortcutRepository)
+    init(
+        getPokeShortcutsUseCase: GetPokeShortcutsUseCase,
+        updatePokeShortcutUseCase: UpdatePokeShortcutUseCase
+    ) {
+        self.viewModel = PokePopupViewModel(
+            getPokeShortcutsUseCase: getPokeShortcutsUseCase,
+            updatePokeShortcutUseCase: updatePokeShortcutUseCase
+        )
         super.init(nibName: nil, bundle: nil)
     }
     

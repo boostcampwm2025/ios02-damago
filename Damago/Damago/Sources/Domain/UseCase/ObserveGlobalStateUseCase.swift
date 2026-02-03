@@ -96,6 +96,7 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
                     foodCount: coupleSnapshot?.foodCount,
                     anniversaryDate: coupleSnapshot?.anniversaryDate,
                     currentQuestionID: coupleSnapshot?.currentQuestionID,
+                    damagoID: userSnapshot.damagoID,
                     damagoName: damagoSnapshot?.damagoName,
                     damagoType: damagoSnapshot?.damagoType,
                     level: damagoSnapshot?.level,
@@ -106,7 +107,9 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
                     lastFedAt: damagoSnapshot?.lastFedAt,
                     totalPlayTime: damagoSnapshot?.totalPlayTime,
                     lastActiveAt: damagoSnapshot?.lastActiveAt,
-                    ownedDamagoTypes: ownedDamagos.compactMap { $0.damagoType }
+                    ownedDamagos: Dictionary(
+                        uniqueKeysWithValues: ownedDamagos.map { ($0.damagoType, $0.level) }
+                    )
                 )
             }
             .eraseToAnyPublisher()

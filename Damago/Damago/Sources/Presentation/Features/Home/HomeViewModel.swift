@@ -33,7 +33,7 @@ final class HomeViewModel: ViewModel {
         var totalCoin = 0
         var foodCount = 0
         var lastFedAt: Date?
-        var ownedDamagoTypes: [DamagoType] = []
+        var ownedDamagos: [DamagoType: Int] = [:]
 
         var isFeedButtonEnabled: Bool { foodCount > 0 && !isFeeding }
         var isPokeButtonEnabled: Bool { true }
@@ -50,22 +50,22 @@ final class HomeViewModel: ViewModel {
     private var damagoID: String?
 
     private let globalStore: GlobalStoreProtocol
-    private let userRepository: UserRepositoryProtocol
-    private let damagoRepository: DamagoRepositoryProtocol
-    private let pushRepository: PushRepositoryProtocol
+    private let fetchUserInfoUseCase: FetchUserInfoUseCase
+    private let feedDamagoUseCase: FeedDamagoUseCase
+    private let pokeDamagoUseCase: PokeDamagoUseCase
     private let updateUserUseCase: UpdateUserUseCase
     
     init(
         globalStore: GlobalStoreProtocol,
-        userRepository: UserRepositoryProtocol,
-        damagoRepository: DamagoRepositoryProtocol,
-        pushRepository: PushRepositoryProtocol,
+        fetchUserInfoUseCase: FetchUserInfoUseCase,
+        feedDamagoUseCase: FeedDamagoUseCase,
+        pokeDamagoUseCase: PokeDamagoUseCase,
         updateUserUseCase: UpdateUserUseCase
     ) {
         self.globalStore = globalStore
-        self.userRepository = userRepository
-        self.damagoRepository = damagoRepository
-        self.pushRepository = pushRepository
+        self.fetchUserInfoUseCase = fetchUserInfoUseCase
+        self.feedDamagoUseCase = feedDamagoUseCase
+        self.pokeDamagoUseCase = pokeDamagoUseCase
         self.updateUserUseCase = updateUserUseCase
     }
 
@@ -107,7 +107,7 @@ final class HomeViewModel: ViewModel {
                 state.isLoading = false
             }
             do {
-                let userInfo = try await userRepository.getUserInfo()
+                let userInfo = try await fetchUserInfoUseCase.execute()
 
                 self.damagoID = userInfo.damagoID
                 state.totalCoin = userInfo.totalCoin
@@ -133,7 +133,7 @@ final class HomeViewModel: ViewModel {
         Task {
             do {
                 state.isFeeding = true
-                let success = try await damagoRepository.feed(damagoID: damagoID)
+                let success = try await feedDamagoUseCase.execute(damagoID: damagoID)
                 if success {
                     state.lastFedAt = Date()
                     LiveActivityManager.shared.synchronizeActivity()
@@ -150,7 +150,7 @@ final class HomeViewModel: ViewModel {
     private func pokeDamago(with message: String) {
         Task {
             do {
-                _ = try await pushRepository.poke(message: message)
+                _ = try await pokeDamagoUseCase.execute(message: message)
                 print("Poke sent with message: \(message)")
             } catch {
                 print("Error poking damago: \(error)")
@@ -188,6 +188,11 @@ final class HomeViewModel: ViewModel {
 
     private func bindGlobalState() {
         globalStore.globalState
+            .compactMap { $0.damagoID }
+            .sink { [weak self] in self?.damagoID = $0 }
+            .store(in: &cancellables)
+
+        globalStore.globalState
             .compactMapForUI { $0 }
             .sink { [weak self] state in
                 guard let self, let damagoType = state.damagoType, let isHungry = state.isHungry else { return }
@@ -198,8 +203,8 @@ final class HomeViewModel: ViewModel {
             .store(in: &cancellables)
         
         globalStore.globalState
-            .map { $0.ownedDamagoTypes ?? [] }
-            .assign(to: \.state.ownedDamagoTypes, on: self)
+            .map { $0.ownedDamagos ?? [:] }
+            .assign(to: \.state.ownedDamagos, on: self)
             .store(in: &cancellables)
 
         globalStore.globalState

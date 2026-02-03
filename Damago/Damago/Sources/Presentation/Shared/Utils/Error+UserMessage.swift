@@ -32,7 +32,15 @@ extension Error {
                 return "서버 응답을 처리할 수 없습니다.\n다시 시도해주세요."
             case .invalidURL:
                 return "잘못된 요청입니다.\n앱을 다시 시작해주세요."
+            case .connectionError(let error):
+                return error.userFriendlyMessage
             }
+        }
+        
+        // POSIX 에러 처리
+        let nsError = self as NSError
+        if nsError.domain == NSPOSIXErrorDomain && nsError.code == 53 {
+            return "로컬 네트워크 권한이 필요합니다.\n설정에서 '로컬 네트워크' 권한을 허용해주세요."
         }
         
         // URLError 처리

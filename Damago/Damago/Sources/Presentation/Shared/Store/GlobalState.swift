@@ -22,6 +22,7 @@ struct GlobalState: Equatable {
     let currentQuestionID: String?
 
     // MARK: - Damago Content
+    let damagoID: String?
     let damagoName: String?
     let damagoType: DamagoType?
     let level: Int?
@@ -32,7 +33,7 @@ struct GlobalState: Equatable {
     let lastFedAt: Date?
     let totalPlayTime: Int?
     let lastActiveAt: Date?
-    let ownedDamagoTypes: [DamagoType]?
+    let ownedDamagos: [DamagoType: Int]?
     
     static let empty = GlobalState(
         nickname: nil,
@@ -44,6 +45,7 @@ struct GlobalState: Equatable {
         foodCount: nil,
         anniversaryDate: nil,
         currentQuestionID: nil,
+        damagoID: nil,
         damagoName: nil,
         damagoType: nil,
         level: nil,
@@ -54,6 +56,6 @@ struct GlobalState: Equatable {
         lastFedAt: nil,
         totalPlayTime: nil,
         lastActiveAt: nil,
-        ownedDamagoTypes: nil
+        ownedDamagos: nil
     )
 }

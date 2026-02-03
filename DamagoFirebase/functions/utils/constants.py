@@ -10,6 +10,7 @@ PROJECT_ID = os.environ.get("GCLOUD_PROJECT", "damago-dev")
 # Cloud Tasks 설정
 LOCATION = "asia-northeast3"
 QUEUE_NAME = "make-hungry-queue"
+PUSH_RETRY_QUEUE_NAME = "push-retry-queue"
 HUNGER_DELAY_SECONDS = 4 * 60 * 60 # 4시간
 
 # --- Game Balance Constants ---
