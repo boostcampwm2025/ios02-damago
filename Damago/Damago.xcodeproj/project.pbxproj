@@ -28,6 +28,13 @@
 			remoteGlobalIDString = 4B1E30292EF16EDC00EB96A1;
 			remoteInfo = DamagoWidgetExtension;
 		};
+		4B46407A2F308262005E4F34 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4B5FE2CC2EF130B6005E31DA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4B5FE2D32EF130B6005E31DA;
+			remoteInfo = Damago;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -49,6 +56,7 @@
 		4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DamagoWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B1E302C2EF16EDC00EB96A1 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		4B1E302E2EF16EDC00EB96A1 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		4B4640762F308262005E4F34 /* DamagoViewModelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DamagoViewModelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B5FE2D42EF130B6005E31DA /* Damago.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Damago.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -125,6 +133,11 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		4B4640772F308262005E4F34 /* DamagoViewModelTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = DamagoViewModelTests;
+			sourceTree = "<group>";
+		};
 		4B5FE2D62EF130B6005E31DA /* Damago */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -146,6 +159,13 @@
 				4B0AF1002F1518C000ED58FA /* DamagoNetwork in Frameworks */,
 				4B1E302D2EF16EDC00EB96A1 /* WidgetKit.framework in Frameworks */,
 				DFE8A4F32F17D3AF0008E70B /* FirebaseAuth in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4B4640732F308262005E4F34 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -180,6 +200,7 @@
 				4B1E304A2EF1700900EB96A1 /* Shared */,
 				4B5FE2D62EF130B6005E31DA /* Damago */,
 				4B1E30302EF16EDC00EB96A1 /* DamagoWidget */,
+				4B4640772F308262005E4F34 /* DamagoViewModelTests */,
 				4B1E302B2EF16EDC00EB96A1 /* Frameworks */,
 				4B5FE2D52EF130B6005E31DA /* Products */,
 			);
@@ -190,6 +211,7 @@
 			children = (
 				4B5FE2D42EF130B6005E31DA /* Damago.app */,
 				4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */,
+				4B4640762F308262005E4F34 /* DamagoViewModelTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -223,6 +245,29 @@
 			productName = DamagoWidgetExtension;
 			productReference = 4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
+		};
+		4B4640752F308262005E4F34 /* DamagoViewModelTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4B46407C2F308262005E4F34 /* Build configuration list for PBXNativeTarget "DamagoViewModelTests" */;
+			buildPhases = (
+				4B4640722F308262005E4F34 /* Sources */,
+				4B4640732F308262005E4F34 /* Frameworks */,
+				4B4640742F308262005E4F34 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4B46407B2F308262005E4F34 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4B4640772F308262005E4F34 /* DamagoViewModelTests */,
+			);
+			name = DamagoViewModelTests;
+			packageProductDependencies = (
+			);
+			productName = DamagoViewModelTests;
+			productReference = 4B4640762F308262005E4F34 /* DamagoViewModelTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		4B5FE2D32EF130B6005E31DA /* Damago */ = {
 			isa = PBXNativeTarget;
@@ -269,6 +314,10 @@
 					4B1E30292EF16EDC00EB96A1 = {
 						CreatedOnToolsVersion = 26.1.1;
 					};
+					4B4640752F308262005E4F34 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = 4B5FE2D32EF130B6005E31DA;
+					};
 					4B5FE2D32EF130B6005E31DA = {
 						CreatedOnToolsVersion = 26.1.1;
 					};
@@ -294,12 +343,20 @@
 			targets = (
 				4B5FE2D32EF130B6005E31DA /* Damago */,
 				4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */,
+				4B4640752F308262005E4F34 /* DamagoViewModelTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		4B1E30282EF16EDC00EB96A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4B4640742F308262005E4F34 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -364,6 +421,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4B4640722F308262005E4F34 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4B5FE2D02EF130B6005E31DA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -382,6 +446,11 @@
 			isa = PBXTargetDependency;
 			target = 4B1E30292EF16EDC00EB96A1 /* DamagoWidgetExtension */;
 			targetProxy = 4B1E303C2EF16EDD00EB96A1 /* PBXContainerItemProxy */;
+		};
+		4B46407B2F308262005E4F34 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4B5FE2D32EF130B6005E31DA /* Damago */;
+			targetProxy = 4B46407A2F308262005E4F34 /* PBXContainerItemProxy */;
 		};
 		4B5FE4172EF139F6005E31DA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -461,6 +530,50 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		4B46407D2F308262005E4F34 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B3PWYBKFUK;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = JY.DamagoViewModelTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Damago.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Damago";
+			};
+			name = Debug;
+		};
+		4B46407E2F308262005E4F34 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B3PWYBKFUK;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = JY.DamagoViewModelTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Damago.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Damago";
 			};
 			name = Release;
 		};
@@ -675,6 +788,15 @@
 			buildConfigurations = (
 				4B1E30402EF16EDD00EB96A1 /* Debug */,
 				4B1E30412EF16EDD00EB96A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4B46407C2F308262005E4F34 /* Build configuration list for PBXNativeTarget "DamagoViewModelTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4B46407D2F308262005E4F34 /* Debug */,
+				4B46407E2F308262005E4F34 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
