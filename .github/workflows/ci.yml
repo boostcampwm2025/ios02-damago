@@ -39,6 +39,11 @@ jobs:
           echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_PROD_BASE64 }}" | base64 --decode > ./Damago/Damago/Resources/GoogleService-Info-Prod.plist
         fi
 
+    - name: Reset Simulators
+      run: |
+        xcrun simctl shutdown all
+        xcrun simctl erase all
+
     - name: Run Fastlane Tests
       # CI 환경에서도 Xcode 설정을 읽어오는 시간을 충분히 확보
       env:
