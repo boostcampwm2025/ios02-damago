@@ -180,8 +180,7 @@ final class DamagoNamingPopupView: UIView {
             }
             .store(in: &cancellables)
             
-        nameTextField.textPublisher
-            .map { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        nameTextField.nonEmptyTextPublisher
             .sink { [weak self] isEnabled in
                 self?.confirmButton.isEnabled = isEnabled
             }

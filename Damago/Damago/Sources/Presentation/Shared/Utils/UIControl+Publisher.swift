@@ -22,6 +22,10 @@ extension UIControl {
         }
     }
 
+    func publisher(for event: UIControl.Event) -> AnyPublisher<UIControl, Never> {
+        EventPublisher(control: self, event: event).eraseToAnyPublisher()
+    }
+
     private final class EventSubscription<S: Subscriber>: Subscription where S.Input == UIControl {
         private var subscriber: S?
         private weak var control: UIControl?
