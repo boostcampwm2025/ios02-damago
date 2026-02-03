@@ -188,6 +188,11 @@ final class HomeViewModel: ViewModel {
 
     private func bindGlobalState() {
         globalStore.globalState
+            .compactMap { $0.damagoID }
+            .sink { [weak self] in self?.damagoID = $0 }
+            .store(in: &cancellables)
+
+        globalStore.globalState
             .compactMapForUI { $0 }
             .sink { [weak self] state in
                 guard let self, let damagoType = state.damagoType, let isHungry = state.isHungry else { return }
