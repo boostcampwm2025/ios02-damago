@@ -90,16 +90,6 @@ final class DailyQuestionInputView: UIView {
         return label
     }()
     
-    let textLimitLabel: UILabel = {
-        let label = UILabel()
-        label.text = "0 / 200"
-        label.font = .caption
-        label.textColor = .textTertiary
-        label.textAlignment = .right
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
     let submitButton: CTAButton = {
         let button = CTAButton()
         let config = CTAButton.Configuration(
@@ -207,7 +197,7 @@ final class DailyQuestionInputView: UIView {
             questionCardView.addSubview($0)
         }
         
-        [textView, placeholderLabel, textLimitLabel].forEach {
+        [textView, placeholderLabel].forEach {
             inputCardView.addSubview($0)
         }
         
@@ -254,9 +244,7 @@ final class DailyQuestionInputView: UIView {
             placeholderLabel.topAnchor.constraint(equalTo: textView.topAnchor, constant: .spacingS),
             placeholderLabel.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: 5),
             
-            textLimitLabel.topAnchor.constraint(equalTo: textView.bottomAnchor, constant: .spacingS),
-            textLimitLabel.trailingAnchor.constraint(equalTo: inputCardView.trailingAnchor, constant: -.spacingL),
-            textLimitLabel.bottomAnchor.constraint(equalTo: inputCardView.bottomAnchor, constant: -.spacingL)
+            inputCardView.bottomAnchor.constraint(greaterThanOrEqualTo: textView.bottomAnchor, constant: .spacingL)
         ])
     }
 }

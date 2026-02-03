@@ -92,8 +92,6 @@ final class DailyQuestionInputViewController: UIViewController {
                 mainView.textView.text = state.currentText
             }
             mainView.placeholderLabel.isHidden = !state.currentText.isEmpty
-            mainView.textLimitLabel.text = state.textCount
-            
             mainView.updateSubmitButton(state: .init(
                 isEnabled: state.isSubmitButtonEnabled,
                 isLoading: state.isLoading
