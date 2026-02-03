@@ -13,8 +13,8 @@ import OSLog
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
     
-    private var userRepository: UserRepositoryProtocol?
-    private var pushRepository: PushRepositoryProtocol?
+    private var fetchUserInfoUseCase: FetchUserInfoUseCase?
+    private var saveLiveActivityTokenUseCase: SaveLiveActivityTokenUseCase?
     private var cancellables = Set<AnyCancellable>()
     
     private var isLiveActivityEnabled: Bool = true
@@ -22,12 +22,12 @@ final class LiveActivityManager {
     private init() {}
     
     func configure(
-        userRepository: UserRepositoryProtocol,
-        pushRepository: PushRepositoryProtocol,
+        fetchUserInfoUseCase: FetchUserInfoUseCase,
+        saveLiveActivityTokenUseCase: SaveLiveActivityTokenUseCase,
         globalStore: GlobalStoreProtocol
     ) {
-        self.userRepository = userRepository
-        self.pushRepository = pushRepository
+        self.fetchUserInfoUseCase = fetchUserInfoUseCase
+        self.saveLiveActivityTokenUseCase = saveLiveActivityTokenUseCase
         
         globalStore.globalState
             .map { $0.useLiveActivity }
@@ -90,14 +90,14 @@ final class LiveActivityManager {
     }
 
     private func fetchActivityData(completion: @escaping (DamagoStatus?) -> Void) {
-        guard let repository = userRepository else {
+        guard let useCase = fetchUserInfoUseCase else {
             completion(nil)
             return
         }
         
         Task {
             do {
-                let userInfo = try await repository.getUserInfo()
+                let userInfo = try await useCase.execute()
                 completion(userInfo.damagoStatus)
             } catch {
                 SharedLogger.liveActivityManger.error("네트워크 에러: \(error)")
@@ -169,14 +169,14 @@ final class LiveActivityManager {
     }
 
     private func requestSaveToken(token: String, key: String) {
-        guard let repository = pushRepository else { return }
+        guard let useCase = saveLiveActivityTokenUseCase else { return }
         
         Task {
             do {
                 let laStartToken = (key == "laStartToken") ? token : nil
                 let laUpdateToken = (key == "laUpdateToken") ? token : nil
                 
-                _ = try await repository.saveLiveActivityToken(
+                _ = try await useCase.execute(
                     startToken: laStartToken,
                     updateToken: laUpdateToken
                 )

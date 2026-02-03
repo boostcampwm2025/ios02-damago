@@ -116,12 +116,12 @@ final class ProfileSettingViewController: UIViewController {
     private func navigateToDamagoSetup() {
         let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
         let fetchUserInfoUseCase = AppDIContainer.shared.resolve(FetchUserInfoUseCase.self)
-        let damagoRepository = AppDIContainer.shared.resolve(DamagoRepositoryProtocol.self)
+        let observeDamagoSnapshotUseCase = AppDIContainer.shared.resolve(ObserveDamagoSnapshotUseCase.self)
         let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
         let vm = DamagoSetupViewModel(
             updateUserUseCase: updateUserUseCase,
             fetchUserInfoUseCase: fetchUserInfoUseCase,
-            damagoRepository: damagoRepository,
+            observeDamagoSnapshotUseCase: observeDamagoSnapshotUseCase,
             globalStore: globalStore
         )
         let vc = DamagoSetupViewController(viewModel: vm)

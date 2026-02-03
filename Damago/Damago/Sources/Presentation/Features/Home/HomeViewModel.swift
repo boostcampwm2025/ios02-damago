@@ -50,22 +50,22 @@ final class HomeViewModel: ViewModel {
     private var damagoID: String?
 
     private let globalStore: GlobalStoreProtocol
-    private let userRepository: UserRepositoryProtocol
-    private let damagoRepository: DamagoRepositoryProtocol
-    private let pushRepository: PushRepositoryProtocol
+    private let fetchUserInfoUseCase: FetchUserInfoUseCase
+    private let feedDamagoUseCase: FeedDamagoUseCase
+    private let pokeDamagoUseCase: PokeDamagoUseCase
     private let updateUserUseCase: UpdateUserUseCase
     
     init(
         globalStore: GlobalStoreProtocol,
-        userRepository: UserRepositoryProtocol,
-        damagoRepository: DamagoRepositoryProtocol,
-        pushRepository: PushRepositoryProtocol,
+        fetchUserInfoUseCase: FetchUserInfoUseCase,
+        feedDamagoUseCase: FeedDamagoUseCase,
+        pokeDamagoUseCase: PokeDamagoUseCase,
         updateUserUseCase: UpdateUserUseCase
     ) {
         self.globalStore = globalStore
-        self.userRepository = userRepository
-        self.damagoRepository = damagoRepository
-        self.pushRepository = pushRepository
+        self.fetchUserInfoUseCase = fetchUserInfoUseCase
+        self.feedDamagoUseCase = feedDamagoUseCase
+        self.pokeDamagoUseCase = pokeDamagoUseCase
         self.updateUserUseCase = updateUserUseCase
     }
 
@@ -107,7 +107,7 @@ final class HomeViewModel: ViewModel {
                 state.isLoading = false
             }
             do {
-                let userInfo = try await userRepository.getUserInfo()
+                let userInfo = try await fetchUserInfoUseCase.execute()
 
                 self.damagoID = userInfo.damagoID
                 state.totalCoin = userInfo.totalCoin
@@ -133,7 +133,7 @@ final class HomeViewModel: ViewModel {
         Task {
             do {
                 state.isFeeding = true
-                let success = try await damagoRepository.feed(damagoID: damagoID)
+                let success = try await feedDamagoUseCase.execute(damagoID: damagoID)
                 if success {
                     state.lastFedAt = Date()
                     LiveActivityManager.shared.synchronizeActivity()
@@ -150,7 +150,7 @@ final class HomeViewModel: ViewModel {
     private func pokeDamago(with message: String) {
         Task {
             do {
-                _ = try await pushRepository.poke(message: message)
+                _ = try await pokeDamagoUseCase.execute(message: message)
                 print("Poke sent with message: \(message)")
             } catch {
                 print("Error poking damago: \(error)")
