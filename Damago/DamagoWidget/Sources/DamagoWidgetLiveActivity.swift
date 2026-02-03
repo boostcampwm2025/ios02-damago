@@ -21,6 +21,7 @@ struct DamagoWidgetLiveActivity: Widget {
         green: 208.0 / 255.0,
         blue: 73.0 / 255.0
     )        // #EAD049
+    private let characterBackgroundColor: Color = .white
     private let pokeButtonBackgroundColor = Color(
         red: 242.0 / 255.0,
         green: 113.0 / 255.0,
@@ -79,7 +80,8 @@ struct DamagoWidgetLiveActivity: Widget {
                 for: context.state.imageName,
                 size: charactrerSize
             )
-            .clipShape(Rectangle())
+            .background(characterBackgroundColor)
+            .clipShape(Circle())
             actionButtonsView(
                 activityID: context
                     .activityID
@@ -115,7 +117,9 @@ struct DamagoWidgetLiveActivity: Widget {
                 for: context.state.imageName,
                 size: smallIconSize
             )
-                .clipShape(Rectangle())
+            .padding(2)
+            .background(characterBackgroundColor)
+            .clipShape(Circle())
         }
     }
 
@@ -124,7 +128,7 @@ struct DamagoWidgetLiveActivity: Widget {
             for: context.state.statusImageName,
             size: largeIconSize
         )
-            .clipShape(Circle())
+        .clipShape(Circle())
     }
 
     private func minimalView(context: ActivityViewContext<DamagoAttributes>) -> some View {
@@ -138,7 +142,8 @@ struct DamagoWidgetLiveActivity: Widget {
                 for: context.state.imageName,
                 size: smallIconSize
             )
-                .clipShape(Rectangle())
+            .background(characterBackgroundColor)
+            .clipShape(Circle())
         }
     }
 
