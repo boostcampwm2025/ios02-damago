@@ -75,6 +75,7 @@ final class DailyQuestionInputView: UIView {
         textView.textColor = .textPrimary
         textView.isScrollEnabled = true
         textView.backgroundColor = .clear
+        textView.maxLength = 200
         textView.translatesAutoresizingMaskIntoConstraints = false
         return textView
     }()

@@ -48,6 +48,7 @@ final class DamagoNamingPopupView: UIView {
         textField.font = .body1
         textField.textColor = .textPrimary
         textField.backgroundColor = .background
+        textField.maxLength = 10
         textField.layer.cornerRadius = .mediumButton
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: .spacingM, height: 0))
         textField.leftViewMode = .always
