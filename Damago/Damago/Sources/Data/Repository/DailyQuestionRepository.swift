@@ -58,39 +58,42 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol, DataSyncSt
         let previousUser2Answer = previousEntity?.user2Answer
         let previousBothAnswered = previousEntity?.bothAnswered ?? false
         let previousLastAnsweredAt = previousEntity?.lastAnsweredAt
-        
-        // 로컬 업데이트 수행
-        try await localDataSource.updateAnswer(
-            questionID: questionID,
-            user1Answer: isUser1 ? answer : previousUser1Answer,
-            user2Answer: isUser1 ? previousUser2Answer : answer,
-            bothAnswered: previousBothAnswered,
-            lastAnsweredAt: Date()
-        )
-        
-        do {
-            let token = try await tokenProvider.idToken()
-            let success = try await networkProvider.requestSuccess(
-                DailyQuestionAPI.submit(
-                    accessToken: token,
+
+        return try await submitWithOptimisticUpdate(
+            backupState: previousEntity,
+            updateLocal: { [weak self] in
+                try await self?.localDataSource.updateAnswer(
                     questionID: questionID,
-                    answer: answer
+                    user1Answer: isUser1 ? answer : previousUser1Answer,
+                    user2Answer: isUser1 ? previousUser2Answer : answer,
+                    bothAnswered: previousBothAnswered,
+                    lastAnsweredAt: Date()
                 )
-            )
-            return success
-        } catch {
-            SharedLogger.interaction.error("API 제출 실패, 로컬 데이터 롤백: \(error.localizedDescription)")
-            
-            // 실패 시 롤백: 이전 상태로 복구
-            try await localDataSource.updateAnswer(
-                questionID: questionID,
-                user1Answer: previousUser1Answer,
-                user2Answer: previousUser2Answer,
-                bothAnswered: previousBothAnswered,
-                lastAnsweredAt: previousLastAnsweredAt
-            )
-            throw error
-        }
+            },
+            networkCall: { [weak self] in
+                guard let self else { return false }
+                let token = try await self.tokenProvider.idToken()
+                return try await self.networkProvider.requestSuccess(
+                    DailyQuestionAPI.submit(
+                        accessToken: token,
+                        questionID: questionID,
+                        answer: answer
+                    )
+                )
+            },
+            rollbackLocal: { [weak self] _ in
+                try await self?.localDataSource.updateAnswer(
+                    questionID: questionID,
+                    user1Answer: previousUser1Answer,
+                    user2Answer: previousUser2Answer,
+                    bothAnswered: previousBothAnswered,
+                    lastAnsweredAt: previousLastAnsweredAt
+                )
+            },
+            onFailure: { error in
+                SharedLogger.interaction.error("API 제출 실패, 로컬 데이터 롤백: \(error.localizedDescription)")
+            }
+        )
     }
 
     // swiftlint:disable trailing_closure

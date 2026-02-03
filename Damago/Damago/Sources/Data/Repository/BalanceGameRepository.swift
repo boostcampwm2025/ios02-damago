@@ -60,36 +60,39 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol, DataSyncStrate
         let previousUser2Choice = previousEntity?.user2Choice
         let previousLastAnsweredAt = previousEntity?.lastAnsweredAt
         
-        // 2. 로컬 업데이트 선반영 (Optimistic Update)
-        try await localDataSource.updateChoice(
-            gameID: gameID,
-            user1Choice: isUser1 ? choice : previousUser1Choice,
-            user2Choice: isUser1 ? previousUser2Choice : choice,
-            lastAnsweredAt: Date()
-        )
-        
-        do {
-            let token = try await tokenProvider.idToken()
-            let success = try await networkProvider.requestSuccess(
-                BalanceGameAPI.submit(
-                    accessToken: token,
+        return try await submitWithOptimisticUpdate(
+            backupState: previousEntity,
+            updateLocal: { [weak self] in
+                try await self?.localDataSource.updateChoice(
                     gameID: gameID,
-                    choice: choice
+                    user1Choice: isUser1 ? choice : previousUser1Choice,
+                    user2Choice: isUser1 ? previousUser2Choice : choice,
+                    lastAnsweredAt: Date()
                 )
-            )
-            return success
-        } catch {
-            SharedLogger.interaction.error("API 제출 실패, 로컬 데이터 롤백: \(error.localizedDescription)")
-            
-            // 3. 실패 시 롤백: 이전 상태로 복구
-            try await localDataSource.updateChoice(
-                gameID: gameID,
-                user1Choice: previousUser1Choice,
-                user2Choice: previousUser2Choice,
-                lastAnsweredAt: previousLastAnsweredAt
-            )
-            throw error
-        }
+            },
+            networkCall: { [weak self] in
+                guard let self else { return false }
+                let token = try await self.tokenProvider.idToken()
+                return try await self.networkProvider.requestSuccess(
+                    BalanceGameAPI.submit(
+                        accessToken: token,
+                        gameID: gameID,
+                        choice: choice
+                    )
+                )
+            },
+            rollbackLocal: { [weak self] _ in
+                try await self?.localDataSource.updateChoice(
+                    gameID: gameID,
+                    user1Choice: previousUser1Choice,
+                    user2Choice: previousUser2Choice,
+                    lastAnsweredAt: previousLastAnsweredAt
+                )
+            },
+            onFailure: { error in
+                SharedLogger.interaction.error("API 제출 실패, 로컬 데이터 롤백: \(error.localizedDescription)")
+            }
+        )
     }
     
     // swiftlint:disable trailing_closure
