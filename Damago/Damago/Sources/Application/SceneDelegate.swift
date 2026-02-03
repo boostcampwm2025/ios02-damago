@@ -25,11 +25,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         willConnectTo session: UISceneSession,
         options connectionOptions: UIScene.ConnectionOptions
     ) {
-        let fetchUserInfoUseCase = AppDIContainer.shared.resolve(FetchUserInfoUseCase.self)
         let saveLiveActivityTokenUseCase = AppDIContainer.shared.resolve(SaveLiveActivityTokenUseCase.self)
         let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
         LiveActivityManager.shared.configure(
-            fetchUserInfoUseCase: fetchUserInfoUseCase,
             saveLiveActivityTokenUseCase: saveLiveActivityTokenUseCase,
             globalStore: globalStore
         )

@@ -57,18 +57,6 @@ final class TabBarViewController: UITabBarController {
         super.viewDidLoad()
         setupViewControllers()
         setupTabBar()
-        setupForegroundNotification()
-    }
-
-    private func setupForegroundNotification() {
-        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
-            .sink { [weak self] _ in
-                guard let self else { return }
-                if self.view.window != nil {
-                    LiveActivityManager.shared.synchronizeActivity()
-                }
-            }
-            .store(in: &cancellables)
     }
 
     private func setupTabBar() {

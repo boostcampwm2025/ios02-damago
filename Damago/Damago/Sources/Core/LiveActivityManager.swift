@@ -13,7 +13,6 @@ import OSLog
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
     
-    private var fetchUserInfoUseCase: FetchUserInfoUseCase?
     private var saveLiveActivityTokenUseCase: SaveLiveActivityTokenUseCase?
     private var cancellables = Set<AnyCancellable>()
     
@@ -22,11 +21,9 @@ final class LiveActivityManager {
     private init() {}
     
     func configure(
-        fetchUserInfoUseCase: FetchUserInfoUseCase,
         saveLiveActivityTokenUseCase: SaveLiveActivityTokenUseCase,
         globalStore: GlobalStoreProtocol
     ) {
-        self.fetchUserInfoUseCase = fetchUserInfoUseCase
         self.saveLiveActivityTokenUseCase = saveLiveActivityTokenUseCase
         
         globalStore.globalState
@@ -36,35 +33,47 @@ final class LiveActivityManager {
                 self?.isLiveActivityEnabled = isEnabled
                 if !isEnabled {
                     self?.endAllActivities()
-                } else {
-                    self?.synchronizeActivity()
                 }
+            }
+            .store(in: &cancellables)
+
+        globalStore.globalState
+            .compactMap { [weak self] state in self?.toDamagoStatus(from: state) }
+            .removeDuplicates()
+            .sink { [weak self] status in
+                self?.updateActivity(with: status)
             }
             .store(in: &cancellables)
     }
 
     private var monitoredActivityIDs: Set<String> = []
-
-    func synchronizeActivity() {
-        SharedLogger.liveActivityManger.info("✅ LiveActivity 동기화 시작")
-        
-        guard isLiveActivityEnabled else {
-            SharedLogger.liveActivityManger.info("Live Activity가 비활성화되어 있어 동기화를 중단합니다.")
-            endAllActivities()
-            return
+    
+    private func toDamagoStatus(from state: GlobalState) -> DamagoStatus? {
+        guard let damagoType = state.damagoType,
+              let damagoName = state.damagoName,
+              let isHungry = state.isHungry,
+              let statusMessage = state.statusMessage,
+              let level = state.level,
+              let currentExp = state.currentExp,
+              let maxExp = state.maxExp else {
+            return nil
         }
         
-        fetchActivityData { [weak self] damagoStatus in
-            guard let damagoStatus else {
-                // 서버로 받은 데이터가 없으면 실행 중인 모든 Live Activity를 종료합니다.
-                self?.endAllActivities()
-                return
-            }
-            self?.updateActivity(with: damagoStatus)
-        }
+        return DamagoStatus(
+            damagoName: damagoName,
+            damagoType: damagoType,
+            level: level,
+            currentExp: currentExp,
+            maxExp: maxExp,
+            isHungry: isHungry,
+            statusMessage: statusMessage,
+            lastFedAt: state.lastFedAt,
+            totalPlayTime: state.totalPlayTime ?? 0,
+            lastActiveAt: state.lastActiveAt
+        )
     }
 
-    func updateActivity(with status: DamagoStatus) {
+    private func updateActivity(with status: DamagoStatus) {
         guard isLiveActivityEnabled else { return }
 
         let latestContentState = DamagoAttributes.ContentState(
@@ -93,23 +102,6 @@ final class LiveActivityManager {
     func startMonitoring() {
         startMonitoringPushToStartToken()
         monitoringLiveActivities()
-    }
-
-    private func fetchActivityData(completion: @escaping (DamagoStatus?) -> Void) {
-        guard let useCase = fetchUserInfoUseCase else {
-            completion(nil)
-            return
-        }
-        
-        Task {
-            do {
-                let userInfo = try await useCase.execute()
-                completion(userInfo.damagoStatus)
-            } catch {
-                SharedLogger.liveActivityManger.error("네트워크 에러: \(error)")
-                completion(nil)
-            }
-        }
     }
     
     private func startMonitoringPushToStartToken() {
