@@ -188,6 +188,19 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
             SharedLogger.interaction.error("Local update failed: \(error)")
         }
     }
+    
+    private func mapToDTO(entity: BalanceGameEntity) -> BalanceGameDTO {
+        BalanceGameDTO(
+            gameID: entity.gameID,
+            questionContent: entity.questionContent,
+            option1: entity.option1,
+            option2: entity.option2,
+            myChoice: entity.isUser1 ? entity.user1Choice : entity.user2Choice,
+            opponentChoice: entity.isUser1 ? entity.user2Choice : entity.user1Choice,
+            isUser1: entity.isUser1,
+            lastAnsweredAt: entity.lastAnsweredAt
+        )
+    }
 }
 
 private struct FirestoreBalanceGameAnswerDTO: Decodable {

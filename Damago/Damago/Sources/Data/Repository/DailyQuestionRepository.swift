@@ -181,6 +181,18 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
             SharedLogger.interaction.error("Local update failed: \(error)")
         }
     }
+
+    private func mapToDTO(entity: DailyQuestionEntity) -> DailyQuestionDTO {
+        DailyQuestionDTO(
+            questionID: entity.questionID,
+            questionContent: entity.questionContent,
+            user1Answer: entity.user1Answer,
+            user2Answer: entity.user2Answer,
+            bothAnswered: entity.bothAnswered,
+            lastAnsweredAt: entity.lastAnsweredAt,
+            isUser1: entity.isUser1
+        )
+    }
 }
 
 private struct FirestoreAnswerDTO: Decodable {
