@@ -4,6 +4,7 @@ from google.cloud import tasks_v2
 from google.protobuf import timestamp_pb2
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
+import utils.errors as errors
 import time
 import json
 from datetime import datetime, timezone, timedelta
@@ -148,13 +149,13 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     my_user_doc = my_user_ref.get()
 
     if not my_user_doc.exists:
-        return https_fn.Response("User not found", status=404)
+        return errors.error_response(errors.USER_NOT_FOUND)
 
     my_user_data = my_user_doc.to_dict()
     partner_uid = my_user_data.get("partnerUID")  # partnerUID 사용
 
     if not partner_uid:
-        return https_fn.Response("User is not in a couple", status=400)
+        return errors.error_response(errors.USER_HAS_NO_COUPLE)
 
     # --- [Step 2] FCM 전송 ---
     nickname = my_user_data.get('nickname') or '상대방'
@@ -174,7 +175,7 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     if success:
         return https_fn.Response("Push notification sent successfully")
     else:
-        return https_fn.Response("Failed to send push notification", status=500)
+        return errors.error_response(errors.FAILED_TO_SEND_PUSH_NOTIFICATION)
 
 def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
     """
@@ -210,7 +211,7 @@ def update_live_activity(req: https_fn.Request) -> https_fn.Response:
     content_state = data.get("contentState")
 
     if not target_uid or not content_state:
-        return https_fn.Response("Missing targetUID or contentState", status=400)
+        return errors.error_response(errors.MISSING_TARGET_UID_OR_CONTENT_STATE)
 
     success = update_live_activity_internal(target_uid, content_state)
 
@@ -342,13 +343,13 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
     content_state = data.get("contentState")
 
     if not target_uid or not attributes or not content_state:
-        return https_fn.Response("Missing parameters", status=400)
+        return errors.error_response(errors.MISSING_PARAMETERS)
 
     db = get_db()
 
     user_doc = db.collection("users").document(target_uid).get()
     if not user_doc.exists:
-        return https_fn.Response("User not found", status=404)
+        return errors.error_response(errors.USER_NOT_FOUND)
 
     user_data = user_doc.to_dict()
     fcm_token = user_data.get("fcmToken")
@@ -356,7 +357,7 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
     use_live_activity = user_data.get("useLiveActivity", True)
 
     if not fcm_token or not la_start_token or not use_live_activity:
-        return https_fn.Response("Start Token not found or Live Activity disabled", status=400)
+        return errors.error_response(errors.START_TOKEN_NOT_FOUND_OR_DISABLED)
 
     try:
         aps = messaging.Aps(
