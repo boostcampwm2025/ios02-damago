@@ -4,7 +4,7 @@ from google.cloud.firestore import FieldFilter
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from services.push_service import send_push_notification
 
 def fetch_history(req: https_fn.Request) -> https_fn.Response:
@@ -96,7 +96,7 @@ def _fetch_daily_question_history(db, couple_ref, limit, uid):
             "questionContent": q_data.get("questionText", "삭제된 질문"),
             "user1Answer": ans_data.get("user1Answer"),
             "user2Answer": ans_data.get("user2Answer"),
-            "answeredAt": ans_data.get("user1AnsweredAt", datetime.now()).isoformat(),
+            "answeredAt": ans_data.get("user1AnsweredAt", datetime.now(timezone.utc)).isoformat(),
             "isUser1": is_user1
         })
         

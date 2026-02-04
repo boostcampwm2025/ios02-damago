@@ -1,6 +1,6 @@
 import os
 import json
-import datetime
+from datetime import datetime, timezone, timedelta
 import random
 from firebase_functions import https_fn
 from firebase_admin import firestore
@@ -153,7 +153,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
         # 밥 주기 성공 시 파트너에게만 Live Activity 업데이트 전송 (본인은 로컬에서 직접 업데이트)
         try:
             partner_uid = result.get("user2UID") if uid == result.get("user1UID") else result.get("user1UID")
-            now_str = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')
+            now_str = datetime.now(timezone.utc).isoformat(timespec='seconds')
             
             content_state = {
                 "damagoType": result.get("damagoType"),
@@ -189,7 +189,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
             is_test_mode = os.environ.get("IS_TEST_MODE", "false").lower() == "true"
             delay_seconds = 10 if is_test_mode else HUNGER_DELAY_SECONDS
             
-            d = datetime.datetime.utcnow() + datetime.timedelta(seconds=delay_seconds)
+            d = datetime.now(timezone.utc) + timedelta(seconds=delay_seconds)
             timestamp = timestamp_pb2.Timestamp()
             timestamp.FromDatetime(d)
 
@@ -266,7 +266,7 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
     if last_fed_at:
         # DB의 lastFedAt은 datetime 객체 (timezone 정보 포함 가능)
         # 비교를 위해 UTC 기준으로 통일
-        now = datetime.datetime.now(datetime.timezone.utc)
+        now = datetime.now(timezone.utc)
         
         # 환경 변수 체크 (테스트 모드일 땐 10초, 아니면 4시간)
         is_test_mode = os.environ.get("IS_TEST_MODE", "false").lower() == "true"
