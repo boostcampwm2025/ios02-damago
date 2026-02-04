@@ -49,7 +49,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
     damago_id = data.get("damagoID")
 
     if not damago_id:
-        return errors.error_response(errors.MISSING_DAMAGO_ID)
+        return errors.error_response(errors.BadRequest.MISSING_DAMAGO_ID)
 
     db = get_db()
     damago_ref = db.collection("damagos").document(damago_id)
@@ -148,7 +148,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
     try:
         result = run_feed_transaction(db.transaction(), damago_ref)
         if result is None:
-             return errors.error_response(errors.DAMAGO_NOT_FOUND)
+             return errors.error_response(errors.NotFound.DAMAGO)
         
         # --- [Live Activity Update] ---
         # 밥 주기 성공 시 파트너에게만 Live Activity 업데이트 전송 (본인은 로컬에서 직접 업데이트)
@@ -247,14 +247,14 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
     damago_id = data.get("damagoID")
 
     if not damago_id:
-        return errors.error_response(errors.MISSING_DAMAGO_ID)
+        return errors.error_response(errors.BadRequest.MISSING_DAMAGO_ID)
 
     db = get_db()
     damago_ref = db.collection("damagos").document(damago_id)
     
     doc = damago_ref.get()
     if not doc.exists:
-        return errors.error_response(errors.DAMAGO_NOT_FOUND)
+        return errors.error_response(errors.NotFound.DAMAGO)
         
     damago_data = doc.to_dict()
     
@@ -340,11 +340,11 @@ def create_damago(req: https_fn.Request) -> https_fn.Response:
     # 1. 유저 및 커플 ID 조회 (Transaction 밖에서 조회하여 쿼리 기반 마련)
     user_doc = db.collection("users").document(uid).get()
     if not user_doc.exists:
-        return errors.error_response(errors.USER_NOT_FOUND)
+        return errors.error_response(errors.NotFound.USER)
         
     couple_id = user_doc.to_dict().get("coupleID")
     if not couple_id:
-        return errors.error_response(errors.USER_HAS_NO_COUPLE)
+        return errors.error_response(errors.BadRequest.USER_HAS_NO_COUPLE)
         
     # 2. 랜덤 선택 (전체 목록에서 무작위 선택)
     target_type = pick_random_damago()

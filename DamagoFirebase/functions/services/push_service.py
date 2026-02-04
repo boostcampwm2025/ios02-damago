@@ -149,13 +149,13 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     my_user_doc = my_user_ref.get()
 
     if not my_user_doc.exists:
-        return errors.error_response(errors.USER_NOT_FOUND)
+        return errors.error_response(errors.NotFound.USER)
 
     my_user_data = my_user_doc.to_dict()
     partner_uid = my_user_data.get("partnerUID")  # partnerUID 사용
 
     if not partner_uid:
-        return errors.error_response(errors.USER_HAS_NO_COUPLE)
+        return errors.error_response(errors.BadRequest.USER_HAS_NO_COUPLE)
 
     # --- [Step 2] FCM 전송 ---
     nickname = my_user_data.get('nickname') or '상대방'
@@ -175,7 +175,7 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     if success:
         return https_fn.Response("Push notification sent successfully")
     else:
-        return errors.error_response(errors.FAILED_TO_SEND_PUSH_NOTIFICATION)
+        return errors.error_response(errors.Internal.FAILED_TO_SEND_PUSH_NOTIFICATION)
 
 def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
     """
@@ -211,7 +211,7 @@ def update_live_activity(req: https_fn.Request) -> https_fn.Response:
     content_state = data.get("contentState")
 
     if not target_uid or not content_state:
-        return errors.error_response(errors.MISSING_TARGET_UID_OR_CONTENT_STATE)
+        return errors.error_response(errors.BadRequest.MISSING_TARGET_UID_OR_CONTENT_STATE)
 
     success = update_live_activity_internal(target_uid, content_state)
 
@@ -343,13 +343,13 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
     content_state = data.get("contentState")
 
     if not target_uid or not attributes or not content_state:
-        return errors.error_response(errors.MISSING_PARAMETERS)
+        return errors.error_response(errors.BadRequest.MISSING_PARAMETERS)
 
     db = get_db()
 
     user_doc = db.collection("users").document(target_uid).get()
     if not user_doc.exists:
-        return errors.error_response(errors.USER_NOT_FOUND)
+        return errors.error_response(errors.NotFound.USER)
 
     user_data = user_doc.to_dict()
     fcm_token = user_data.get("fcmToken")
@@ -357,7 +357,7 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
     use_live_activity = user_data.get("useLiveActivity", True)
 
     if not fcm_token or not la_start_token or not use_live_activity:
-        return errors.error_response(errors.START_TOKEN_NOT_FOUND_OR_DISABLED)
+        return errors.error_response(errors.BadRequest.START_TOKEN_NOT_FOUND_OR_DISABLED)
 
     try:
         aps = messaging.Aps(

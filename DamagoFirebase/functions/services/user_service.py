@@ -26,12 +26,12 @@ def adjust_coin(req: https_fn.Request) -> https_fn.Response:
         amount = data.get("amount")
         
         if amount is None:
-             return errors.error_response(errors.MISSING_AMOUNT)
+             return errors.error_response(errors.BadRequest.MISSING_AMOUNT)
         
         try:
             amount = int(amount)
         except ValueError:
-            return errors.error_response(errors.AMOUNT_NOT_INTEGER)
+            return errors.error_response(errors.BadRequest.AMOUNT_NOT_INTEGER)
             
     except ValueError as e:
         return https_fn.Response(str(e), status=401)
@@ -44,11 +44,11 @@ def adjust_coin(req: https_fn.Request) -> https_fn.Response:
     user_ref = db.collection("users").document(uid)
     user_doc = user_ref.get()
     if not user_doc.exists:
-        return errors.error_response(errors.USER_NOT_FOUND)
+        return errors.error_response(errors.NotFound.USER)
         
     couple_id = user_doc.to_dict().get("coupleID")
     if not couple_id:
-        return errors.error_response(errors.COUPLE_NOT_FOUND)
+        return errors.error_response(errors.NotFound.COUPLE)
         
     couple_ref = db.collection("couples").document(couple_id)
 
@@ -56,13 +56,13 @@ def adjust_coin(req: https_fn.Request) -> https_fn.Response:
     def run_coin_transaction(transaction, doc_ref):
         snapshot = doc_ref.get(transaction=transaction)
         if not snapshot.exists:
-            raise ValueError(errors.COUPLE_DOCUMENT_NOT_FOUND.message)
+            raise ValueError(errors.NotFound.COUPLE_DOCUMENT.message)
             
         current_coin = snapshot.to_dict().get("totalCoin", 0)
         new_coin = current_coin + amount
         
         if new_coin < 0:
-            raise ValueError(errors.NOT_ENOUGH_COINS.message)
+            raise ValueError(errors.BadRequest.NOT_ENOUGH_COINS.message)
             
         transaction.update(doc_ref, {"totalCoin": new_coin})
         return new_coin
@@ -76,7 +76,7 @@ def adjust_coin(req: https_fn.Request) -> https_fn.Response:
     except ValueError as ve:
          return https_fn.Response(str(ve), status=400)
     except Exception as e:
-        return https_fn.Response(f"Transaction failed: {str(e)}", status=500)
+        return errors.error_response_with_detail(errors.Internal.TRANSACTION_FAILED, str(e))
 
 def update_user_info(req: https_fn.Request) -> https_fn.Response:
     """
@@ -104,7 +104,7 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
     try:
         body = req.get_json()
     except Exception:
-        return errors.error_response(errors.INVALID_JSON_BODY)
+        return errors.error_response(errors.BadRequest.INVALID_JSON_BODY)
         
     nickname = body.get("nickname")
     anniversary_date_str = body.get("anniversaryDate")
@@ -115,7 +115,7 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
     
     # 파라미터가 모두 없으면 400 Bad Request 리턴
     if all(param is None for param in [nickname, anniversary_date_str, use_fcm, use_live_activity, damago_name, damago_type]):
-        return errors.error_response(errors.AT_LEAST_ONE_PARAM_REQUIRED)
+        return errors.error_response(errors.BadRequest.AT_LEAST_ONE_PARAM_REQUIRED)
         
     db = get_db()
     user_ref = db.collection("users").document(uid)
@@ -140,7 +140,7 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
     if any(param is not None for param in [anniversary_date_str, damago_name, damago_type]):
         user_snap = user_ref.get()
         if not user_snap.exists:
-             return errors.error_response(errors.USER_NOT_FOUND)
+             return errors.error_response(errors.NotFound.USER)
         user_data = user_snap.to_dict()
 
         # 3. 기념일 업데이트 (커플인 경우에만)
@@ -152,7 +152,7 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
                      anniversary_date_str = anniversary_date_str.replace('Z', '+00:00')
                 anniversary_date = datetime.fromisoformat(anniversary_date_str)
             except ValueError:
-                 return errors.error_response(errors.INVALID_DATE_FORMAT)
+                 return errors.error_response(errors.BadRequest.INVALID_DATE_FORMAT)
 
             couple_id = user_data.get("coupleID")
             if couple_id:
@@ -163,7 +163,7 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
         if damago_name is not None or damago_type is not None:
             couple_id = user_data.get("coupleID")
             if not couple_id:
-                 return errors.error_response(errors.COUPLE_NOT_FOUND)
+                 return errors.error_response(errors.NotFound.COUPLE)
 
             # damago_type에 따라 고유한 damagoID 생성 (예: coupleID_Bunny)
             current_damago_id = user_data.get("damagoID")
@@ -235,7 +235,7 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
     user_doc = db.collection("users").document(uid).get()
 
     if not user_doc.exists:
-        return errors.error_response(errors.USER_NOT_FOUND)
+        return errors.error_response(errors.NotFound.USER)
 
     user_data = user_doc.to_dict()
     damago_id = user_data.get("damagoID")
@@ -310,7 +310,7 @@ def update_fcm_token(req: https_fn.Request) -> https_fn.Response:
         fcm_token = data.get("fcmToken")
         
         if not fcm_token:
-            return errors.error_response(errors.MISSING_FCM_TOKEN)
+            return errors.error_response(errors.BadRequest.MISSING_FCM_TOKEN)
             
     except ValueError as e:
         return https_fn.Response(str(e), status=401)
@@ -323,7 +323,7 @@ def update_fcm_token(req: https_fn.Request) -> https_fn.Response:
     # 해당 사용자가 존재하는지 확인
     doc = user_ref.get()
     if not doc.exists:
-        return errors.error_response(errors.USER_NOT_FOUND)
+        return errors.error_response(errors.NotFound.USER)
         
     user_ref.update({"fcmToken": fcm_token})
     

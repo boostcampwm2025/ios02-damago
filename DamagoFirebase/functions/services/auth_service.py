@@ -62,7 +62,7 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
             break
 
     if unique_code is None:
-        return errors.error_response(errors.UNABLE_TO_GENERATE_NEW_CODE)
+        return errors.error_response(errors.Internal.UNABLE_TO_GENERATE_NEW_CODE)
 
     # --- [Step 3] 유저 생성 ---
     doc_ref.set({
@@ -107,7 +107,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     target_code = data.get("targetCode")
 
     if not target_code:
-        return errors.error_response(errors.MISSING_TARGET_CODE)
+        return errors.error_response(errors.BadRequest.MISSING_TARGET_CODE)
 
     db = get_db()
     users_ref = db.collection("users")
@@ -118,7 +118,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     my_doc = my_doc_ref.get()
 
     if not my_doc.exists:
-        return errors.error_response(errors.USER_NOT_FOUND_TOKEN_INVALID)
+        return errors.error_response(errors.NotFound.USER_TOKEN_INVALID)
     
     my_code = my_doc.to_dict().get("code")
 
@@ -129,7 +129,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     target_snapshot = users_ref.where("code", "==", target_code).limit(1).get()
 
     if not target_snapshot:
-        return errors.error_response(errors.TARGET_USER_NOT_FOUND_INVALID_CODE)
+        return errors.error_response(errors.NotFound.TARGET_USER_INVALID_CODE)
 
     target_doc = target_snapshot[0]
 
@@ -242,7 +242,7 @@ def withdraw_user(req: https_fn.Request) -> https_fn.Response:
     # 유저 정보 조회
     user_doc = user_ref.get()
     if not user_doc.exists:
-        return errors.error_response(errors.USER_NOT_FOUND)
+        return errors.error_response(errors.NotFound.USER)
 
     user_data = user_doc.to_dict()
     couple_id = user_data.get("coupleID")

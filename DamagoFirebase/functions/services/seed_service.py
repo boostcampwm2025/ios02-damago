@@ -100,7 +100,7 @@ def seed_daily_questions(req: https_fn.Request) -> https_fn.Response:
     
     # 관리자 권한 확인 (에뮬레이터에서는 자동 통과)
     if not is_admin(req):
-        return errors.error_response(errors.UNAUTHORIZED_ADMIN_REQUIRED)
+        return errors.error_response(errors.Forbidden.ADMIN_REQUIRED)
     
     try:
         import time
@@ -200,7 +200,7 @@ def seed_balance_games(req: https_fn.Request) -> https_fn.Response:
     
     # 관리자 권한 확인 (에뮬레이터에서는 자동 통과)
     if not is_admin(req):
-        return errors.error_response(errors.UNAUTHORIZED_ADMIN_REQUIRED)
+        return errors.error_response(errors.Forbidden.ADMIN_REQUIRED)
     
     try:
         import time
@@ -301,7 +301,7 @@ def clear_seed_data(req: https_fn.Request) -> https_fn.Response:
     
     # 관리자 권한 확인 (에뮬레이터에서는 자동 통과)
     if not is_admin(req):
-        return errors.error_response(errors.UNAUTHORIZED_ADMIN_REQUIRED)
+        return errors.error_response(errors.Forbidden.ADMIN_REQUIRED)
     
     try:
         # Firestore 클라이언트 초기화

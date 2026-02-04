@@ -25,11 +25,11 @@ def fetch_history(req: https_fn.Request) -> https_fn.Response:
     # 1. 사용자 -> 커플 ID 조회
     user_doc = db.collection("users").document(uid).get()
     if not user_doc.exists:
-        return errors.error_response(errors.USER_NOT_FOUND)
+        return errors.error_response(errors.NotFound.USER)
     
     couple_id = user_doc.get("coupleID")
     if not couple_id:
-        return errors.error_response(errors.COUPLE_NOT_FOUND)
+        return errors.error_response(errors.NotFound.COUPLE)
         
     # 2. 파라미터 파싱
     history_type = req.args.get("type", "daily_question")
@@ -45,7 +45,7 @@ def fetch_history(req: https_fn.Request) -> https_fn.Response:
     elif history_type == "balance_game":
         return _fetch_balance_game_history(db, couple_ref, limit, uid)
     else:
-        return errors.error_response(errors.INVALID_TYPE)
+        return errors.error_response(errors.BadRequest.INVALID_TYPE)
 
 def _fetch_daily_question_history(db, couple_ref, limit, uid):
     # 답변 내역 조회 (bothAnswered == True)
@@ -181,18 +181,18 @@ def fetch_daily_question(req: https_fn.Request) -> https_fn.Response:
     # 1. 사용자 정보 조회 (CoupleID 확인)
     user_doc = db.collection("users").document(uid).get()
     if not user_doc.exists:
-        return errors.error_response(errors.USER_NOT_FOUND)
+        return errors.error_response(errors.NotFound.USER)
         
     user_data = user_doc.to_dict()
     couple_id = user_data.get("coupleID")
     
     if not couple_id:
-        return errors.error_response(errors.COUPLE_NOT_FOUND)
+        return errors.error_response(errors.NotFound.COUPLE)
         
     # 2. 커플 정보 조회 (User1/User2 확인 및 진행 상황 확인)
     couple_doc = db.collection("couples").document(couple_id).get()
     if not couple_doc.exists:
-        return errors.error_response(errors.COUPLE_DOCUMENT_NOT_FOUND)
+        return errors.error_response(errors.NotFound.COUPLE_DOCUMENT)
         
     couple_data = couple_doc.to_dict()
     is_user1 = (couple_data.get("user1UID") == uid)
@@ -247,7 +247,7 @@ def fetch_daily_question(req: https_fn.Request) -> https_fn.Response:
     
     if not question_doc:
         # 더 이상 질문이 없거나 아직 질문이 생성되지 않음
-        return errors.error_response(errors.NO_MORE_QUESTIONS)
+        return errors.error_response(errors.NotFound.NO_MORE_QUESTIONS)
         
     question_data = question_doc.to_dict()
     question_id = question_doc.id
@@ -314,10 +314,10 @@ def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
         question_id = body.get("questionID")
         answer_text = body.get("answer")
     except Exception:
-        return errors.error_response(errors.INVALID_JSON)
+        return errors.error_response(errors.BadRequest.INVALID_JSON)
         
     if not question_id or not answer_text:
-        return errors.error_response(errors.MISSING_FIELDS)
+        return errors.error_response(errors.BadRequest.MISSING_FIELDS)
 
     db = get_db()
     
@@ -329,19 +329,19 @@ def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
         user_snapshot = next(transaction.get(user_ref))
         
         if not user_snapshot.exists:
-            raise ValueError(errors.USER_NOT_FOUND.message)
+            raise ValueError(errors.NotFound.USER.message)
             
         user_data = user_snapshot.to_dict()
         couple_id = user_data.get("coupleID")
         
         if not couple_id:
-            raise ValueError(errors.COUPLE_NOT_FOUND.message)
+            raise ValueError(errors.NotFound.COUPLE.message)
             
         couple_ref = db.collection("couples").document(couple_id)
         couple_snapshot = next(transaction.get(couple_ref))
         
         if not couple_snapshot.exists:
-            raise ValueError(errors.COUPLE_DOCUMENT_NOT_FOUND.message)
+            raise ValueError(errors.NotFound.COUPLE_DOCUMENT.message)
             
         couple_data = couple_snapshot.to_dict()
         
@@ -352,7 +352,7 @@ def submit_daily_question(req: https_fn.Request) -> https_fn.Response:
         question_snapshot = next(transaction.get(question_ref))
         
         if not question_snapshot.exists:
-            raise ValueError(errors.QUESTION_NOT_FOUND.message)
+            raise ValueError(errors.NotFound.QUESTION.message)
             
         question_content = question_snapshot.get("questionText")
         
@@ -484,18 +484,18 @@ def fetch_balance_game(req: https_fn.Request) -> https_fn.Response:
     # 1. 사용자 정보 조회
     user_doc = db.collection("users").document(uid).get()
     if not user_doc.exists:
-        return errors.error_response(errors.USER_NOT_FOUND)
+        return errors.error_response(errors.NotFound.USER)
         
     user_data = user_doc.to_dict()
     couple_id = user_data.get("coupleID")
     
     if not couple_id:
-        return errors.error_response(errors.COUPLE_NOT_FOUND)
+        return errors.error_response(errors.NotFound.COUPLE)
         
     # 2. 커플 정보 및 진행도 조회
     couple_doc = db.collection("couples").document(couple_id).get()
     if not couple_doc.exists:
-        return errors.error_response(errors.COUPLE_DOCUMENT_NOT_FOUND)
+        return errors.error_response(errors.NotFound.COUPLE_DOCUMENT)
         
     couple_data = couple_doc.to_dict()
     is_user1 = (couple_data.get("user1UID") == uid)
@@ -517,7 +517,7 @@ def fetch_balance_game(req: https_fn.Request) -> https_fn.Response:
     game_doc = next(games_query, None)
     
     if not game_doc:
-        return errors.error_response(errors.NO_MORE_BALANCE_GAMES)
+        return errors.error_response(errors.NotFound.NO_MORE_BALANCE_GAMES)
         
     game_data = game_doc.to_dict()
     game_id = game_doc.id
@@ -575,10 +575,10 @@ def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
         game_id = body.get("gameID")
         choice = body.get("choice") # 1 또는 2
     except Exception:
-        return errors.error_response(errors.INVALID_JSON)
+        return errors.error_response(errors.BadRequest.INVALID_JSON)
         
     if not game_id or choice not in [1, 2]:
-        return errors.error_response(errors.INVALID_FIELDS)
+        return errors.error_response(errors.BadRequest.INVALID_FIELDS)
 
     db = get_db()
 
@@ -586,15 +586,15 @@ def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
     def submit_in_transaction(transaction):
         user_ref = db.collection("users").document(uid)
         user_snapshot = next(transaction.get(user_ref))
-        if not user_snapshot.exists: raise ValueError(errors.USER_NOT_FOUND.message)
+        if not user_snapshot.exists: raise ValueError(errors.NotFound.USER.message)
         
         user_data = user_snapshot.to_dict()
         couple_id = user_data.get("coupleID")
-        if not couple_id: raise ValueError(errors.COUPLE_NOT_FOUND.message)
+        if not couple_id: raise ValueError(errors.NotFound.COUPLE.message)
             
         couple_ref = db.collection("couples").document(couple_id)
         couple_snapshot = next(transaction.get(couple_ref))
-        if not couple_snapshot.exists: raise ValueError(errors.COUPLE_NOT_FOUND.message)
+        if not couple_snapshot.exists: raise ValueError(errors.NotFound.COUPLE.message)
         
         couple_data = couple_snapshot.to_dict()
         is_user1 = (couple_data.get("user1UID") == uid)
