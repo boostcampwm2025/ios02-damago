@@ -69,8 +69,8 @@ final class DailyQuestionInputView: UIView {
         return view
     }()
     
-    let textView: UITextView = {
-        let textView = UITextView()
+    let textView: DamagoTextView = {
+        let textView = DamagoTextView()
         textView.font = .body1
         textView.textColor = .textPrimary
         textView.isScrollEnabled = true

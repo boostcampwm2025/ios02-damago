@@ -15,7 +15,7 @@ final class PokePopupView: UIView {
     let shortcutSummaryChangedSubject = PassthroughSubject<(index: Int, summary: String), Never>()
     let shortcutMessageChangedSubject = PassthroughSubject<(index: Int, message: String), Never>()
     
-    private var shortcutEditViews: [Int: (summaryField: UITextField, messageField: UITextField)] = [:]
+    private var shortcutEditViews: [Int: (summaryField: DamagoTextField, messageField: DamagoTextField)] = [:]
     private var customTextFieldHeightConstraint: NSLayoutConstraint?
     private var exampleButtonsViewHeightConstraint: NSLayoutConstraint?
     private var containerViewCenterYConstraint: NSLayoutConstraint?
@@ -61,17 +61,13 @@ final class PokePopupView: UIView {
         return stackView
     }()
     
-    let customTextField: UITextField = {
-        let textField = UITextField()
+    let customTextField: DamagoTextField = {
+        let textField = DamagoTextField()
         textField.placeholder = "직접 입력하기"
         textField.font = .body1
         textField.textColor = .textPrimary
         textField.backgroundColor = .white
         textField.layer.cornerRadius = .mediumButton
-        textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: .spacingM, height: 0))
-        textField.leftViewMode = .always
-        textField.rightView = UIView(frame: CGRect(x: 0, y: 0, width: .spacingM, height: 0))
-        textField.rightViewMode = .always
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.setContentHuggingPriority(.required, for: .vertical)
         textField.setContentCompressionResistancePriority(.required, for: .vertical)
@@ -447,18 +443,14 @@ extension PokePopupView {
         font: UIFont,
         textColor: UIColor,
         maxLength: Int
-    ) -> UITextField {
-        let textField = UITextField()
+    ) -> DamagoTextField {
+        let textField = DamagoTextField()
         textField.placeholder = placeholder
         textField.text = text
         textField.font = font
         textField.textColor = textColor
         textField.backgroundColor = .white
         textField.layer.cornerRadius = 4
-        textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 8, height: 0))
-        textField.leftViewMode = .always
-        textField.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 8, height: 0))
-        textField.rightViewMode = .always
         textField.delegate = self
         textField.returnKeyType = .done
         textField.maxLength = maxLength
@@ -525,7 +517,8 @@ extension PokePopupView: UITextFieldDelegate {
         replacementString string: String
     ) -> Bool {
         // maxLength가 설정된 경우
-        guard let maxLength = textField.maxLength else {
+        guard let textField = textField as? DamagoTextField,
+              let maxLength = textField.maxLength else {
             return true
         }
         

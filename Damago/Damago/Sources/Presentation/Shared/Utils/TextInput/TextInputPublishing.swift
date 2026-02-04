@@ -14,6 +14,22 @@ protocol TextInputPublishing: AnyObject {
     func currentText() -> String?
 }
 
+extension UITextField: TextInputPublishing {
+    static var textDidChangeNotificationName: Notification.Name {
+        UITextField.textDidChangeNotification
+    }
+    
+    func currentText() -> String? { text }
+}
+
+extension UITextView: TextInputPublishing {
+    static var textDidChangeNotificationName: Notification.Name {
+        UITextView.textDidChangeNotification
+    }
+    
+    func currentText() -> String? { text }
+}
+
 extension TextInputPublishing {
     var textPublisher: AnyPublisher<String, Never> {
         NotificationCenter.default.publisher(
