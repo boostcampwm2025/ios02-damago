@@ -1,0 +1,36 @@
+{
+  "configurations" : [
+    {
+      "id" : "23682047-02BA-47E5-846A-C2EACB13BEEF",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "environmentVariableEntries" : [
+      {
+        "key" : "USE_LOCAL_EMULATOR",
+        "value" : "192.168.219.103"
+      }
+    ],
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Damago.xcodeproj",
+      "identifier" : "4B5FE2D32EF130B6005E31DA",
+      "name" : "Damago"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Damago.xcodeproj",
+        "identifier" : "4B4640752F308262005E4F34",
+        "name" : "DamagoViewModelTests"
+      }
+    }
+  ],
+  "version" : 1
+}
