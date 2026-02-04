@@ -28,7 +28,6 @@ final class CollectionViewModel: ViewModel {
 
     enum Route {
         case showChangeConfirmPopup(damagoType: DamagoType)
-        case changeSuccess
         case error(title: String, message: String)
     }
 
@@ -105,7 +104,6 @@ final class CollectionViewModel: ViewModel {
                     damagoType: selectedDamago
                 )
                 state.currentDamagoType = selectedDamago
-                state.route = Pulse(.changeSuccess)
             } catch {
                 state.route = Pulse(.error(title: "오류", message: error.localizedDescription))
             }

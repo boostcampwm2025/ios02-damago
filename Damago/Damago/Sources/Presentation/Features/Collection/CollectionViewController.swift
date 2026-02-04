@@ -104,8 +104,6 @@ final class CollectionViewController: UIViewController {
         switch route {
         case .showChangeConfirmPopup(let damagoType):
             showChangeConfirmPopup(for: damagoType)
-        case .changeSuccess:
-            LiveActivityManager.shared.synchronizeActivity()
         case .error(let title, let message):
             let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "확인", style: .default))

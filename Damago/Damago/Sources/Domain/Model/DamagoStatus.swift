@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct DamagoStatus {
+struct DamagoStatus: Equatable {
     let damagoName: String
     let damagoType: DamagoType
     let level: Int

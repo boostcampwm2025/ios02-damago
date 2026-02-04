@@ -10,6 +10,10 @@ import DamagoNetwork
 import Foundation
 import OSLog
 
+enum DataMappingError: Error {
+    case invalidDamagoType(String)
+}
+
 final class UserRepository: UserRepositoryProtocol {
     private let networkProvider: NetworkProvider
     private let authService: AuthService
@@ -50,7 +54,7 @@ final class UserRepository: UserRepositoryProtocol {
     func getUserInfo() async throws -> UserInfo {
         let token = try await tokenProvider.idToken()
         let response: UserInfoResponse = try await networkProvider.request(UserAPI.getUserInfo(accessToken: token))
-        return response.toDomain()
+        return try response.toDomain()
     }
     
     func updateFCMToken(fcmToken: String?) async throws {
@@ -155,14 +159,14 @@ final class UserRepository: UserRepositoryProtocol {
 
 // MARK: - DTO Mapping
 private extension UserInfoResponse {
-    func toDomain() -> UserInfo {
+    func toDomain() throws -> UserInfo {
         UserInfo(
             uid: uid,
             damagoID: damagoID,
             coupleID: coupleID,
             partnerUID: partnerUID,
             nickname: nickname,
-            damagoStatus: damagoStatus?.toDomain(),
+            damagoStatus: try damagoStatus?.toDomain(),
             totalCoin: totalCoin ?? 0,
             lastFedAt: lastFedAt
         )
@@ -170,10 +174,10 @@ private extension UserInfoResponse {
 }
 
 extension DamagoStatusResponse {
-    func toDomain() -> DamagoStatus {
+    func toDomain() throws -> DamagoStatus {
         guard let damagoType = DamagoType(rawValue: damagoType) else {
             SharedLogger.common.error("invalid damagoType: \(damagoType)")
-            fatalError()
+            throw DataMappingError.invalidDamagoType(damagoType)
         }
         
         return DamagoStatus(

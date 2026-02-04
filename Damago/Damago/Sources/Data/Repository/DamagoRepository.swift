@@ -24,24 +24,9 @@ final class DamagoRepository: DamagoRepositoryProtocol {
         self.firestoreService = firestoreService
     }
     
-    func feed(damagoID: String) async throws -> DamagoStatus {
+    func feed(damagoID: String) async throws -> Bool {
         let token = try await tokenProvider.idToken()
-        let response: DamagoStatusResponse = try await networkProvider.request(
-            DamagoAPI.feed(accessToken: token, damagoID: damagoID)
-        )
-        
-        return DamagoStatus(
-            damagoName: response.damagoName,
-            damagoType: DamagoType(rawValue: response.damagoType) ?? .basicBlack,
-            level: response.level,
-            currentExp: response.currentExp,
-            maxExp: response.maxExp,
-            isHungry: response.isHungry,
-            statusMessage: response.statusMessage,
-            lastFedAt: response.lastFedAt,
-            totalPlayTime: response.totalPlayTime ?? 0,
-            lastActiveAt: response.lastActiveAt
-        )
+        return try await networkProvider.requestSuccess(DamagoAPI.feed(accessToken: token, damagoID: damagoID))
     }
 
     func create() async throws -> DrawResult {
