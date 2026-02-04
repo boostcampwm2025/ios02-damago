@@ -5,7 +5,7 @@
 //  Created by 박현수 on 2026/01/28.
 //
 
-import UIKit
+import Foundation
 
 enum CardGameDifficulty {
     case easy
@@ -38,7 +38,7 @@ nonisolated enum CardMatchingState: Equatable {
 
 nonisolated struct CardItem: Hashable, Identifiable {
     let id: UUID
-    let image: UIImage?
+    let image: Data?
     var isFlipped: Bool
     var isMatched: Bool
     var matchingState: CardMatchingState = .none

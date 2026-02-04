@@ -7,7 +7,6 @@
 
 import Combine
 import Foundation
-import UIKit
 
 final class CardGameViewModel: ViewModel {
     struct Input {
@@ -40,7 +39,7 @@ final class CardGameViewModel: ViewModel {
 
     private let adjustCoinAmountUseCase: AdjustCoinAmountUseCase
 
-    init(difficulty: CardGameDifficulty, images: [UIImage], adjustCoinAmountUseCase: AdjustCoinAmountUseCase) {
+    init(difficulty: CardGameDifficulty, images: [Data], adjustCoinAmountUseCase: AdjustCoinAmountUseCase) {
         let items = Self.createItems(difficulty: difficulty, images: images)
         self.state = State(items: items, difficulty: difficulty)
         self.adjustCoinAmountUseCase = adjustCoinAmountUseCase
@@ -198,7 +197,7 @@ final class CardGameViewModel: ViewModel {
         }
     }
 
-    private static func createItems(difficulty: CardGameDifficulty, images: [UIImage]) -> [CardItem] {
+    private static func createItems(difficulty: CardGameDifficulty, images: [Data]) -> [CardItem] {
         let pairCount = difficulty.cardCount / 2
 
         return (0..<pairCount)
