@@ -15,14 +15,6 @@ final class DamagoTextField: UITextField {
         }
     }
     
-    // 좌/우 패딩
-    var leftPadding: CGFloat = .spacingM {
-        didSet { setNeedsLayout() }
-    }
-    var rightPadding: CGFloat = .spacingM {
-        didSet { setNeedsLayout() }
-    }
-    
     private let counterLabel = UILabel()
     private var counterWidth: CGFloat = 0
     private var isEnforcing = false
@@ -102,7 +94,9 @@ final class DamagoTextField: UITextField {
     private func updateCounterLabel() {
         guard let maxLength, maxLength >= 0 else { return }
         let current = text?.count ?? 0
-        counterLabel.text = "\(current) / \(maxLength)"
+        let newText = "\(current) / \(maxLength)"
+        guard counterLabel.text != newText || counterLabel.isHidden else { return }
+        counterLabel.text = newText
         counterLabel.isHidden = false
         updateCounterMetrics()
         setNeedsLayout()
@@ -116,13 +110,13 @@ final class DamagoTextField: UITextField {
     private func layoutCounterIfNeeded() {
         guard maxLength != nil, !counterLabel.isHidden, bounds.height > 0 else { return }
         let size = counterLabel.intrinsicContentSize
-        let x = bounds.width - rightPadding - size.width
+        let x = bounds.width - .spacingM - size.width
         let y = (bounds.height - size.height) / 2
         counterLabel.frame = CGRect(x: x, y: y, width: size.width, height: size.height)
     }
     
     private func contentInsets() -> UIEdgeInsets {
-        let rightInset = rightPadding + (maxLength == nil ? 0 : counterWidth)
-        return UIEdgeInsets(top: 0, left: leftPadding, bottom: 0, right: rightInset)
+        let rightInset = .spacingM + (maxLength == nil ? 0 : counterWidth)
+        return UIEdgeInsets(top: 0, left: .spacingM, bottom: 0, right: rightInset)
     }
 }

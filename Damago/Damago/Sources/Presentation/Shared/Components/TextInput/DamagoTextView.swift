@@ -92,7 +92,10 @@ final class DamagoTextView: UITextView {
     private func updateCounterLabel() {
         guard let maxLength, maxLength >= 0 else { return }
         let current = text?.count ?? 0
-        counterLabel.text = "\(current) / \(maxLength)"
+        let newText = "\(current) / \(maxLength)"
+        if counterLabel.text != newText {
+            counterLabel.text = newText
+        }
     }
     
     private func updateCounterAttachment() {
