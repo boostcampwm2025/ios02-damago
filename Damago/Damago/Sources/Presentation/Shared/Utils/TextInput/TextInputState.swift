@@ -26,8 +26,11 @@ enum TextInputStateStore {
         keyOptions: .weakMemory,
         valueOptions: .strongMemory
     )
+    private static let lock = NSLock()
 
     static func state(for textField: UITextField) -> TextInputState {
+        lock.lock()
+        defer { lock.unlock() }
         if let state = textFieldStore.object(forKey: textField) { return state }
         let state = TextInputState()
         textFieldStore.setObject(state, forKey: textField)
@@ -35,6 +38,8 @@ enum TextInputStateStore {
     }
 
     static func state(for textView: UITextView) -> TextInputState {
+        lock.lock()
+        defer { lock.unlock() }
         if let state = textViewStore.object(forKey: textView) { return state }
         let state = TextInputState()
         textViewStore.setObject(state, forKey: textView)
