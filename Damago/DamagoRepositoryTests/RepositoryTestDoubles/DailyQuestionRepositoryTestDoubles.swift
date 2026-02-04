@@ -12,7 +12,6 @@ import Combine
 
 final class MockNetworkProvider: NetworkProvider, @unchecked Sendable {
     var requestHandler: ((EndPoint) async throws -> Any)?
-    
     var requestSuccessResult: Bool = true
     var requestSuccessError: Error?
     
@@ -51,7 +50,7 @@ final class MockTokenProvider: TokenProvider, @unchecked Sendable {
 }
 
 final class MockFirestoreService: FirestoreService, @unchecked Sendable {
-    var observeHandler: ((String, String) -> AnyPublisher<Result<Any, Error>, Never>)?
+    var observeDataHandler: ((String, String) -> AnyPublisher<Result<Data, Error>, Never>)?
     var observeCalledWith: (collection: String, document: String)?
     
     func observe<T: Decodable>(
@@ -59,9 +58,20 @@ final class MockFirestoreService: FirestoreService, @unchecked Sendable {
         document: String
     ) -> AnyPublisher<Result<T, Error>, Never> {
         observeCalledWith = (collection, document)
-        if let handler = observeHandler {
-            return handler(collection, document).map { res in
-                res.map { $0 as! T }
+        
+        if let handler = observeDataHandler {
+            return handler(collection, document).map { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let decoded = try JSONDecoder().decode(T.self, from: data)
+                        return .success(decoded)
+                    } catch {
+                        return .failure(error)
+                    }
+                case .failure(let error):
+                    return .failure(error)
+                }
             }.eraseToAnyPublisher()
         }
         return Empty().eraseToAnyPublisher()
@@ -93,6 +103,7 @@ final class MockDailyQuestionLocalDataSource: DailyQuestionLocalDataSourceProtoc
     }
 
     func fetchLatestQuestion() async throws -> DailyQuestionEntity? {
+        if let error = fetchQuestionError { throw error } // reuse error for simplicity
         return try await fetchLatestQuestionHandler?()
     }
 
