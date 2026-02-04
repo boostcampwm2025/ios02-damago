@@ -32,7 +32,13 @@ extension UITextView: TextInputPublishing {
 
 extension TextInputPublishing {
     var textPublisher: AnyPublisher<String, Never> {
-        NotificationCenter.default.publisher(
+        if let textField = self as? UITextField {
+            return textField.publisher(for: .editingChanged)
+                .map { [weak textField] _ in textField?.text ?? "" }
+                .eraseToAnyPublisher()
+        }
+
+        return NotificationCenter.default.publisher(
             for: Self.textDidChangeNotificationName,
             object: self
         )
