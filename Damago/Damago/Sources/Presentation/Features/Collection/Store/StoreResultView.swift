@@ -8,8 +8,8 @@
 import UIKit
 
 final class StoreResultView: UIView {
-    let petView: PetView = {
-        let view = PetView()
+    let damagoView: DamagoView = {
+        let view = DamagoView()
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -18,6 +18,7 @@ final class StoreResultView: UIView {
         let label = UILabel()
         label.font = .title2
         label.textColor = .white
+        label.numberOfLines = 0
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -43,8 +44,8 @@ final class StoreResultView: UIView {
         setupUI()
     }
     
-    func configure(with result: StoreViewModel.DrawResult) {
-        petView.configure(with: result.petType)
+    func configure(with result: DrawResult) {
+        damagoView.configure(with: result.damagoType)
         nameLabel.text = result.itemName
         startBlinkingInfoLabel()
     }
@@ -56,19 +57,19 @@ final class StoreResultView: UIView {
     }
     
     private func setupHierarchy() {
-        addSubview(petView)
+        addSubview(damagoView)
         addSubview(nameLabel)
         addSubview(infoLabel)
     }
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            petView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            petView.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -60),
-            petView.widthAnchor.constraint(equalToConstant: 200),
-            petView.heightAnchor.constraint(equalToConstant: 200),
+            damagoView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            damagoView.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -60),
+            damagoView.widthAnchor.constraint(equalToConstant: 200),
+            damagoView.heightAnchor.constraint(equalToConstant: 200),
             
-            nameLabel.topAnchor.constraint(equalTo: petView.bottomAnchor, constant: .spacingL),
+            nameLabel.topAnchor.constraint(equalTo: damagoView.bottomAnchor, constant: .spacingL),
             nameLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
             
             infoLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: .spacingL),

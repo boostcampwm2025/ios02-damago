@@ -18,6 +18,22 @@ final class SpriteAnimationView: UIView {
     
     var frameDuration: TimeInterval = 0.2
     
+    // MARK: - New Properties for Template Mode
+    
+    /// 이미지 렌더링 모드 설정 (기본값: .alwaysOriginal)
+    /// .alwaysTemplate으로 설정 시 tintColor가 적용됩니다.
+    var renderingMode: UIImage.RenderingMode = .alwaysOriginal {
+        didSet {
+            updateSpriteColor()
+        }
+    }
+    
+    /// 틴트 컬러 변경 감지 및 적용
+    override func tintColorDidChange() {
+        super.tintColorDidChange()
+        updateSpriteColor()
+    }
+    
     /// 포커스 시스템 지원 여부
     override var canBecomeFocused: Bool { false }
     override var preferredFocusEnvironments: [UIFocusEnvironment] { [] }
@@ -99,6 +115,10 @@ extension SpriteAnimationView {
               !textures.isEmpty else { return }
         let scene = createScene()
         let spriteNode = createSpriteNode(with: textures[0], in: scene)
+        
+        // 노드 생성 직후 현재 설정된 렌더링 모드 적용
+        applyColorToNode(spriteNode)
+        
         let animationAction = createAnimationAction(with: textures, repeatCount: repeatCount)
         
         // 다른 시트로 변경하고 repeatCount가 지정된 경우 기본 애니메이션으로 복귀
@@ -128,6 +148,25 @@ extension SpriteAnimationView {
 
 // MARK: - Private Helpers
 private extension SpriteAnimationView {
+    
+    /// 현재 활성화된 SpriteNode의 색상을 업데이트
+    func updateSpriteColor() {
+        guard let scene = scene,
+              let spriteNode = scene.children.first as? SKSpriteNode else { return }
+        applyColorToNode(spriteNode)
+    }
+    
+    /// 특정 노드에 렌더링 모드에 따른 색상 적용
+    func applyColorToNode(_ node: SKSpriteNode) {
+        if renderingMode == .alwaysTemplate {
+            node.color = self.tintColor
+            node.colorBlendFactor = 1.0 // 1.0이면 텍스처 모양에 color를 100% 입힘
+        } else {
+            node.color = .clear // 혹은 .white
+            node.colorBlendFactor = 0.0 // 0.0이면 원본 텍스처 색상 사용
+        }
+    }
+    
     /// 가로 1열, 정사각형 프레임 가정으로 columns 자동 감지
     static func autoDetectColumns(sheetName: String) -> Int? {
         guard !sheetName.isEmpty, let image = UIImage(named: sheetName) else { return nil }

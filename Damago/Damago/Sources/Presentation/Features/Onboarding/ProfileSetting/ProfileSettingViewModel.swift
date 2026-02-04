@@ -27,7 +27,7 @@ final class ProfileSettingViewModel: ViewModel {
     }
     
     enum Route {
-        case petSetup
+        case damagoSetup
         case partnerAlreadySelected
         case error(message: String)
     }
@@ -36,14 +36,14 @@ final class ProfileSettingViewModel: ViewModel {
     private var cancellables = Set<AnyCancellable>()
     
     private let updateUserUseCase: UpdateUserUseCase
-    private let userRepository: UserRepositoryProtocol
+    private let fetchUserInfoUseCase: FetchUserInfoUseCase
     
     init(
         updateUserUseCase: UpdateUserUseCase,
-        userRepository: UserRepositoryProtocol
+        fetchUserInfoUseCase: FetchUserInfoUseCase
     ) {
         self.updateUserUseCase = updateUserUseCase
-        self.userRepository = userRepository
+        self.fetchUserInfoUseCase = fetchUserInfoUseCase
     }
     
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
@@ -79,17 +79,17 @@ final class ProfileSettingViewModel: ViewModel {
                     anniversaryDate: state.anniversaryDate,
                     useFCM: nil,
                     useLiveActivity: nil,
-                    petName: nil,
-                    petType: nil
+                    damagoName: nil,
+                    damagoType: nil
                 )
                 
                 // 최신 정보를 직접 조회하여 파트너가 펫을 결정했는지 확인
-                let userInfo = try await userRepository.getUserInfo()
+                let userInfo = try await fetchUserInfoUseCase.execute()
                 
                 if userInfo.damagoID != nil {
                     state.route = Pulse(.partnerAlreadySelected)
                 } else {
-                    state.route = Pulse(.petSetup)
+                    state.route = Pulse(.damagoSetup)
                 }
             } catch {
                 state.route = Pulse(.error(message: error.localizedDescription))

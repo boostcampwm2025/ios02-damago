@@ -8,6 +8,11 @@
 import Combine
 import DamagoNetwork
 import Foundation
+import OSLog
+
+enum DataMappingError: Error {
+    case invalidDamagoType(String)
+}
 
 final class UserRepository: UserRepositoryProtocol {
     private let networkProvider: NetworkProvider
@@ -49,14 +54,23 @@ final class UserRepository: UserRepositoryProtocol {
     func getUserInfo() async throws -> UserInfo {
         let token = try await tokenProvider.idToken()
         let response: UserInfoResponse = try await networkProvider.request(UserAPI.getUserInfo(accessToken: token))
-        return response.toDomain()
+        return try response.toDomain()
     }
     
-    func updateFCMToken(fcmToken: String) async throws {
-        let token = try await tokenProvider.idToken()
+    func updateFCMToken(fcmToken: String?) async throws {
+        guard let fcmToken = fcmToken ?? UserDefaults.standard.string(forKey: "fcmToken") else {
+            SharedLogger.apns.error("fcm 토큰을 가져오지 못했습니다.")
+            return
+        }
+
+        guard let idToken = try? await tokenProvider.idToken() else {
+            SharedLogger.apns.log("fcm 토큰 업데이트 중 id token을 가져오지 못했습니다. 로그인 상태가 아닙니다.")
+            return
+        }
+
         try await networkProvider.requestSuccess(
             UserAPI.updateFCMToken(
-                accessToken: token,
+                accessToken: idToken,
                 fcmToken: fcmToken
             )
         )
@@ -75,11 +89,21 @@ final class UserRepository: UserRepositoryProtocol {
     }
 
     func observeCoupleSnapshot(coupleID: String) -> AnyPublisher<Result<CoupleSnapshotDTO, Error>, Never> {
-        firestoreService.observe(collection: "couples", document: coupleID)
+        let firestorePath = FirestorePath.couples(coupleID: coupleID)
+        
+        let publisher: AnyPublisher<Result<CoupleSnapshotDTO, Error>, Never> =
+        firestoreService.observe(collection: firestorePath.collection, document: firestorePath.document)
+        
+        return publisher
     }
 
     func observeUserSnapshot(uid: String) -> AnyPublisher<Result<UserSnapshotDTO, Error>, Never> {
-        firestoreService.observe(collection: "users", document: uid)
+        let firestorePath = FirestorePath.users(uid: uid)
+        
+        let publisher: AnyPublisher<Result<UserSnapshotDTO, Error>, Never> =
+        firestoreService.observe(collection: firestorePath.collection, document: firestorePath.document)
+        
+        return publisher
     }
 
     func updateUserInfo(
@@ -87,8 +111,8 @@ final class UserRepository: UserRepositoryProtocol {
         anniversaryDate: Date?,
         useFCM: Bool?,
         useLiveActivity: Bool?,
-        petName: String?,
-        petType: String?
+        damagoName: String?,
+        damagoType: DamagoType?
     ) async throws {
         let token = try await tokenProvider.idToken()
         let dateString = anniversaryDate.map {
@@ -104,8 +128,8 @@ final class UserRepository: UserRepositoryProtocol {
                 anniversaryDate: dateString,
                 useFCM: useFCM,
                 useLiveActivity: useLiveActivity,
-                petName: petName,
-                petType: petType
+                damagoName: damagoName,
+                damagoType: damagoType?.rawValue
             )
         )
     }
@@ -145,14 +169,14 @@ final class UserRepository: UserRepositoryProtocol {
 
 // MARK: - DTO Mapping
 private extension UserInfoResponse {
-    func toDomain() -> UserInfo {
+    func toDomain() throws -> UserInfo {
         UserInfo(
             uid: uid,
             damagoID: damagoID,
             coupleID: coupleID,
             partnerUID: partnerUID,
             nickname: nickname,
-            petStatus: petStatus?.toDomain(),
+            damagoStatus: try damagoStatus?.toDomain(),
             totalCoin: totalCoin ?? 0,
             lastFedAt: lastFedAt
         )
@@ -160,10 +184,15 @@ private extension UserInfoResponse {
 }
 
 extension DamagoStatusResponse {
-    func toDomain() -> PetStatus {
-        PetStatus(
-            petName: petName,
-            petType: petType,
+    func toDomain() throws -> DamagoStatus {
+        guard let damagoType = DamagoType(rawValue: damagoType) else {
+            SharedLogger.common.error("invalid damagoType: \(damagoType)")
+            throw DataMappingError.invalidDamagoType(damagoType)
+        }
+        
+        return DamagoStatus(
+            damagoName: damagoName,
+            damagoType: damagoType,
             level: level,
             currentExp: currentExp,
             maxExp: maxExp,

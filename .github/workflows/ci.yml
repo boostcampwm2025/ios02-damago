@@ -39,6 +39,26 @@ jobs:
           echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_PROD_BASE64 }}" | base64 --decode > ./Damago/Damago/Resources/GoogleService-Info-Prod.plist
         fi
 
+    - name: Reset Simulators
+      run: |
+        xcrun simctl shutdown all
+        xcrun simctl erase all
+
+    - name: Clean Xcode Derived Data & Package Cache
+      run: |
+        rm -rf ~/Library/Developer/Xcode/DerivedData
+        rm -rf ~/Library/Caches/org.swift.swiftpm
+        rm -rf ./Damago/Damago.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+
+    # Fastlane 실행 전, 패키지(Firebase 등)를 미리 해결(Resolve)
+    # -list 명령어가 타임아웃 나지 않도록 의존성을 먼저 다운로드합니다.
+    - name: Resolve Package Dependencies
+      run: |
+        xcodebuild -resolvePackageDependencies \
+          -project ./Damago/Damago.xcodeproj \
+          -scheme Damago \
+          -configuration Debug
+
     - name: Run Fastlane Tests
       # CI 환경에서도 Xcode 설정을 읽어오는 시간을 충분히 확보
       env:

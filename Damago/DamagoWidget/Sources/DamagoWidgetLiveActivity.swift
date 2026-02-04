@@ -11,21 +11,15 @@ import SwiftUI
 import WidgetKit
 
 struct DamagoWidgetLiveActivity: Widget {
-    private let feedButtonBackgroundColor = Color(
-        red: 65.0 / 255.0,
-        green: 74.0 / 255.0,
-        blue: 84.0 / 255.0
-    )   // #414A54
-    private let feedButtonIconColor = Color(
-        red: 234.0 / 255.0,
-        green: 208.0 / 255.0,
-        blue: 73.0 / 255.0
-    )        // #EAD049
-    private let pokeButtonBackgroundColor = Color(
-        red: 242.0 / 255.0,
-        green: 113.0 / 255.0,
-        blue: 182.0 / 255.0
-    ) // #F271B6
+    private var damagoBackgroundColor: Color {
+        let defaults = AppGroupUserDefaults.sharedDefaults()
+        let rawValue = defaults.string(
+            forKey: AppGroupUserDefaults.damagoBackgroundColorKey
+        )
+        let option = DamagoBackgroundColorOption(rawValue: rawValue ?? "")
+            ?? DamagoBackgroundColorOption.defaultOption
+        return option.swiftUIColor
+    }
 
     private let charactrerSize: CGFloat = 80
     private let largeIconSize: CGFloat = 26
@@ -79,7 +73,8 @@ struct DamagoWidgetLiveActivity: Widget {
                 for: context.state.imageName,
                 size: charactrerSize
             )
-            .clipShape(Rectangle())
+            .background(damagoBackgroundColor)
+            .clipShape(Circle())
             actionButtonsView(
                 activityID: context
                     .activityID
@@ -115,7 +110,9 @@ struct DamagoWidgetLiveActivity: Widget {
                 for: context.state.imageName,
                 size: smallIconSize
             )
-                .clipShape(Rectangle())
+            .padding(2)
+            .background(damagoBackgroundColor)
+            .clipShape(Circle())
         }
     }
 
@@ -124,7 +121,7 @@ struct DamagoWidgetLiveActivity: Widget {
             for: context.state.statusImageName,
             size: largeIconSize
         )
-            .clipShape(Circle())
+        .clipShape(Circle())
     }
 
     private func minimalView(context: ActivityViewContext<DamagoAttributes>) -> some View {
@@ -138,7 +135,8 @@ struct DamagoWidgetLiveActivity: Widget {
                 for: context.state.imageName,
                 size: smallIconSize
             )
-                .clipShape(Rectangle())
+            .background(damagoBackgroundColor)
+            .clipShape(Circle())
         }
     }
 
@@ -155,12 +153,12 @@ struct DamagoWidgetLiveActivity: Widget {
         Button(intent: FeedAppIntent(activityID: activityID)) {
             HStack(spacing: .spacingS) {
                 Image(systemName: "fork.knife")
-                    .foregroundStyle(feedButtonIconColor)
+                    .foregroundStyle(.damagoYellow)
                 Text("밥 주기")
                     .foregroundStyle(.white)
             }
         }
-        .dynamicIslandActionButton(backgroundColor: feedButtonBackgroundColor)
+        .dynamicIslandActionButton(backgroundColor: .textTertiary)
     }
 
     private func pokeButton(activityID: String) -> some View {
@@ -172,7 +170,7 @@ struct DamagoWidgetLiveActivity: Widget {
                     .foregroundStyle(.white)
             }
         }
-        .dynamicIslandActionButton(backgroundColor: pokeButtonBackgroundColor)
+        .dynamicIslandActionButton(backgroundColor: .damagoPink)
     }
 
     // MARK: PokeButtonView

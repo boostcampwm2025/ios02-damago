@@ -18,14 +18,15 @@ final class SettingsViewModel: ViewModel {
         var anniversaryDate: String
         var dDay: Int
         var opponentName: String
+        var damagoBackgroundOption: DamagoBackgroundColorOption
         let privacyPolicyURL: URL?
-        let termsURL: URL?
     }
 
     struct Input {
         let viewDidLoad: AnyPublisher<Void, Never>
         let toggleChanged: AnyPublisher<(ToggleType, Bool), Never>
         let itemSelected: AnyPublisher<SettingsItem, Never>
+        let damagoBackgroundChanged: AnyPublisher<DamagoBackgroundColorOption, Never>
         let alertActionDidConfirm: AnyPublisher<AlertActionType, Never>
     }
 
@@ -36,8 +37,8 @@ final class SettingsViewModel: ViewModel {
         var anniversaryDate: String = ""
         var dDay: Int = 0
         var opponentName: String = ""
-        let privacyPolicyURL: URL? = URL(string: "https://example.com")
-        let termsURL: URL? = URL(string: "https://example.com")
+        var damagoBackgroundOption: DamagoBackgroundColorOption = .defaultOption
+        let privacyPolicyURL: URL? = URL(string: "https://strong-wren-d65.notion.site/Damago-2fce20acc2ad8056a0f8e16c8f0798b4")
         var route: Pulse<Route>?
 
         var notificationCurrentPermission: Bool = false
@@ -51,8 +52,8 @@ final class SettingsViewModel: ViewModel {
                 anniversaryDate: anniversaryDate,
                 dDay: dDay,
                 opponentName: opponentName,
-                privacyPolicyURL: privacyPolicyURL,
-                termsURL: termsURL
+                damagoBackgroundOption: damagoBackgroundOption,
+                privacyPolicyURL: privacyPolicyURL
             )
         }
     }
@@ -61,6 +62,7 @@ final class SettingsViewModel: ViewModel {
         case editProfile
         case connection
         case webLink(url: URL?)
+        case damagoBackgroundPicker(current: DamagoBackgroundColorOption)
         case alert(type: AlertActionType)
         case error(message: String)
         case openSettings
@@ -88,6 +90,7 @@ final class SettingsViewModel: ViewModel {
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
         input.viewDidLoad
             .sink { [weak self] in
+                self?.loadDamagoBackgroundOption()
                 self?.refreshPermissionsAndBind()
             }
             .store(in: &cancellables)
@@ -101,6 +104,12 @@ final class SettingsViewModel: ViewModel {
         input.itemSelected
             .sink { [weak self] item in
                 self?.handleSelection(item: item)
+            }
+            .store(in: &cancellables)
+
+        input.damagoBackgroundChanged
+            .sink { [weak self] option in
+                self?.handleDamagoBackgroundChange(option)
             }
             .store(in: &cancellables)
 
@@ -214,8 +223,8 @@ final class SettingsViewModel: ViewModel {
                     anniversaryDate: nil,
                     useFCM: isOn,
                     useLiveActivity: nil,
-                    petName: nil,
-                    petType: nil
+                    damagoName: nil,
+                    damagoType: nil
                 )
             case .liveActivity:
                 try await updateUserUseCase.execute(
@@ -223,8 +232,8 @@ final class SettingsViewModel: ViewModel {
                     anniversaryDate: nil,
                     useFCM: nil,
                     useLiveActivity: isOn,
-                    petName: nil,
-                    petType: nil
+                    damagoName: nil,
+                    damagoType: nil
                 )
             }
         } catch {
@@ -245,6 +254,8 @@ final class SettingsViewModel: ViewModel {
             state.route = Pulse(.editProfile)
         case .relationship:
             state.route = Pulse(.connection)
+        case .damagoBackground(let option):
+            state.route = Pulse(.damagoBackgroundPicker(current: option))
         case .link(_, let url):
             state.route = Pulse(.webLink(url: url))
         case .action(let type):
@@ -252,6 +263,19 @@ final class SettingsViewModel: ViewModel {
         default:
             break
         }
+    }
+
+    private func loadDamagoBackgroundOption() {
+        let defaults = AppGroupUserDefaults.sharedDefaults()
+        let rawValue = defaults.string(forKey: AppGroupUserDefaults.damagoBackgroundColorKey)
+        state.damagoBackgroundOption = DamagoBackgroundColorOption(rawValue: rawValue ?? "")
+            ?? DamagoBackgroundColorOption.defaultOption
+    }
+
+    private func handleDamagoBackgroundChange(_ option: DamagoBackgroundColorOption) {
+        let defaults = AppGroupUserDefaults.sharedDefaults()
+        defaults.set(option.rawValue, forKey: AppGroupUserDefaults.damagoBackgroundColorKey)
+        state.damagoBackgroundOption = option
     }
 
     private func handleAccountAction(_ type: AlertActionType) {
@@ -263,9 +287,7 @@ final class SettingsViewModel: ViewModel {
         case .logout:
             do {
                 try signOutUseCase.execute()
-                // 로그아웃 시 커플 연결 상태 초기화 및 Live Activity 종료
                 UserDefaults.standard.set(false, forKey: "isOnboardingCompleted")
-                LiveActivityManager.shared.synchronizeActivity()
                 NotificationCenter.default.post(name: .authenticationStateDidChange, object: nil)
             } catch {
                 state.route = Pulse(.error(message: error.userFriendlyMessage))

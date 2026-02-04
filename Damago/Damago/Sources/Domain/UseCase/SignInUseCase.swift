@@ -18,5 +18,6 @@ final class SignInUseCaseImpl: SignInUseCase {
 
     func signIn() async throws {
         try await repository.signIn()
+        try await repository.updateFCMToken(fcmToken: nil)
     }
 }

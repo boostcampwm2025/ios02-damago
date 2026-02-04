@@ -4,7 +4,7 @@ from nanoid import generate
 import google.cloud.firestore
 import json
 
-from utils.constants import AVAILABLE_PET_TYPES, get_default_pet_name, XP_TABLE
+from utils.constants import AVAILABLE_DAMAGO_TYPES, BASIC_DAMAGO_TYPES, get_default_damago_name, XP_TABLE
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
 
@@ -34,19 +34,20 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
         user_data = doc_snapshot.to_dict()
         existing_code = user_data.get("code")
         
-        partner_uid = user_data.get("partnerUID")
-        partner_code = None
-        
-        if partner_uid:
-            partner_doc = users_ref.document(partner_uid).get()
-            if partner_doc.exists:
-                partner_code = partner_doc.to_dict().get("code")
+        if existing_code:
+            partner_uid = user_data.get("partnerUID")
+            partner_code = None
+            
+            if partner_uid:
+                partner_doc = users_ref.document(partner_uid).get()
+                if partner_doc.exists:
+                    partner_code = partner_doc.to_dict().get("code")
 
-        return https_fn.Response(
-            json.dumps({"myCode": existing_code, "partnerCode": partner_code}), 
-            status=200,
-            mimetype='application/json'
-        )
+            return https_fn.Response(
+                json.dumps({"myCode": existing_code, "partnerCode": partner_code}), 
+                status=200,
+                mimetype='application/json'
+            )
 
     # --- [Step 2] 고유 코드 생성 (NanoID) ---
     safe_alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
@@ -63,8 +64,9 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
     if unique_code is None:
         return https_fn.Response("Unable to generate new code", status=500)
 
-    # --- [Step 3] 유저 생성 ---
-    doc_ref.set({
+    # --- [Step 3] 유저 생성 (또는 업데이트) ---
+    # fcmToken이 이미 존재할 수 있으므로 덮어쓰지 않도록 주의 (None으로 설정하지 않음)
+    user_data = {
         "uid": uid,  # udid -> uid 변경
         "code": unique_code,
         "partnerUID": None, # partnerUDID -> partnerUID 변경
@@ -72,14 +74,16 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
         "coupleID": None,
         "anniversaryDate": None,
         "nickname": None,
-        "fcmToken": None,
         "laStartToken": None,
         "laUpdateToken": None,
         "useFCM": True,
         "useLiveActivity": True,
         "createdAt": firestore.SERVER_TIMESTAMP,
         "updatedAt": firestore.SERVER_TIMESTAMP
-    })
+    }
+    
+    # merge=True를 사용하여 기존 필드(예: fcmToken)는 유지하고, 없는 필드는 추가/업데이트
+    doc_ref.set(user_data, merge=True)
 
     return https_fn.Response(
         json.dumps({"myCode": unique_code, "partnerCode": None}), 
@@ -91,7 +95,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     """
     두 유저(Token User, targetCode)를 커플로 연결합니다.
     visible(isAvailable)인 모든 다마고를 기본 이름으로 생성합니다.
-    활성 다마고(damagoID) 선택은 이후 PetSetup 등 선택 화면에서 이루어집니다.
+    활성 다마고(damagoID) 선택은 이후 DamagoSetup 등 선택 화면에서 이루어집니다.
     트랜잭션을 사용하여 데이터 일관성을 보장합니다.
 
     Args:
@@ -151,7 +155,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
         if snapshot.exists:
             return "ok" # 이미 연결됨
 
-        # 커플 생성 (다마고 선택은 이후 PetSetup 등 선택 화면에서 진행)
+        # 커플 생성 (다마고 선택은 이후 DamagoSetup 등 선택 화면에서 진행)
         transaction.set(couple_ref, {
             "id": couple_ref.id,
             "user1UID": my_uid,
@@ -178,9 +182,9 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
             "updatedAt": firestore.SERVER_TIMESTAMP
         })
 
-        # visible인 모든 다마고 생성 (기본 이름 사용)
-        for pet_type in AVAILABLE_PET_TYPES:
-            damago_id = f"{couple_ref.id}_{pet_type}"
+        # 기본 다마고 생성 (기본 이름 사용)
+        for damago_type in BASIC_DAMAGO_TYPES:
+            damago_id = f"{couple_ref.id}_{damago_type}"
             damago_ref = db.collection("damagos").document(damago_id)
             transaction.set(damago_ref, {
                 "id": damago_id,
@@ -194,8 +198,8 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
                 "lastUpdatedAt": firestore.SERVER_TIMESTAMP,
                 "lastFedAt": None,
                 "endedAt": None,
-                "petName": get_default_pet_name(pet_type),
-                "petType": pet_type,
+                "damagoName": get_default_damago_name(damago_type),
+                "damagoType": damago_type,
             })
 
         return "ok"
@@ -262,8 +266,8 @@ def withdraw_user(req: https_fn.Request) -> https_fn.Response:
         for doc in db.collection("damagos").where("coupleID", "==", couple_id).stream():
             batch.delete(doc.reference)
 
-    # 4. 파트너 정보 초기화
-    if partner_uid:
+    # 4. 파트너 정보 초기화 (본인이 아닌 경우에만)
+    if partner_uid and partner_uid != uid:
         partner_ref = db.collection("users").document(partner_uid)
         batch.update(partner_ref, {
             "coupleID": firestore.DELETE_FIELD,

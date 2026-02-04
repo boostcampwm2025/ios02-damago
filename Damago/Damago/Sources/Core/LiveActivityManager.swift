@@ -13,21 +13,19 @@ import OSLog
 final class LiveActivityManager {
     static let shared = LiveActivityManager()
     
-    private var userRepository: UserRepositoryProtocol?
-    private var pushRepository: PushRepositoryProtocol?
+    private var saveLiveActivityTokenUseCase: SaveLiveActivityTokenUseCase?
     private var cancellables = Set<AnyCancellable>()
     
     private var isLiveActivityEnabled: Bool = true
+    private var currentStatus: DamagoStatus?
     
     private init() {}
     
     func configure(
-        userRepository: UserRepositoryProtocol,
-        pushRepository: PushRepositoryProtocol,
+        saveLiveActivityTokenUseCase: SaveLiveActivityTokenUseCase,
         globalStore: GlobalStoreProtocol
     ) {
-        self.userRepository = userRepository
-        self.pushRepository = pushRepository
+        self.saveLiveActivityTokenUseCase = saveLiveActivityTokenUseCase
         
         globalStore.globalState
             .map { $0.useLiveActivity }
@@ -41,74 +39,83 @@ final class LiveActivityManager {
                 }
             }
             .store(in: &cancellables)
+
+        globalStore.globalState
+            .compactMap { [weak self] state in self?.toDamagoStatus(from: state) }
+            .removeDuplicates()
+            .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: true)
+            .sink { [weak self] status in
+                self?.currentStatus = status
+                self?.updateActivity(with: status)
+            }
+            .store(in: &cancellables)
     }
 
     private var monitoredActivityIDs: Set<String> = []
 
     func synchronizeActivity() {
-        SharedLogger.liveActivityManger.info("✅ LiveActivity 동기화 시작")
-        
-        guard isLiveActivityEnabled else {
-            SharedLogger.liveActivityManger.info("Live Activity가 비활성화되어 있어 동기화를 중단합니다.")
-            endAllActivities()
+        guard let currentStatus else {
+            SharedLogger.liveActivityManger.info("⚠️ 동기화할 캐시된 상태가 없습니다.")
             return
         }
+        SharedLogger.liveActivityManger.info("✅ 캐시된 상태로 LiveActivity 동기화")
+        updateActivity(with: currentStatus)
+    }
+    
+    private func toDamagoStatus(from state: GlobalState) -> DamagoStatus? {
+        guard let damagoType = state.damagoType,
+              let damagoName = state.damagoName,
+              let isHungry = state.isHungry,
+              let statusMessage = state.statusMessage,
+              let level = state.level,
+              let currentExp = state.currentExp,
+              let maxExp = state.maxExp else {
+            return nil
+        }
         
-        fetchActivityData { petStatus in
-            guard let petStatus else {
-                // 서버로 받은 데이터가 없으면 실행 중인 모든 Live Activity를 종료합니다.
-                self.endAllActivities()
-                return
-            }
+        return DamagoStatus(
+            damagoName: damagoName,
+            damagoType: damagoType,
+            level: level,
+            currentExp: currentExp,
+            maxExp: maxExp,
+            isHungry: isHungry,
+            statusMessage: statusMessage,
+            lastFedAt: state.lastFedAt,
+            totalPlayTime: state.totalPlayTime ?? 0,
+            lastActiveAt: state.lastActiveAt
+        )
+    }
 
-            guard let petType = DamagoType(rawValue: petStatus.petType) else {
-                SharedLogger.liveActivityManger.error("Invalid petType from server: \(petStatus.petType)")
-                return
-            }
+    private func updateActivity(with status: DamagoStatus) {
+        guard isLiveActivityEnabled else { return }
 
-            let latestContentState = DamagoAttributes.ContentState(
-                petType: petType,
-                isHungry: petStatus.isHungry,
-                statusMessage: petStatus.statusMessage,
-                level: petStatus.level,
-                currentExp: petStatus.currentExp,
-                maxExp: petStatus.maxExp,
-                lastFedAt: petStatus.lastFedAt?.ISO8601Format()
-            )
-            let attributes = DamagoAttributes(
-                petName: petStatus.petName
-            )
+        let latestContentState = DamagoAttributes.ContentState(
+            damagoType: status.damagoType,
+            isHungry: status.isHungry,
+            statusMessage: status.statusMessage,
+            level: status.level,
+            currentExp: status.currentExp,
+            maxExp: status.maxExp,
+            lastFedAt: status.lastFedAt?.ISO8601Format()
+        )
+        let attributes = DamagoAttributes(
+            damagoName: status.damagoName
+        )
 
-            if let activity = Activity<DamagoAttributes>.activities.first {
-                Task {
-                    await activity.update(.init(state: latestContentState, staleDate: nil))
-                }
-            } else {
-                self.startActivity(attributes: attributes, contentState: latestContentState)
+        if let activity = Activity<DamagoAttributes>.activities.first {
+            Task {
+                await activity.update(.init(state: latestContentState, staleDate: nil))
+                SharedLogger.liveActivityManger.info("Live Activity 로컬 업데이트 완료")
             }
+        } else {
+            self.startActivity(attributes: attributes, contentState: latestContentState)
         }
     }
     
     func startMonitoring() {
         startMonitoringPushToStartToken()
         monitoringLiveActivities()
-    }
-
-    private func fetchActivityData(completion: @escaping (PetStatus?) -> Void) {
-        guard let repository = userRepository else {
-            completion(nil)
-            return
-        }
-        
-        Task {
-            do {
-                let userInfo = try await repository.getUserInfo()
-                completion(userInfo.petStatus)
-            } catch {
-                SharedLogger.liveActivityManger.error("네트워크 에러: \(error)")
-                completion(nil)
-            }
-        }
     }
     
     private func startMonitoringPushToStartToken() {
@@ -174,14 +181,14 @@ final class LiveActivityManager {
     }
 
     private func requestSaveToken(token: String, key: String) {
-        guard let repository = pushRepository else { return }
+        guard let useCase = saveLiveActivityTokenUseCase else { return }
         
         Task {
             do {
                 let laStartToken = (key == "laStartToken") ? token : nil
                 let laUpdateToken = (key == "laUpdateToken") ? token : nil
                 
-                _ = try await repository.saveLiveActivityToken(
+                _ = try await useCase.execute(
                     startToken: laStartToken,
                     updateToken: laUpdateToken
                 )

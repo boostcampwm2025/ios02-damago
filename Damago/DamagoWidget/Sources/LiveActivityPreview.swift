@@ -13,14 +13,14 @@ import WidgetKit
 
 extension DamagoAttributes {
     fileprivate static var preview: DamagoAttributes {
-        DamagoAttributes(petName: "Base Pet")
+        DamagoAttributes(damagoName: "Base Damago")
     }
 }
 
 extension DamagoAttributes.ContentState {
     fileprivate static var base: DamagoAttributes.ContentState {
         .init(
-            petType: .siamese,
+            damagoType: .siamese,
             isHungry: false,
             statusMessage: "우리가 함께 키우는 작은 행복 🍀",
             level: 20,
@@ -32,7 +32,7 @@ extension DamagoAttributes.ContentState {
 
     fileprivate static var hungry: DamagoAttributes.ContentState {
         .init(
-            petType: .siamese,
+            damagoType: .siamese,
             isHungry: true,
             statusMessage: "우리가 함께 키우는 작은 행복 🍀",
             level: 20,
@@ -44,7 +44,7 @@ extension DamagoAttributes.ContentState {
 
     fileprivate static var choosePokeMessage: DamagoAttributes.ContentState {
         .init(
-            petType: .siamese,
+            damagoType: .siamese,
             isHungry: false,
             statusMessage: "메시지를 선택해 상대를 콕 찌르세요",
             level: 20,
@@ -57,7 +57,7 @@ extension DamagoAttributes.ContentState {
 
     fileprivate static var sending: DamagoAttributes.ContentState {
         .init(
-            petType: .siamese,
+            damagoType: .siamese,
             isHungry: false,
             statusMessage: "전송 중…",
             level: 20,
@@ -70,7 +70,7 @@ extension DamagoAttributes.ContentState {
 
     fileprivate static var error: DamagoAttributes.ContentState {
         .init(
-            petType: .siamese,
+            damagoType: .siamese,
             isHungry: false,
             statusMessage: "요청을 처리하지 못했습니다",
             level: 20,

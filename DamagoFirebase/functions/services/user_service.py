@@ -2,7 +2,7 @@ from firebase_functions import https_fn
 from firebase_admin import firestore
 import google.cloud.firestore
 from utils.firestore import get_db
-from utils.constants import get_default_pet_name, get_required_exp
+from utils.constants import get_default_damago_name, get_required_exp
 from utils.middleware import get_uid_from_request
 import json
 from datetime import datetime
@@ -109,11 +109,11 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
     anniversary_date_str = body.get("anniversaryDate")
     use_fcm = body.get("useFCM")
     use_live_activity = body.get("useLiveActivity")
-    pet_name = body.get("petName")
-    pet_type = body.get("petType")
+    damago_name = body.get("damagoName")
+    damago_type = body.get("damagoType")
     
     # 파라미터가 모두 없으면 400 Bad Request 리턴
-    if all(param is None for param in [nickname, anniversary_date_str, use_fcm, use_live_activity, pet_name, pet_type]):
+    if all(param is None for param in [nickname, anniversary_date_str, use_fcm, use_live_activity, damago_name, damago_type]):
         return https_fn.Response("At least one parameter is required", status=400)
         
     db = get_db()
@@ -136,7 +136,7 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
         user_ref.update(updates)
 
     # 기념일 또는 펫 정보 업데이트가 필요한 경우 유저 정보를 조회해야 함
-    if any(param is not None for param in [anniversary_date_str, pet_name, pet_type]):
+    if any(param is not None for param in [anniversary_date_str, damago_name, damago_type]):
         user_snap = user_ref.get()
         if not user_snap.exists:
              return https_fn.Response("User not found", status=404)
@@ -158,16 +158,16 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
                 couple_ref = db.collection("couples").document(couple_id)
                 couple_ref.update({"anniversaryDate": anniversary_date})
 
-        # 4. 펫 정보 업데이트 (이름, 타입)
-        if pet_name is not None or pet_type is not None:
+        # 4. 다마고 정보 업데이트 (이름, 타입)
+        if damago_name is not None or damago_type is not None:
             couple_id = user_data.get("coupleID")
             if not couple_id:
                  return https_fn.Response("Couple not found", status=404)
 
-            # pet_type에 따라 고유한 damagoID 생성 (예: coupleID_Bunny)
+            # damago_type에 따라 고유한 damagoID 생성 (예: coupleID_Bunny)
             current_damago_id = user_data.get("damagoID")
-            if pet_type is not None:
-                target_damago_id = f"{couple_id}_{pet_type}"
+            if damago_type is not None:
+                target_damago_id = f"{couple_id}_{damago_type}"
                 # 유저, 파트너 및 커플의 활성 펫 ID 업데이트
                 user_ref.update({"damagoID": target_damago_id})
                 db.collection("couples").document(couple_id).update({"damagoID": target_damago_id})
@@ -180,18 +180,18 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
 
             if target_damago_id:
                 damago_ref = db.collection("damagos").document(target_damago_id)
-                pet_snap = damago_ref.get()
+                damago_snap = damago_ref.get()
                 
-                pet_updates = {"lastUpdatedAt": firestore.SERVER_TIMESTAMP}
-                if pet_name is not None:
-                    pet_updates["petName"] = pet_name
-                if pet_type is not None:
-                    pet_updates["petType"] = pet_type
+                damago_updates = {"lastUpdatedAt": firestore.SERVER_TIMESTAMP}
+                if damago_name is not None:
+                    damago_updates["damagoName"] = damago_name
+                if damago_type is not None:
+                    damago_updates["damagoType"] = damago_type
                 
-                if not pet_snap.exists:
-                    # 해당 타입의 펫이 처음인 경우 초기화
+                if not damago_snap.exists:
+                    # 해당 타입의 다마고가 처음인 경우 초기화
                     from utils.constants import XP_TABLE
-                    pet_updates.update({
+                    damago_updates.update({
                         "id": target_damago_id,
                         "level": 1,
                         "currentExp": 0,
@@ -203,25 +203,25 @@ def update_user_info(req: https_fn.Request) -> https_fn.Response:
                         "lastFedAt": None,
                         "endedAt": None
                     })
-                    # 요청에 petName이 없으면 해당 타입의 기본 이름 사용
-                    if "petName" not in pet_updates:
-                        pet_updates["petName"] = get_default_pet_name(pet_type)
-                    damago_ref.set(pet_updates)
+                    # 요청에 damagoName이 없으면 해당 타입의 기본 이름 사용
+                    if "damagoName" not in damago_updates:
+                        damago_updates["damagoName"] = get_default_damago_name(damago_type)
+                    damago_ref.set(damago_updates)
                 else:
-                    damago_ref.update(pet_updates)
+                    damago_ref.update(damago_updates)
 
     return https_fn.Response("Updated successfully", status=200)
 
 def get_user_info(req: https_fn.Request) -> https_fn.Response:
     """
     사용자 정보(UID 기반)를 조회합니다.
-    현재 활성화된 펫(damagoID)이 있다면 해당 펫의 상세 상태 정보도 함께 반환합니다(Aggregation).
+    현재 활성화된 다마고(damagoID)가 있다면 해당 다마고의 상세 상태 정보도 함께 반환합니다(Aggregation).
     
     Args:
         req (https_fn.Request): Header Authorization Bearer Token
         
     Returns:
-        JSON Response: { "uid": ..., "damagoID": ..., "petStatus": { ... }, "totalCoin": ... }
+        JSON Response: { "uid": ..., "damagoID": ..., "damagoStatus": { ... }, "totalCoin": ... }
     """
     try:
         # 미들웨어로 UID 추출
@@ -239,40 +239,40 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
     user_data = user_doc.to_dict()
     damago_id = user_data.get("damagoID")
     
-    # 펫 정보 초기화
-    pet_status = None
+    # 다마고 정보 초기화
+    damago_status = None
     total_coin = 0
     
-    # --- [Pet & Coin Aggregation] ---
-    # damagoID가 있으면 펫 정보도 함께 조회 (Aggregation)
+    # --- [Damago & Coin Aggregation] ---
+    # damagoID가 있으면 다마고 정보도 함께 조회 (Aggregation)
     if damago_id:
-        pet_doc = db.collection("damagos").document(damago_id).get()
-        if pet_doc.exists:
-            pet_data = pet_doc.to_dict()
+        damago_doc = db.collection("damagos").document(damago_id).get()
+        if damago_doc.exists:
+            damago_data = damago_doc.to_dict()
             
-            last_fed_at = pet_data.get("lastFedAt")
+            last_fed_at = damago_data.get("lastFedAt")
             last_fed_at_str = last_fed_at.isoformat(timespec='seconds') if last_fed_at else None
             
-            last_active_at = pet_data.get("lastActiveAt")
+            last_active_at = damago_data.get("lastActiveAt")
             last_active_at_str = last_active_at.isoformat(timespec='seconds') if last_active_at else None
             
             # 커플 정보에서 코인 조회
-            couple_id = pet_data.get("coupleID")
+            couple_id = damago_data.get("coupleID")
             if couple_id:
                 couple_doc = db.collection("couples").document(couple_id).get()
                 if couple_doc.exists:
                     total_coin = couple_doc.to_dict().get("totalCoin", 0)
 
-            pet_status = {
-                "petName": pet_data.get("petName", "이름 없는 펫"),
-                "petType": pet_data.get("petType", "Bunny"),
-                "level": pet_data.get("level", 1),
-                "currentExp": pet_data.get("currentExp", 0),
-                "maxExp": pet_data.get("maxExp", 20),
-                "isHungry": pet_data.get("isHungry", False),
-                "statusMessage": pet_data.get("statusMessage", "행복해요!"),
+            damago_status = {
+                "damagoName": damago_data.get("damagoName", "이름 없는 다마고"),
+                "damagoType": damago_data.get("damagoType", "Bunny"),
+                "level": damago_data.get("level", 1),
+                "currentExp": damago_data.get("currentExp", 0),
+                "maxExp": damago_data.get("maxExp", 20),
+                "isHungry": damago_data.get("isHungry", False),
+                "statusMessage": damago_data.get("statusMessage", "행복해요!"),
                 "lastFedAt": last_fed_at_str,
-                "totalPlayTime": pet_data.get("totalPlayTime", 0),
+                "totalPlayTime": damago_data.get("totalPlayTime", 0),
                 "lastActiveAt": last_active_at_str
             }
 
@@ -282,7 +282,7 @@ def get_user_info(req: https_fn.Request) -> https_fn.Response:
         "coupleID": user_data.get("coupleID"),
         "partnerUID": user_data.get("partnerUID"), # partnerUDID -> partnerUID
         "nickname": user_data.get("nickname"),
-        "petStatus": pet_status,  # 합쳐진 펫 정보
+        "damagoStatus": damago_status,  # 합쳐진 다마고 정보
         "totalCoin": total_coin
     }
 
@@ -322,9 +322,16 @@ def update_fcm_token(req: https_fn.Request) -> https_fn.Response:
     # 해당 사용자가 존재하는지 확인
     doc = user_ref.get()
     if not doc.exists:
-        return https_fn.Response("User not found", status=404)
-        
-    user_ref.update({"fcmToken": fcm_token})
+        # 유저가 없으면 생성 (최초 로그인 시 FCM 토큰 업데이트가 먼저 호출될 수 있음)
+        user_ref.set({
+            "uid": uid,
+            "fcmToken": fcm_token,
+            "useFCM": True,
+            "createdAt": firestore.SERVER_TIMESTAMP,
+            "updatedAt": firestore.SERVER_TIMESTAMP
+        })
+    else:
+        user_ref.update({"fcmToken": fcm_token})
     
     return https_fn.Response(
         json.dumps({"message": "FCM token updated successfully"}),

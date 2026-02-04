@@ -13,11 +13,12 @@ final class CollectionViewController: UIViewController {
     private let viewModel: CollectionViewModel
 
     private let viewDidLoadPublisher = PassthroughSubject<Void, Never>()
-    private let petSelectedPublisher = PassthroughSubject<DamagoType, Never>()
+    private let damagoSelectedPublisher = PassthroughSubject<DamagoType, Never>()
     private let confirmChangeTappedPublisher = PassthroughSubject<Void, Never>()
 
     private var cancellables = Set<AnyCancellable>()
-    private var currentPetType: DamagoType?
+    private var currentDamagoType: DamagoType?
+    private var ownedDamagos: [DamagoType: Int] = [:]
 
     init(viewModel: CollectionViewModel) {
         self.viewModel = viewModel
@@ -68,7 +69,7 @@ final class CollectionViewController: UIViewController {
     private func bind() {
         let input = CollectionViewModel.Input(
             viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
-            petSelected: petSelectedPublisher.eraseToAnyPublisher(),
+            damagoSelected: damagoSelectedPublisher.eraseToAnyPublisher(),
             confirmChangeTapped: confirmChangeTappedPublisher.eraseToAnyPublisher()
         )
 
@@ -82,10 +83,18 @@ final class CollectionViewController: UIViewController {
             .store(in: &cancellables)
 
         output
-            .map(\.currentPetType)
+            .map(\.currentDamagoType)
             .removeDuplicates { $0?.rawValue == $1?.rawValue }
             .sink { [weak self] ct in
-                self?.currentPetType = ct
+                self?.currentDamagoType = ct
+                self?.mainView.collectionView.reloadData()
+            }
+            .store(in: &cancellables)
+
+        output
+            .map(\.ownedDamagos)
+            .sink { [weak self] in
+                self?.ownedDamagos = $0
                 self?.mainView.collectionView.reloadData()
             }
             .store(in: &cancellables)
@@ -93,10 +102,8 @@ final class CollectionViewController: UIViewController {
 
     private func handleRoute(_ route: CollectionViewModel.Route) {
         switch route {
-        case .showChangeConfirmPopup(let petType):
-            showChangeConfirmPopup(for: petType)
-        case .changeSuccess:
-            LiveActivityManager.shared.synchronizeActivity()
+        case .showChangeConfirmPopup(let damagoType):
+            showChangeConfirmPopup(for: damagoType)
         case .error(let title, let message):
             let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "확인", style: .default))
@@ -104,9 +111,9 @@ final class CollectionViewController: UIViewController {
         }
     }
 
-    private func showChangeConfirmPopup(for petType: DamagoType) {
-        let popupView = CharacterChangeConfirmPopupView()
-        popupView.configure(with: petType)
+    private func showChangeConfirmPopup(for damagoType: DamagoType) {
+        let popupView = DamagoChangeConfirmPopupView()
+        popupView.configure(with: damagoType)
         popupView.translatesAutoresizingMaskIntoConstraints = false
 
         // 탭바까지 덮도록 tabBarController의 view에 추가
@@ -139,8 +146,14 @@ final class CollectionViewController: UIViewController {
         }
     }
 
-    @objc private func shopButtonTapped() {
-        let storeViewModel = StoreViewModel()
+    @objc
+    private func shopButtonTapped() {
+        let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
+        let createDamagoUseCase = AppDIContainer.shared.resolve(CreateDamagoUseCase.self)
+        let storeViewModel = StoreViewModel(
+            globalStore: globalStore,
+            createDamagoUseCase: createDamagoUseCase
+        )
         let storeVC = StoreViewController(viewModel: storeViewModel)
         storeVC.modalPresentationStyle = .fullScreen
         self.present(storeVC, animated: true)
@@ -149,7 +162,7 @@ final class CollectionViewController: UIViewController {
 
 extension CollectionViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        viewModel.pets.count
+        viewModel.damagos.count
     }
 
     func collectionView(
@@ -157,19 +170,27 @@ extension CollectionViewController: UICollectionViewDataSource, UICollectionView
         cellForItemAt indexPath: IndexPath
     ) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: PetCell.reuseIdentifier,
+            withReuseIdentifier: DamagoCell.reuseIdentifier,
             for: indexPath
-        ) as? PetCell else {
+        ) as? DamagoCell else {
             return UICollectionViewCell()
         }
-        let petType = viewModel.pets[indexPath.item]
-        cell.configure(with: petType, isCurrentPet: currentPetType == petType)
+        let damagoType = viewModel.damagos[indexPath.item]
+        let isAvailable = ownedDamagos.keys.contains(damagoType)
+        let isHighLevel = (ownedDamagos[damagoType] ?? 0) >= 30
+        
+        cell.configure(
+            with: damagoType,
+            isCurrentDamago: currentDamagoType == damagoType,
+            showTemplete: !isAvailable,
+            isHighLevel: isHighLevel
+        )
         return cell
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let petType = viewModel.pets[indexPath.item]
-        if petType == currentPetType { return }
-        petSelectedPublisher.send(petType)
+        let damagoType = viewModel.damagos[indexPath.item]
+        if damagoType == currentDamagoType { return }
+        damagoSelectedPublisher.send(damagoType)
     }
 }

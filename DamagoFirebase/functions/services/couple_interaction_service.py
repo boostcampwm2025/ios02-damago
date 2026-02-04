@@ -4,7 +4,7 @@ from google.cloud.firestore import FieldFilter
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from services.push_service import send_push_notification
 
 def fetch_history(req: https_fn.Request) -> https_fn.Response:
@@ -96,7 +96,7 @@ def _fetch_daily_question_history(db, couple_ref, limit, uid):
             "questionContent": q_data.get("questionText", "삭제된 질문"),
             "user1Answer": ans_data.get("user1Answer"),
             "user2Answer": ans_data.get("user2Answer"),
-            "answeredAt": ans_data.get("user1AnsweredAt", datetime.now()).isoformat(),
+            "answeredAt": ans_data.get("user1AnsweredAt", datetime.now(timezone.utc)).isoformat(),
             "isUser1": is_user1
         })
         
@@ -121,15 +121,8 @@ def _fetch_balance_game_history(db, couple_ref, limit, uid):
     
     for ans_doc in answers:
         data = ans_doc.to_dict()
-        # balanceGameID 필드 혹은 doc.id 활용
-        # 스키마 상 doc.id는 {coupleID}_{gameID}일 수도 있고, gameID일 수도 있음.
-        # 기존 로직과 데이터 구조에 따라 다르지만, 여기서는 data 내에 'balanceGameID'가 있다고 가정하거나
-        # 없다면 doc.id가 gameID라고 가정해야 함.
-        # 안전하게 data.get('balanceGameID')를 우선 사용
         game_id = data.get("balanceGameID")
         
-        # 만약 balanceGameID가 없다면 doc.id가 gameID일 가능성 (시드 데이터 로직 확인 필요하나, 
-        # 보통 subcollection document id를 gameID로 쓰는 경우가 많음)
         if not game_id:
             game_id = ans_doc.id
             
@@ -154,14 +147,20 @@ def _fetch_balance_game_history(db, couple_ref, limit, uid):
         if not game_data:
             continue
             
+        last_at = ans_data.get("lastAnsweredAt")
+        formatted_last_at = None
+        if last_at and hasattr(last_at, "isoformat"):
+            formatted_last_at = last_at.isoformat()
+
         result_list.append({
             "gameID": game_id,
             "question": game_data.get("questionText"),
             "optionA": game_data.get("option1"), 
             "optionB": game_data.get("option2"),
-            "user1Answer": ans_data.get("user1Answer"), # 1: Left, 2: Right (가정)
+            "user1Answer": ans_data.get("user1Answer"), 
             "user2Answer": ans_data.get("user2Answer"),
-            "isUser1": is_user1
+            "isUser1": is_user1,
+            "answeredAt": formatted_last_at
         })
         
     return https_fn.Response(json.dumps(result_list, default=str), mimetype="application/json")
@@ -528,20 +527,25 @@ def fetch_balance_game(req: https_fn.Request) -> https_fn.Response:
     
     user1_choice = None
     user2_choice = None
+    both_answered = False
+    specific_last_answered_at = None
     
     if answer_doc.exists:
         answer_data = answer_doc.to_dict()
         user1_choice = answer_data.get("user1Answer")
         user2_choice = answer_data.get("user2Answer")
+        both_answered = answer_data.get("bothAnswered", False)
+        specific_last_answered_at = answer_data.get("lastAnsweredAt")
     
     my_choice = user1_choice if is_user1 else user2_choice
     opponent_choice = user2_choice if is_user1 else user1_choice
     
     formatted_last_answered_at = None
-    if last_answered_at:
-        if last_answered_at.tzinfo is None:
-            last_answered_at = last_answered_at.replace(tzinfo=timezone.utc)
-        formatted_last_answered_at = last_answered_at.isoformat(timespec="seconds").replace("+00:00", "Z")
+    if specific_last_answered_at and both_answered:
+        if hasattr(specific_last_answered_at, "isoformat"):
+            if specific_last_answered_at.tzinfo is None:
+                specific_last_answered_at = specific_last_answered_at.replace(tzinfo=timezone.utc)
+            formatted_last_answered_at = specific_last_answered_at.isoformat(timespec="seconds").replace("+00:00", "Z")
 
     response_data = {
         "gameID": game_id,
@@ -598,7 +602,7 @@ def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
         answer_snapshot = next(transaction.get(answer_ref))
         answer_data = answer_snapshot.to_dict() if answer_snapshot.exists else {}
         
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         answer_update = {}
         
         if is_user1:
@@ -614,6 +618,7 @@ def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
         
         if is_completing_now:
             answer_update["bothAnswered"] = True
+            answer_update["lastAnsweredAt"] = now
             current_stats = couple_data.get("balanceGameStats", {})
             current_total = current_stats.get("totalAnswered", 0)
             
@@ -626,11 +631,26 @@ def submit_balance_game(req: https_fn.Request) -> https_fn.Response:
             
         transaction.set(answer_ref, answer_update, merge=True)
         
+        is_both_answered = is_completing_now or answer_data.get("bothAnswered", False)
+        final_last_answered_at = None
+        
+        if is_both_answered:
+            if is_completing_now:
+                final_last_answered_at = now.isoformat(timespec="seconds").replace("+00:00", "Z")
+            else:
+                last_at = answer_data.get("lastAnsweredAt")
+                if last_at:
+                    if hasattr(last_at, "isoformat"):
+                        if last_at.tzinfo is None:
+                            last_at = last_at.replace(tzinfo=timezone.utc)
+                        final_last_answered_at = last_at.isoformat(timespec="seconds").replace("+00:00", "Z")
+
         return {
             "gameID": game_id,
             "myChoice": choice,
             "opponentChoice": opponent_choice,
-            "bothAnswered": is_completing_now or answer_data.get("bothAnswered", False),
+            "bothAnswered": is_both_answered,
+            "lastAnsweredAt": final_last_answered_at,
             "notificationData": {
                 "partnerUID": user_data.get("partnerUID"),
                 "nickname": user_data.get("nickname", "상대방"),

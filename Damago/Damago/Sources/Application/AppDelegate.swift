@@ -16,6 +16,8 @@ import TipKit
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
+    private var apnsRetryCount = 0
+    private let maxRetryCount = 3
 
     /// 앱이 처음 실행될 때 호출되는 메소드입니다.
     /// Firebase 설정, 알림 권한 요청, Delegate 연결 등의 초기화 작업을 수행합니다.
@@ -28,7 +30,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         FirebaseApp.configure()
 
         do {
-            try Auth.auth().useUserAccessGroup("B3PWYBKFUK.kr.codesquad.boostcamp10.Damago.SharedKeychain")
+            try Auth.auth().useUserAccessGroup(KeychainSharingConstants.defaultID)
         } catch {
             SharedLogger.firebase.error("키체인 그룹 에러: \(error.localizedDescription)")
         }
@@ -94,6 +96,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
+        self.apnsRetryCount = 0
         SharedLogger.apns.info("✅ APNs token retrieved: \(deviceToken.map { String(format: "%02.2hhx", $0) }.joined())")
 
         // 발급받은 APNs 토큰을 Firebase Messaging에 연결합니다.
@@ -115,8 +118,38 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         _ application: UIApplication,
         didFailToRegisterForRemoteNotificationsWithError error: any Error
     ) {
-        // TODO: - 유저 피드백 제공
-        // ex) Alert와 함께 앱 종료
+        SharedLogger.apns.error("❌ Failed to register for remote notifications with error: \(error.localizedDescription)")
+        
+        if apnsRetryCount < maxRetryCount {
+            apnsRetryCount += 1
+            let delay = apnsRetryCount * 2
+            
+            SharedLogger.apns.info("🔄 \(delay)초 후 APNs 등록 재시도합니다... (횟수: \(self.apnsRetryCount))")
+            
+            Task {
+                try? await Task.sleep(for: .seconds(delay))
+                UIApplication.shared.registerForRemoteNotifications()
+            }
+        } else {
+            SharedLogger.apns.error("⛔️ Remote notification registration 최종 실패: 재시도 횟수 초과")
+            showFinalFailureAlert(error: error)
+        }
+    }
+    
+    private func showFinalFailureAlert(error: Error) {
+        let alert = UIAlertController(
+            title: "알림 연결 실패",
+            message: "서버 연결이 불안정하여 알림을 받을 수 없습니다.\n잠시 후에 앱을 재실행해주세요.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        
+        let keyWindow = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+        
+        keyWindow?.rootViewController?.present(alert, animated: true)
     }
 
     /// 앱이 **화면(Foreground)**에 켜져 있는 상태에서 푸시 알림이 왔을 때 호출됩니다.

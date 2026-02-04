@@ -11,7 +11,7 @@ public enum UserAPI {
     case generateCode(accessToken: String)
     case connectCouple(accessToken: String, targetCode: String)
     case getUserInfo(accessToken: String)
-    case updateUserInfo(accessToken: String, nickname: String?, anniversaryDate: String?, useFCM: Bool?, useLiveActivity: Bool?, petName: String?, petType: String?)
+    case updateUserInfo(accessToken: String, nickname: String?, anniversaryDate: String?, useFCM: Bool?, useLiveActivity: Bool?, damagoName: String?, damagoType: String?)
     case updateFCMToken(accessToken: String, fcmToken: String)
     case withdrawUser(accessToken: String)
     case checkCoupleConnection(accessToken: String)
@@ -69,14 +69,14 @@ extension UserAPI: EndPoint {
         case .updateFCMToken(_, let fcmToken):
             parameters = ["fcmToken": fcmToken]
             
-        case .updateUserInfo(_, let nickname, let anniversaryDate, let useFCM, let useLiveActivity, let petName, let petType):
+        case .updateUserInfo(_, let nickname, let anniversaryDate, let useFCM, let useLiveActivity, let damagoName, let damagoType):
             parameters = [
                 "nickname": nickname,
                 "anniversaryDate": anniversaryDate,
                 "useFCM": useFCM,
                 "useLiveActivity": useLiveActivity,
-                "petName": petName,
-                "petType": petType
+                "damagoName": damagoName,
+                "damagoType": damagoType
             ]
             
         case .withdrawUser:

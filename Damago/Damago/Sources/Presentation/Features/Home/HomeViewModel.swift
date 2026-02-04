@@ -14,7 +14,7 @@ final class HomeViewModel: ViewModel {
         let viewDidLoad: AnyPublisher<Void, Never>
         let feedButtonDidTap: AnyPublisher<Void, Never>
         let pokeMessageSelected: AnyPublisher<String, Never>
-        let petNameChangeSubmitted: AnyPublisher<String, Never>
+        let damagoNameChangeSubmitted: AnyPublisher<String, Never>
     }
 
     struct State: Equatable {
@@ -24,8 +24,8 @@ final class HomeViewModel: ViewModel {
         var coinAmount = 0
         var foodAmount = 0
         var dDay = 0
-        var petName = ""
-        var petType = ""
+        var damagoName = ""
+        var damagoType: DamagoType?
         var isHungry: Bool = true
         var level = 0
         var currentExp = 0
@@ -33,6 +33,7 @@ final class HomeViewModel: ViewModel {
         var totalCoin = 0
         var foodCount = 0
         var lastFedAt: Date?
+        var ownedDamagos: [DamagoType: Int] = [:]
 
         var isFeedButtonEnabled: Bool { foodCount > 0 && !isFeeding }
         var isPokeButtonEnabled: Bool { true }
@@ -44,27 +45,27 @@ final class HomeViewModel: ViewModel {
         case error(message: String)
     }
 
-    @Published private var state = State()
+    @Published private(set) var state = State()
     private var cancellables = Set<AnyCancellable>()
     private var damagoID: String?
 
     private let globalStore: GlobalStoreProtocol
-    private let userRepository: UserRepositoryProtocol
-    private let petRepository: PetRepositoryProtocol
-    private let pushRepository: PushRepositoryProtocol
+    private let fetchUserInfoUseCase: FetchUserInfoUseCase
+    private let feedDamagoUseCase: FeedDamagoUseCase
+    private let pokeDamagoUseCase: PokeDamagoUseCase
     private let updateUserUseCase: UpdateUserUseCase
     
     init(
         globalStore: GlobalStoreProtocol,
-        userRepository: UserRepositoryProtocol,
-        petRepository: PetRepositoryProtocol,
-        pushRepository: PushRepositoryProtocol,
+        fetchUserInfoUseCase: FetchUserInfoUseCase,
+        feedDamagoUseCase: FeedDamagoUseCase,
+        pokeDamagoUseCase: PokeDamagoUseCase,
         updateUserUseCase: UpdateUserUseCase
     ) {
         self.globalStore = globalStore
-        self.userRepository = userRepository
-        self.petRepository = petRepository
-        self.pushRepository = pushRepository
+        self.fetchUserInfoUseCase = fetchUserInfoUseCase
+        self.feedDamagoUseCase = feedDamagoUseCase
+        self.pokeDamagoUseCase = pokeDamagoUseCase
         self.updateUserUseCase = updateUserUseCase
     }
 
@@ -79,20 +80,20 @@ final class HomeViewModel: ViewModel {
 
         input.feedButtonDidTap
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] in self?.feedPet() }
+            .sink { [weak self] in self?.feedDamago() }
             .store(in: &cancellables)
 
         input.pokeMessageSelected
             .receive(on: DispatchQueue.main)
             .sink { [weak self] message in
-                self?.pokePet(with: message)
+                self?.pokeDamago(with: message)
             }
             .store(in: &cancellables)
 
-        input.petNameChangeSubmitted
+        input.damagoNameChangeSubmitted
             .receive(on: DispatchQueue.main)
             .sink { [weak self] name in
-                self?.updatePetName(name: name)
+                self?.updateDamagoName(name: name)
             }
             .store(in: &cancellables)
 
@@ -106,58 +107,51 @@ final class HomeViewModel: ViewModel {
                 state.isLoading = false
             }
             do {
-                let userInfo = try await userRepository.getUserInfo()
+                let userInfo = try await fetchUserInfoUseCase.execute()
 
                 self.damagoID = userInfo.damagoID
                 state.totalCoin = userInfo.totalCoin
 
-                if let petStatus = userInfo.petStatus {
-                    state.level = petStatus.level
-                    state.currentExp = petStatus.currentExp
-                    state.maxExp = petStatus.maxExp
-                    state.petName = petStatus.petName
-                    state.petType = petStatus.petType
-                    state.isHungry = petStatus.isHungry
-                    state.lastFedAt = petStatus.lastFedAt
+                if let damagoStatus = userInfo.damagoStatus {
+                    state.level = damagoStatus.level
+                    state.currentExp = damagoStatus.currentExp
+                    state.maxExp = damagoStatus.maxExp
+                    state.damagoName = damagoStatus.damagoName
+                    state.damagoType = damagoStatus.damagoType
+                    state.isHungry = damagoStatus.isHungry
                 }
             } catch {
-                print("Error fetching user info: \(error)")
+                SharedLogger.home.error("Error fetching user info: \(error)")
             }
         }
     }
 
-    private func feedPet() {
+    private func feedDamago() {
         guard let damagoID else { return }
         
         Task {
             do {
                 state.isFeeding = true
-                let success = try await petRepository.feed(damagoID: damagoID)
-                if success {
-                    state.lastFedAt = Date()
-                    LiveActivityManager.shared.synchronizeActivity()
-                } else {
-                    state.isFeeding = false
-                }
+                try await feedDamagoUseCase.execute(damagoID: damagoID)
             } catch {
-                print("Error feeding pet: \(error)")
+                SharedLogger.home.error("Error feeding damago: \(error)")
                 state.isFeeding = false
             }
         }
     }
 
-    private func pokePet(with message: String) {
+    private func pokeDamago(with message: String) {
         Task {
             do {
-                _ = try await pushRepository.poke(message: message)
-                print("Poke sent with message: \(message)")
+                _ = try await pokeDamagoUseCase.execute(message: message)
+                SharedLogger.home.info("Poke sent with message: \(message)")
             } catch {
-                print("Error poking pet: \(error)")
+                SharedLogger.home.error("Error poking damago: \(error)")
             }
         }
     }
 
-    private func updatePetName(name: String) {
+    private func updateDamagoName(name: String) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             state.route = Pulse(.error(message: "이름을 입력해 주세요."))
@@ -173,11 +167,11 @@ final class HomeViewModel: ViewModel {
                     anniversaryDate: nil,
                     useFCM: nil,
                     useLiveActivity: nil,
-                    petName: trimmed,
-                    petType: nil
+                    damagoName: trimmed,
+                    damagoType: nil
                 )
                 // 서버/Firestore 반영을 기다리지 않고 UI를 즉시 갱신
-                state.petName = trimmed
+                state.damagoName = trimmed
                 state.route = Pulse(.nameChangeSuccess)
             } catch {
                 state.route = Pulse(.error(message: error.userFriendlyMessage))
@@ -187,18 +181,28 @@ final class HomeViewModel: ViewModel {
 
     private func bindGlobalState() {
         globalStore.globalState
-            .compactMapForUI { $0 }
-            .sink { [weak self] state in
-                guard let self, let petType = state.petType, let isHungry = state.isHungry else { return }
-                
-                self.state.petType = petType
-                self.state.isHungry = isHungry
-            }
+            .compactMap { $0.damagoID }
+            .sink { [weak self] in self?.damagoID = $0 }
             .store(in: &cancellables)
 
         globalStore.globalState
-            .compactMapForUI { $0.petName }
-            .sink { [weak self] in self?.state.petName = $0 }
+            .compactMapForUI { $0 }
+            .sink { [weak self] state in
+                guard let self, let damagoType = state.damagoType, let isHungry = state.isHungry else { return }
+                
+                self.state.damagoType = damagoType
+                self.state.isHungry = isHungry
+            }
+            .store(in: &cancellables)
+        
+        globalStore.globalState
+            .map { $0.ownedDamagos ?? [:] }
+            .assign(to: \.state.ownedDamagos, on: self)
+            .store(in: &cancellables)
+
+        globalStore.globalState
+            .compactMapForUI { $0.damagoName }
+            .sink { [weak self] in self?.state.damagoName = $0 }
             .store(in: &cancellables)
 
         globalStore.globalState
@@ -214,11 +218,6 @@ final class HomeViewModel: ViewModel {
         globalStore.globalState
             .compactMapForUI { $0.maxExp }
             .sink { [weak self] in self?.state.maxExp = $0 }
-            .store(in: &cancellables)
-            
-        globalStore.globalState
-            .mapForUI { $0.lastFedAt }
-            .sink { [weak self] in self?.state.lastFedAt = $0 }
             .store(in: &cancellables)
 
         globalStore.globalState

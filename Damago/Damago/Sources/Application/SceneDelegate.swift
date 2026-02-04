@@ -25,12 +25,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         willConnectTo session: UISceneSession,
         options connectionOptions: UIScene.ConnectionOptions
     ) {
-        let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
-        let pushRepository = AppDIContainer.shared.resolve(PushRepositoryProtocol.self)
+        let saveLiveActivityTokenUseCase = AppDIContainer.shared.resolve(SaveLiveActivityTokenUseCase.self)
         let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
         LiveActivityManager.shared.configure(
-            userRepository: userRepository,
-            pushRepository: pushRepository,
+            saveLiveActivityTokenUseCase: saveLiveActivityTokenUseCase,
             globalStore: globalStore
         )
 
@@ -138,11 +136,11 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let tabBarController = TabBarViewController()
             window?.rootViewController = tabBarController
         } else {
-            let userRepository = AppDIContainer.shared.resolve(UserRepositoryProtocol.self)
+            let fetchUserInfoUseCase = AppDIContainer.shared.resolve(FetchUserInfoUseCase.self)
             let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
             let vm = ProfileSettingViewModel(
                 updateUserUseCase: updateUserUseCase,
-                userRepository: userRepository
+                fetchUserInfoUseCase: fetchUserInfoUseCase
             )
             let vc = ProfileSettingViewController(viewModel: vm)
             let navigationController = UINavigationController(rootViewController: vc)

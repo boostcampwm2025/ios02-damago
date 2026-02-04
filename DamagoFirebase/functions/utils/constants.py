@@ -10,6 +10,7 @@ PROJECT_ID = os.environ.get("GCLOUD_PROJECT", "damago-dev")
 # Cloud Tasks 설정
 LOCATION = "asia-northeast3"
 QUEUE_NAME = "make-hungry-queue"
+PUSH_RETRY_QUEUE_NAME = "push-retry-queue"
 HUNGER_DELAY_SECONDS = 4 * 60 * 60 # 4시간
 
 # --- Game Balance Constants ---
@@ -57,9 +58,18 @@ def get_level_up_reward(level: int) -> int:
 
     return 50 + (level * 10)
 
+BASIC_DAMAGO_TYPES = [
+    "CatBasicBlack",
+    "CatBasicPink",
+    "CatBasicYellow",
+]
 
 # DamagoAttributes.DamagoType.isAvailable == true 인 타입 (동기화 유지)
-AVAILABLE_PET_TYPES = [
+AVAILABLE_DAMAGO_TYPES = [
+    "CatBasicBlack",
+    "CatBasicPink",
+    "CatBasicYellow",
+
     "CatSiamese",
     "CatTiger",
     "CatBatman",
@@ -71,7 +81,11 @@ AVAILABLE_PET_TYPES = [
 ]
 
 # DamagoType rawValue → 기본 이름 (DamagoAttributes.DamagoType.defaultName과 동기화)
-PET_TYPE_DEFAULT_NAMES = {
+DAMAGO_TYPE_DEFAULT_NAMES = {
+    "CatBasicBlack": "검정냥",
+    "CatBasicPink": "핑크냥",
+    "CatBasicYellow": "노랑냥",
+
     "CatSiamese": "샴",
     "CatTiger": "호랑이",
     "CatBatman": "배트맨",
@@ -80,17 +94,11 @@ PET_TYPE_DEFAULT_NAMES = {
     "CatOddEye": "오드아이",
     "CatThreeColored": "삼색",
     "CatWizard": "위자드",
-    "Dog": "강아지",
-    "Fish": "물고기",
-    "Lizard": "도마뱀",
-    "Owl": "부엉이",
-    "Parrot": "앵무새",
-    "Rabbit": "토끼",
 }
 
 
-def get_default_pet_name(pet_type: str | None) -> str:
-    """pet_type에 맞는 기본 이름을 반환합니다. 없으면 '다마고'."""
-    if not pet_type:
+def get_default_damago_name(damago_type: str | None) -> str:
+    """damago_type에 맞는 기본 이름을 반환합니다. 없으면 '다마고'."""
+    if not damago_type:
         return "다마고"
-    return PET_TYPE_DEFAULT_NAMES.get(pet_type, "다마고")
+    return DAMAGO_TYPE_DEFAULT_NAMES.get(damago_type, "다마고")

@@ -14,6 +14,8 @@ final class StoreViewController: UIViewController {
     private let viewModel: StoreViewModel
     private var cancellables = Set<AnyCancellable>()
 
+    private var ownedDamagos: [DamagoType: Int]?
+
     init(viewModel: StoreViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -55,11 +57,30 @@ final class StoreViewController: UIViewController {
                 self.triggerGachaAnimation(result: result)
             }
             .store(in: &cancellables)
+
+        output
+            .map { $0.ownedDamagos }
+            .assign(to: \.ownedDamagos, on: self)
+            .store(in: &cancellables)
         
         output
             .pulse(\.error)
-            .sink { [weak self] errorMessage in
-                self?.showErrorAlert(message: errorMessage)
+            .sink { [weak self] error in
+                self?.showErrorAlert(message: error.localizedDescription)
+            }
+            .store(in: &cancellables)
+            
+        output
+            .mapForUI { $0.isDrawButtonEnabled }
+            .sink { [weak self] isEnabled in
+                self?.mainView.drawButton.isEnabled = isEnabled
+            }
+            .store(in: &cancellables)
+            
+        output
+            .mapForUI { $0.drawButtonTitle }
+            .sink { [weak self] title in
+                self?.mainView.drawButton.setTitle(title)
             }
             .store(in: &cancellables)
     }
@@ -86,7 +107,7 @@ final class StoreViewController: UIViewController {
         present(alert, animated: true)
     }
     
-    private func triggerGachaAnimation(result: StoreViewModel.DrawResult) {
+    private func triggerGachaAnimation(result: DrawResult) {
         mainView.machineImageView.isHidden = true
         mainView.drawButton.isEnabled = false
         mainView.exitButton.isHidden = true
@@ -103,7 +124,7 @@ final class StoreViewController: UIViewController {
             }
             
             self.mainView.machineImageView.isHidden = false
-            self.mainView.drawButton.isEnabled = true
+            self.mainView.drawButton.isEnabled = self.viewModel.state.isDrawButtonEnabled
             self.mainView.exitButton.isHidden = false
         }
         
@@ -124,7 +145,7 @@ final class StoreViewController: UIViewController {
         hostingController.didMove(toParent: self)
     }
     
-    private func showResultOverlay(result: StoreViewModel.DrawResult) {
+    private func showResultOverlay(result: DrawResult) {
         mainView.resultView.configure(with: result)
         
         UIView.animate(withDuration: 0.3) {

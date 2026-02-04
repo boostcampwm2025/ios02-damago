@@ -41,13 +41,13 @@ struct FeedAppIntent: AppIntent, LiveActivityIntent {
 
             try await requestFeed(accessToken: token, damagoID: damagoID)
 
-            // feed 성공 후 서버의 최신 PetStatus로 Live Activity 상태 동기화
-            guard let petStatus = try await fetchPetStatus(accessToken: token) else {
+            // feed 성공 후 서버의 최신 DamagoStatus로 Live Activity 상태 동기화
+            guard let damagoStatus = try await fetchDamagoStatus(accessToken: token) else {
                 await showTransientErrorAndReturnIdle()
                 return .result()
             }
 
-            await applyPetStatusAndReturnIdle(petStatus)
+            await applyDamagoStatusAndReturnIdle(damagoStatus)
             return .result()
         } catch {
             SharedLogger.liveActivityAppIntent
@@ -93,42 +93,42 @@ struct FeedAppIntent: AppIntent, LiveActivityIntent {
     /// 서버에 feed 요청을 전송합니다.
     private func requestFeed(accessToken: String, damagoID: String) async throws {
         _ = try await networkProvider.requestSuccess(
-            PetAPI.feed(accessToken: accessToken, damagoID: damagoID)
+            DamagoAPI.feed(accessToken: accessToken, damagoID: damagoID)
         )
     }
 
-    /// 최신 PetStatus를 얻기 위해 UserInfo를 재조회하고, petStatus만 반환합니다.
-    /// - Returns: 서버 응답에 petStatus가 없으면 nil을 반환합니다.
-    private func fetchPetStatus(accessToken: String) async throws -> DamagoStatusResponse? {
+    /// 최신 DamagoStatus를 얻기 위해 UserInfo를 재조회하고, damagoStatus만 반환합니다.
+    /// - Returns: 서버 응답에 damagoStatus가 없으면 nil을 반환합니다.
+    private func fetchDamagoStatus(accessToken: String) async throws -> DamagoStatusResponse? {
         let refreshedUserInfo: UserInfoResponse = try await fetchUserInfo(accessToken: accessToken)
 
-        guard let petStatus = refreshedUserInfo.petStatus else {
+        guard let damagoStatus = refreshedUserInfo.damagoStatus else {
             SharedLogger.liveActivityAppIntent
-                .error("User info doesn't have pet status")
+                .error("User info doesn't have damago status")
             return nil
         }
 
-        return petStatus
+        return damagoStatus
     }
 
-    /// 서버에서 받은 PetStatus로 ContentState를 재구성하고, 화면을 idle로 복귀시킵니다.
-    private func applyPetStatusAndReturnIdle(_ petStatus: DamagoStatusResponse) async {
-        guard let petType = DamagoType(rawValue: petStatus.petType) else {
+    /// 서버에서 받은 DamagoStatus로 ContentState를 재구성하고, 화면을 idle로 복귀시킵니다.
+    private func applyDamagoStatusAndReturnIdle(_ damagoStatus: DamagoStatusResponse) async {
+        guard let damagoType = DamagoType(rawValue: damagoStatus.damagoType) else {
             SharedLogger.liveActivityAppIntent
-                .error("Invalid petType from server: \(petStatus.petType)")
+                .error("Invalid damagoType from server: \(damagoStatus.damagoType)")
             await showTransientErrorAndReturnIdle()
             return
         }
 
         await updateState { state in
             state = DamagoAttributes.ContentState(
-                petType: petType,
-                isHungry: petStatus.isHungry,
-                statusMessage: petStatus.statusMessage,
-                level: petStatus.level,
-                currentExp: petStatus.currentExp,
-                maxExp: petStatus.maxExp,
-                lastFedAt: petStatus.lastFedAt?.ISO8601Format()
+                damagoType: damagoType,
+                isHungry: damagoStatus.isHungry,
+                statusMessage: damagoStatus.statusMessage,
+                level: damagoStatus.level,
+                currentExp: damagoStatus.currentExp,
+                maxExp: damagoStatus.maxExp,
+                lastFedAt: damagoStatus.lastFedAt?.ISO8601Format()
             )
             state.screen = .idle
         }

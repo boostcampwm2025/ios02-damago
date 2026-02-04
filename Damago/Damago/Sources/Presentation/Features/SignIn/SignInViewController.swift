@@ -30,10 +30,16 @@ final class SignInViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        let output = viewModel.transform(SignInViewModel.Input(
-            signInButtonDidTap: mainView.signInButton.tapPublisher,
-            alertButtonDidTap: alertActionSubject.eraseToAnyPublisher()
-        ))
+        let output = viewModel.transform(
+            SignInViewModel.Input(
+                signInButtonDidTap: mainView.signInButton.tapPublisher.throttle(
+                    for: .seconds(0.3),
+                    scheduler: DispatchQueue.main,
+                    latest: false
+                ).eraseToAnyPublisher(),
+                alertButtonDidTap: alertActionSubject.eraseToAnyPublisher()
+            )
+        )
         bind(output)
     }
 

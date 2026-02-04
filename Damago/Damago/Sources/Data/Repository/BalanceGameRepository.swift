@@ -114,9 +114,11 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
         option2: String,
         isUser1: Bool
     ) -> AnyPublisher<Result<BalanceGameDTO, Error>, Never> {
-        firestoreService.observe(
-            collection: "couples/\(coupleID)/balanceGameAnswers",
-            document: gameID
+        let firestorePath = FirestorePath.balanceGameAnswers(coupleID: coupleID, gameID: gameID)
+        
+        let publisher: AnyPublisher<Result<BalanceGameDTO, Error>, Never> = firestoreService.observe(
+            collection: firestorePath.collection,
+            document: firestorePath.document
         )
         .handleEvents(receiveOutput: { [weak self] result in
             if case .success(let response) = result {
@@ -131,6 +133,21 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
         .map { (result: Result<FirestoreBalanceGameAnswerDTO, Error>) in
             switch result {
             case .success(let dto):
+                var lastAnsweredAt = dto.lastAnsweredAt
+                
+                // Fallback: bothAnswered는 true인데 lastAnsweredAt이 없는 경우 (레거시 데이터 등)
+                if lastAnsweredAt == nil && dto.bothAnswered == true {
+                    let t1 = dto.user1AnsweredAt?.timeIntervalSince1970 ?? 0
+                    let t2 = dto.user2AnsweredAt?.timeIntervalSince1970 ?? 0
+                    if t1 > 0 || t2 > 0 {
+                        lastAnsweredAt = Date(timeIntervalSince1970: max(t1, t2))
+                    }
+                }
+                
+                if lastAnsweredAt == nil && dto.bothAnswered == true {
+                    SharedLogger.interaction.debug("Repository: bothAnswered는 true인데 lastAnsweredAt을 복구할 수 없습니다.")
+                }
+                
                 let combinedDTO = BalanceGameDTO(
                     gameID: gameID,
                     questionContent: questionContent,
@@ -139,7 +156,7 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
                     myChoice: isUser1 ? dto.user1Answer : dto.user2Answer,
                     opponentChoice: isUser1 ? dto.user2Answer : dto.user1Answer,
                     isUser1: isUser1,
-                    lastAnsweredAt: dto.lastAnsweredAt
+                    lastAnsweredAt: lastAnsweredAt
                 )
                 return .success(combinedDTO)
             case .failure(let error):
@@ -147,6 +164,8 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
             }
         }
         .eraseToAnyPublisher()
+        
+        return publisher
     }
     // swiftlint:enable trailing_closure
 
@@ -171,12 +190,22 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
 
     @MainActor
     private func updateLocalChoice(gameID: String, response: FirestoreBalanceGameAnswerDTO) async {
+        var lastAnsweredAt = response.lastAnsweredAt
+        
+        if lastAnsweredAt == nil && response.bothAnswered == true {
+            let t1 = response.user1AnsweredAt?.timeIntervalSince1970 ?? 0
+            let t2 = response.user2AnsweredAt?.timeIntervalSince1970 ?? 0
+            if t1 > 0 || t2 > 0 {
+                lastAnsweredAt = Date(timeIntervalSince1970: max(t1, t2))
+            }
+        }
+
         do {
             try await localDataSource.updateChoice(
                 gameID: gameID,
                 user1Choice: response.user1Answer,
                 user2Choice: response.user2Answer,
-                lastAnsweredAt: response.lastAnsweredAt
+                lastAnsweredAt: lastAnsweredAt
             )
         } catch {
             SharedLogger.interaction.error("Local update failed: \(error)")
@@ -189,4 +218,6 @@ private struct FirestoreBalanceGameAnswerDTO: Decodable {
     let user2Answer: Int?
     let bothAnswered: Bool?
     let lastAnsweredAt: Date?
+    let user1AnsweredAt: Date?
+    let user2AnsweredAt: Date?
 }

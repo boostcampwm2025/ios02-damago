@@ -40,7 +40,7 @@ final class UseCaseAssembly: Assembly {
         container.register(ObserveGlobalStateUseCase.self) {
             ObserveGlobalStateUseCaseImpl(
                 userRepository: container.resolve(UserRepositoryProtocol.self),
-                petRepository: container.resolve(PetRepositoryProtocol.self)
+                damagoRepository: container.resolve(DamagoRepositoryProtocol.self)
             )
         }
         container.register(SignOutUseCase.self) {
@@ -94,6 +94,34 @@ final class UseCaseAssembly: Assembly {
         }
         container.register(AdjustCoinAmountUseCase.self) {
             AdjustCoinAmountUseCaseImpl(userRepository: container.resolve(UserRepositoryProtocol.self))
+        }
+        
+        container.register(SaveLiveActivityTokenUseCase.self) {
+            SaveLiveActivityTokenUseCaseImpl(repository: container.resolve(PushRepositoryProtocol.self))
+        }
+        
+        container.register(ObserveDamagoSnapshotUseCase.self) {
+            ObserveDamagoSnapshotUseCaseImpl(repository: container.resolve(DamagoRepositoryProtocol.self))
+        }
+        
+        container.register(GetPokeShortcutsUseCase.self) {
+            GetPokeShortcutsUseCaseImpl(repository: container.resolve(PokeShortcutRepositoryProtocol.self))
+        }
+        
+        container.register(UpdatePokeShortcutUseCase.self) {
+            UpdatePokeShortcutUseCaseImpl(repository: container.resolve(PokeShortcutRepositoryProtocol.self))
+        }
+        
+        container.register(FeedDamagoUseCase.self) {
+            FeedDamagoUseCaseImpl(repository: container.resolve(DamagoRepositoryProtocol.self))
+        }
+        
+        container.register(PokeDamagoUseCase.self) {
+            PokeDamagoUseCaseImpl(repository: container.resolve(PushRepositoryProtocol.self))
+        }
+        
+        container.register(CreateDamagoUseCase.self) {
+            CreateDamagoUseCaseImpl(damagoRepository: container.resolve(DamagoRepositoryProtocol.self))
         }
     }
 }

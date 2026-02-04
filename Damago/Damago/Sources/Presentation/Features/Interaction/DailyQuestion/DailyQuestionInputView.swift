@@ -69,12 +69,13 @@ final class DailyQuestionInputView: UIView {
         return view
     }()
     
-    let textView: UITextView = {
-        let textView = UITextView()
+    let textView: DamagoTextView = {
+        let textView = DamagoTextView()
         textView.font = .body1
         textView.textColor = .textPrimary
         textView.isScrollEnabled = true
         textView.backgroundColor = .clear
+        textView.maxLength = 200
         textView.translatesAutoresizingMaskIntoConstraints = false
         return textView
     }()
@@ -85,16 +86,6 @@ final class DailyQuestionInputView: UIView {
         label.font = .body1
         label.textColor = .textTertiary
         label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    let textLimitLabel: UILabel = {
-        let label = UILabel()
-        label.text = "0 / 200"
-        label.font = .caption
-        label.textColor = .textTertiary
-        label.textAlignment = .right
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -206,7 +197,7 @@ final class DailyQuestionInputView: UIView {
             questionCardView.addSubview($0)
         }
         
-        [textView, placeholderLabel, textLimitLabel].forEach {
+        [textView, placeholderLabel].forEach {
             inputCardView.addSubview($0)
         }
         
@@ -253,9 +244,7 @@ final class DailyQuestionInputView: UIView {
             placeholderLabel.topAnchor.constraint(equalTo: textView.topAnchor, constant: .spacingS),
             placeholderLabel.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: 5),
             
-            textLimitLabel.topAnchor.constraint(equalTo: textView.bottomAnchor, constant: .spacingS),
-            textLimitLabel.trailingAnchor.constraint(equalTo: inputCardView.trailingAnchor, constant: -.spacingL),
-            textLimitLabel.bottomAnchor.constraint(equalTo: inputCardView.bottomAnchor, constant: -.spacingL)
+            inputCardView.bottomAnchor.constraint(greaterThanOrEqualTo: textView.bottomAnchor, constant: .spacingL)
         ])
     }
 }

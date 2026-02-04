@@ -12,7 +12,7 @@ protocol UserRepositoryProtocol {
     func generateCode() async throws -> ConnectionCodes
     func connectCouple(targetCode: String) async throws
     func getUserInfo() async throws -> UserInfo
-    func updateFCMToken(fcmToken: String) async throws
+    func updateFCMToken(fcmToken: String?) async throws
     func signIn() async throws
     func fcmToken() async throws -> String
     func observeCoupleSnapshot(coupleID: String) -> AnyPublisher<Result<CoupleSnapshotDTO, Error>, Never>
@@ -22,8 +22,8 @@ protocol UserRepositoryProtocol {
         anniversaryDate: Date?,
         useFCM: Bool?,
         useLiveActivity: Bool?,
-        petName: String?,
-        petType: String?
+        damagoName: String?,
+        damagoType: DamagoType?
     ) async throws
     func signOut() throws
     func withdraw() async throws

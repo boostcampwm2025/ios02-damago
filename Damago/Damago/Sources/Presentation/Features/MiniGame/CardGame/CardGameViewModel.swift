@@ -64,7 +64,6 @@ final class CardGameViewModel: ViewModel {
         input.alertConfirmDidTap
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in
-                // FIXME: 클라우드 펑션 호출로 수정
                 self?.adjustCoinAmount()
             }
             .store(in: &cancellables)

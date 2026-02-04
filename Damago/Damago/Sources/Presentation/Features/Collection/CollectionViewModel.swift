@@ -13,54 +13,66 @@ final class CollectionViewModel: ViewModel {
 
     struct Input {
         let viewDidLoad: AnyPublisher<Void, Never>
-        let petSelected: AnyPublisher<DamagoType, Never>
+        let damagoSelected: AnyPublisher<DamagoType, Never>
         let confirmChangeTapped: AnyPublisher<Void, Never>
     }
 
     struct State {
-        var pets: [DamagoType] = DamagoType.allCases
-        var selectedPet: DamagoType?
-        var currentPetType: DamagoType?
+        var damagos: [DamagoType] = DamagoType.allCases
+        var selectedDamago: DamagoType?
+        var currentDamagoType: DamagoType?
+        var ownedDamagos: [DamagoType: Int] = [:]
         var isLoading: Bool = false
         var route: Pulse<Route>?
     }
 
     enum Route {
-        case showChangeConfirmPopup(petType: DamagoType)
-        case changeSuccess
+        case showChangeConfirmPopup(damagoType: DamagoType)
         case error(title: String, message: String)
     }
 
-    var pets: [DamagoType] { DamagoType.allCases }
+    var damagos: [DamagoType] { DamagoType.allCases }
 
     @Published private var state = State()
     private var cancellables = Set<AnyCancellable>()
 
     private let updateUserUseCase: UpdateUserUseCase
     private let fetchUserInfoUseCase: FetchUserInfoUseCase
+    private let globalStore: GlobalStoreProtocol
 
-    init(updateUserUseCase: UpdateUserUseCase, fetchUserInfoUseCase: FetchUserInfoUseCase) {
+    init(
+        updateUserUseCase: UpdateUserUseCase,
+        fetchUserInfoUseCase: FetchUserInfoUseCase,
+        globalStore: GlobalStoreProtocol
+    ) {
         self.updateUserUseCase = updateUserUseCase
         self.fetchUserInfoUseCase = fetchUserInfoUseCase
+        self.globalStore = globalStore
     }
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
         input.viewDidLoad
             .sink { [weak self] in
-                self?.loadCurrentPet()
+                self?.loadCurrentDamago()
             }
             .store(in: &cancellables)
 
-        input.petSelected
-            .sink { [weak self] petType in
-                if petType == self?.state.currentPetType { return }
-                if petType.isAvailable {
-                    self?.state.selectedPet = petType
-                    self?.state.route = Pulse(.showChangeConfirmPopup(petType: petType))
+        globalStore.globalState
+            .map { $0.ownedDamagos ?? [:] }
+            .assign(to: \.state.ownedDamagos, on: self)
+            .store(in: &cancellables)
+
+        input.damagoSelected
+            .sink { [weak self] damagoType in
+                guard let self = self else { return }
+                if damagoType == self.state.currentDamagoType { return }
+                if self.state.ownedDamagos.keys.contains(damagoType) {
+                    self.state.selectedDamago = damagoType
+                    self.state.route = Pulse(.showChangeConfirmPopup(damagoType: damagoType))
                 } else {
-                    self?.state.route = Pulse(.error(
-                        title: "🙌 추후 업데이트 예정입니다!",
-                        message: "더 좋은 서비스로 찾아뵙겠습니다."
+                    self.state.route = Pulse(.error(
+                        title: "미보유 다마고입니다.",
+                        message: "코인을 모아 상점해서 획득해보세요!"
                     ))
                 }
             }
@@ -68,15 +80,15 @@ final class CollectionViewModel: ViewModel {
 
         input.confirmChangeTapped
             .sink { [weak self] in
-                self?.changePet()
+                self?.changeDamago()
             }
             .store(in: &cancellables)
 
         return $state.eraseToAnyPublisher()
     }
 
-    private func changePet() {
-        guard let selectedPet = state.selectedPet else { return }
+    private func changeDamago() {
+        guard let selectedDamago = state.selectedDamago else { return }
 
         Task {
             state.isLoading = true
@@ -88,24 +100,23 @@ final class CollectionViewModel: ViewModel {
                     anniversaryDate: nil,
                     useFCM: nil,
                     useLiveActivity: nil,
-                    petName: nil,
-                    petType: selectedPet.rawValue
+                    damagoName: nil,
+                    damagoType: selectedDamago
                 )
-                state.currentPetType = selectedPet
-                state.route = Pulse(.changeSuccess)
+                state.currentDamagoType = selectedDamago
             } catch {
                 state.route = Pulse(.error(title: "오류", message: error.localizedDescription))
             }
         }
     }
 
-    private func loadCurrentPet() {
+    private func loadCurrentDamago() {
         Task {
             do {
                 let userInfo = try await fetchUserInfoUseCase.execute()
-                state.currentPetType = userInfo.petStatus.flatMap { DamagoType(rawValue: $0.petType) }
+                state.currentDamagoType = userInfo.damagoStatus.flatMap { $0.damagoType }
             } catch {
-                state.currentPetType = nil
+                state.currentDamagoType = nil
             }
         }
     }

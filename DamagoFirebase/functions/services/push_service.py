@@ -1,14 +1,73 @@
 from firebase_functions import https_fn
 from firebase_admin import firestore, messaging
+from google.cloud import tasks_v2
+from google.protobuf import timestamp_pb2
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
 import time
-from utils.constants import BUNDLE_ID
+import json
+from datetime import datetime, timezone, timedelta
+import os
+from utils.constants import BUNDLE_ID, PROJECT_ID, LOCATION, PUSH_RETRY_QUEUE_NAME, IS_EMULATOR
 
 
-def send_push_notification(target_uid: str, title: str, body: str, data: dict = None) -> bool:
+def enqueue_push_retry(payload: dict):
+    """실패한 푸시 알림을 Cloud Tasks 큐에 지수 백오프와 함께 예약합니다."""
+    try:
+        client = tasks_v2.CloudTasksClient()
+        parent = client.queue_path(PROJECT_ID, LOCATION, PUSH_RETRY_QUEUE_NAME)
+        
+        # 재시도 횟수 제한 (최대 3회)
+        retry_count = payload.get("retry_count", 0)
+        if retry_count >= 3:
+            print(f"Max retries reached for task type: {payload.get('type')}")
+            return
+            
+        # 지수 백오프 적용 (10s, 60s, 300s)
+        if retry_count == 0:
+            delay_seconds = 10
+        elif retry_count == 1:
+            delay_seconds = 60
+        else:
+            delay_seconds = 300
+
+        payload["retry_count"] = retry_count + 1
+        json_payload = json.dumps(payload).encode()
+        
+        # 실행 시간 예약
+        d = datetime.now(timezone.utc) + timedelta(seconds=delay_seconds)
+        timestamp = timestamp_pb2.Timestamp()
+        timestamp.FromDatetime(d)
+
+        if os.environ.get("FUNCTIONS_EMULATOR") == "true":
+            target_url = f"http://127.0.0.1:5001/{PROJECT_ID}/{LOCATION}/retry_push_notification"
+        else:
+            target_url = f"https://{LOCATION}-{PROJECT_ID}.cloudfunctions.net/retry_push_notification"
+        
+        task = {
+            "http_request": {
+                "http_method": tasks_v2.HttpMethod.POST,
+                "url": target_url,
+                "headers": {"Content-Type": "application/json"},
+                "body": json_payload,
+            },
+            "schedule_time": timestamp,
+        }
+        
+        if not IS_EMULATOR:
+            task["http_request"]["oidc_token"] = {
+                "service_account_email": f"{PROJECT_ID}@appspot.gserviceaccount.com"
+            }
+
+        client.create_task(request={"parent": parent, "task": task})
+        print(f"Push retry enqueued: {payload.get('type')} (Attempt {payload['retry_count']})")
+    except Exception as e:
+        print(f"Failed to enqueue push retry: {e}")
+
+
+def send_push_notification(target_uid: str, title: str, body: str, data: dict = None, is_retry: bool = False, retry_count: int = 0) -> bool:
     """
-    특정 사용자에게 푸시 알림을 전송합니다.
+    특정 사용자에게 푸시 알림을 전송합니다. 실패 시 Cloud Tasks로 재시도합니다.
     """
     db = get_db()
     target_user_doc = db.collection("users").document(target_uid).get()
@@ -43,6 +102,18 @@ def send_push_notification(target_uid: str, title: str, body: str, data: dict = 
         return True
     except Exception as e:
         print(f"Error sending message to {target_uid}: {e}")
+        
+        # 일시적 네트워크 오류 등 재시도 가능한 상황인 경우 Cloud Task 예약
+        if any(err in str(e).lower() for err in ["unavailable", "internal-error", "timeout"]):
+            enqueue_push_retry({
+                "type": "push",
+                "targetUID": target_uid,
+                "title": title,
+                "body": body,
+                "data": data,
+                "retry_count": retry_count
+            })
+            
         return False
 
 
@@ -125,7 +196,7 @@ def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
     if la_update_token: update_data["laUpdateToken"] = la_update_token
     if la_start_token: update_data["laStartToken"] = la_start_token
 
-    user_ref.update(update_data)
+    user_ref.set(update_data, merge=True)
 
     return https_fn.Response("Live Activity Token Saved")
 
@@ -149,7 +220,7 @@ def update_live_activity(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response("Live Activity update skipped or failed", status=200)
 
 
-def update_live_activity_internal(target_uid: str, content_state: dict, attributes: dict = None) -> bool:
+def update_live_activity_internal(target_uid: str, content_state: dict, attributes: dict = None, is_retry: bool = False, retry_count: int = 0) -> bool:
     """
     내부 호출용 Live Activity 업데이트 함수.
     업데이트 실패 시, attributes와 Start Token이 있다면 새로운 Activity를 시작합니다.
@@ -204,7 +275,19 @@ def update_live_activity_internal(target_uid: str, content_state: dict, attribut
             return True
 
         except Exception as e:
-            print(f"Live Activity update failed for {target_uid}: {e}. Trying fallback to Start...")
+            print(f"Live Activity update failed for {target_uid}: {e}")
+            
+            # 재시도가 아닌 최초 실패 시에만 Cloud Task 예약
+            if not is_retry and any(err in str(e).lower() for err in ["unavailable", "internal-error", "timeout"]):
+                enqueue_push_retry({
+                    "type": "la_update",
+                    "targetUID": target_uid,
+                    "contentState": content_state,
+                    "attributes": attributes,
+                    "retry_count": retry_count
+                })
+            
+            print(f"Trying fallback to Start...")
             # Fallback 진행을 위해 예외를 무시하고 아래로 진행
     
     # 2. Fallback: Start 시도 (Update 실패 혹은 토큰 없음)
@@ -312,3 +395,35 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
     except Exception as e:
         print(f"Error starting Live Activity: {e}")
         return https_fn.Response(f"Error: {str(e)}", status=500)
+
+
+def retry_push_notification(req: https_fn.Request) -> https_fn.Response:
+    """
+    Cloud Tasks로부터 호출되어 실패했던 푸시 알림을 다시 시도합니다.
+    """
+    data = req.get_json(silent=True) or req.args
+    task_type = data.get("type")
+    target_uid = data.get("targetUID")
+    retry_count = data.get("retry_count", 0)
+
+    print(f"Retrying task: {task_type} for {target_uid} (Retry count: {retry_count})")
+
+    if task_type == "push":
+        send_push_notification(
+            target_uid=target_uid,
+            title=data.get("title"),
+            body=data.get("body"),
+            data=data.get("data"),
+            is_retry=True,
+            retry_count=retry_count
+        )
+    elif task_type == "la_update":
+        update_live_activity_internal(
+            target_uid=target_uid,
+            content_state=data.get("contentState"),
+            attributes=data.get("attributes"),
+            is_retry=True,
+            retry_count=retry_count
+        )
+
+    return https_fn.Response("OK")

@@ -97,8 +97,8 @@ final class ProfileSettingViewController: UIViewController {
             .pulse(\.route)
             .sink { [weak self] route in
                 switch route {
-                case .petSetup:
-                    self?.navigateToPetSetup()
+                case .damagoSetup:
+                    self?.navigateToDamagoSetup()
                 case .partnerAlreadySelected:
                     self?.showPartnerSelectedAlert()
                 case .error(let message):
@@ -113,16 +113,18 @@ final class ProfileSettingViewController: UIViewController {
         mainView.saveButton.setTitle("다음") 
     }
     
-    private func navigateToPetSetup() {
+    private func navigateToDamagoSetup() {
         let updateUserUseCase = AppDIContainer.shared.resolve(UpdateUserUseCase.self)
         let fetchUserInfoUseCase = AppDIContainer.shared.resolve(FetchUserInfoUseCase.self)
-        let petRepository = AppDIContainer.shared.resolve(PetRepositoryProtocol.self)
-        let vm = PetSetupViewModel(
+        let observeDamagoSnapshotUseCase = AppDIContainer.shared.resolve(ObserveDamagoSnapshotUseCase.self)
+        let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
+        let vm = DamagoSetupViewModel(
             updateUserUseCase: updateUserUseCase,
             fetchUserInfoUseCase: fetchUserInfoUseCase,
-            petRepository: petRepository
+            observeDamagoSnapshotUseCase: observeDamagoSnapshotUseCase,
+            globalStore: globalStore
         )
-        let vc = PetSetupViewController(viewModel: vm)
+        let vc = DamagoSetupViewController(viewModel: vm)
         navigationController?.pushViewController(vc, animated: true)
     }
     
