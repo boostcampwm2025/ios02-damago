@@ -25,7 +25,7 @@ platform :ios do
       clean: false,
       
       # [핵심] 30분 타임아웃 방지를 위해 병렬 테스트 비활성화
-      xcargs: "-skipPackagePluginValidation -parallel-testing-enabled NO"
+      xcargs: "-skipPackagePluginValidation -parallel-testing-enabled NO ARCHS=arm64"
     )
 
     # ----------------------------------------------------------------
@@ -47,7 +47,7 @@ platform :ios do
         
         # CI에 인증서 세팅이 없어도 빌드가 터지지 않도록 '시뮬레이터'용으로 빌드
         destination: "platform=iOS Simulator,name=#{device_name}",
-        xcargs: "-skipPackagePluginValidation RUN_CLANG_STATIC_ANALYZER=NO"
+        xcargs: "-skipPackagePluginValidation RUN_CLANG_STATIC_ANALYZER=NO ARCHS=arm64"
       )
     end
   end
