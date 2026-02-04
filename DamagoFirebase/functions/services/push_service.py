@@ -6,7 +6,7 @@ from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
 import time
 import json
-import datetime
+from datetime import datetime, timezone, timedelta
 import os
 from utils.constants import BUNDLE_ID, PROJECT_ID, LOCATION, PUSH_RETRY_QUEUE_NAME, IS_EMULATOR
 
@@ -35,7 +35,7 @@ def enqueue_push_retry(payload: dict):
         json_payload = json.dumps(payload).encode()
         
         # 실행 시간 예약
-        d = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=delay_seconds)
+        d = datetime.now(timezone.utc) + timedelta(seconds=delay_seconds)
         timestamp = timestamp_pb2.Timestamp()
         timestamp.FromDatetime(d)
 
