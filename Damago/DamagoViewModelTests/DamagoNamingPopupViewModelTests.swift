@@ -38,6 +38,7 @@ final class DamagoNamingPopupViewModelTests {
         
         // When
         var lastState: DamagoNamingPopupViewModel.State?
+        
         viewModel.transform(testInput.input)
             .sink { lastState = $0 }
             .store(in: &cancellables)
@@ -55,16 +56,19 @@ final class DamagoNamingPopupViewModelTests {
         
         // When & Then
         await confirmation("Confirm button should be enabled") { confirm in
-            // Then: 구독 설정 (기대 결과)
-            output.map { $0.isConfirmEnabled }
-                .removeDuplicates()
-                .filter { $0 == true }
-                .sink { _ in confirm() }
-                .store(in: &cancellables)
+            let stream = AsyncStream<Void> { continuation in
+                output.map { $0.isConfirmEnabled }
+                    .removeDuplicates()
+                    .filter { $0 == true }
+                    .sink { _ in continuation.yield() }
+                    .store(in: &cancellables)
+            }
+            var iterator = stream.makeAsyncIterator()
             
-            // When: 입력 발생
             testInput.textChanged.send("다마고치")
-            await Task.yield()
+            
+            await iterator.next()
+            confirm()
         }
     }
     
@@ -75,17 +79,39 @@ final class DamagoNamingPopupViewModelTests {
         let testInput = TestInput()
         let output = viewModel.transform(testInput.input)
         
-        var lastEnabled: Bool?
-        output.map { $0.isConfirmEnabled }
-            .sink { lastEnabled = $0 }
-            .store(in: &cancellables)
-        
-        // When
-        testInput.textChanged.send("   ")
-        await Task.yield()
-        
-        // Then
-        #expect(lastEnabled == false)
+        // When & Then
+        await confirmation("Confirm button should be disabled") { confirm in
+            let stream = AsyncStream<Bool> { continuation in
+                output.map { $0.isConfirmEnabled }
+                    .removeDuplicates()
+                    .sink { isEnabled in continuation.yield(isEnabled) }
+                    .store(in: &cancellables)
+            }
+            var iterator = stream.makeAsyncIterator()
+            
+            // 1. 유효한 이름 입력
+            testInput.textChanged.send("ValidName")
+            var isEnabled = await iterator.next()
+            while isEnabled == false {
+                isEnabled = await iterator.next()
+            }
+            
+            // 2. 공백 입력
+            testInput.textChanged.send("   ")
+            
+            isEnabled = await iterator.next()
+            while isEnabled == true {
+                if let next = await iterator.next() {
+                    isEnabled = next
+                } else {
+                    break
+                }
+            }
+            
+            if isEnabled == false {
+                confirm()
+            }
+        }
     }
     
     @Test("변경 사항이 없을 때 취소하면 닫기 요청이 발생해야 한다")
@@ -97,16 +123,22 @@ final class DamagoNamingPopupViewModelTests {
         
         // When & Then
         await confirmation("Dismiss request should be emitted") { confirm in
-            // Then
-            output.compactMap { $0.dismissRequest?.value }
-                .sink { _ in confirm() }
-                .store(in: &cancellables)
+            let stream = AsyncStream<Void> { continuation in
+                output.compactMap { $0.dismissRequest?.value }
+                    .sink { _ in continuation.yield() }
+                    .store(in: &cancellables)
+            }
+            var iterator = stream.makeAsyncIterator()
             
-            // When
+            // 1. 초기값 설정 (입력)
             testInput.textChanged.send("기존이름")
-            await Task.yield()
+            
+            // 2. 취소 버튼 탭
             testInput.cancelTapped.send()
-            await Task.yield()
+            
+            // 3. 대기
+            await iterator.next()
+            confirm()
         }
     }
     
@@ -119,16 +151,22 @@ final class DamagoNamingPopupViewModelTests {
         
         // When & Then
         await confirmation("Confirmation request should be emitted") { confirm in
-            // Then
-            output.compactMap { $0.requestCancelConfirmation?.value }
-                .sink { _ in confirm() }
-                .store(in: &cancellables)
+            let stream = AsyncStream<Void> { continuation in
+                output.compactMap { $0.requestCancelConfirmation?.value }
+                    .sink { _ in continuation.yield() }
+                    .store(in: &cancellables)
+            }
+            var iterator = stream.makeAsyncIterator()
             
-            // When
+            // 1. 이름 변경
             testInput.textChanged.send("새로운이름")
-            await Task.yield()
+            
+            // 2. 취소 버튼 탭
             testInput.cancelTapped.send()
-            await Task.yield()
+            
+            // 3. 대기
+            await iterator.next()
+            confirm()
         }
     }
     
@@ -139,18 +177,32 @@ final class DamagoNamingPopupViewModelTests {
         let testInput = TestInput()
         let output = viewModel.transform(testInput.input)
         
-        var currentName = ""
-        var isEnabled = false
-        
-        output.map { $0.currentName }.sink { currentName = $0 }.store(in: &cancellables)
-        output.map { $0.isConfirmEnabled }.sink { isEnabled = $0 }.store(in: &cancellables)
-        
-        // When
-        testInput.updateInitialName.send("나중에온이름")
-        await Task.yield()
-        
-        // Then
-        #expect(currentName == "나중에온이름")
-        #expect(isEnabled == true)
+        // When & Then
+        await confirmation("Name and button state should be updated", expectedCount: 2) { confirm in
+            // 두 개의 스트림을 각각 생성
+            let nameStream = AsyncStream<Void> { continuation in
+                output.map { $0.currentName }
+                    .filter { $0 == "나중에온이름" }
+                    .sink { _ in continuation.yield() }
+                    .store(in: &cancellables)
+            }
+            var nameIterator = nameStream.makeAsyncIterator()
+            
+            let buttonStream = AsyncStream<Void> { continuation in
+                output.map { $0.isConfirmEnabled }
+                    .filter { $0 == true }
+                    .sink { _ in continuation.yield() }
+                    .store(in: &cancellables)
+            }
+            var buttonIterator = buttonStream.makeAsyncIterator()
+            
+            testInput.updateInitialName.send("나중에온이름")
+            
+            await nameIterator.next()
+            confirm()
+            
+            await buttonIterator.next()
+            confirm()
+        }
     }
 }
