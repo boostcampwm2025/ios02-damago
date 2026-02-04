@@ -2,7 +2,7 @@
 //  SettingsViewModelTests.swift
 //  DamagoViewModelTests
 //
-//  Created by Gemini on 2/4/26.
+//  Created by 박현수 on 2/4/26.
 //
 
 import Testing
@@ -136,14 +136,12 @@ final class SettingsViewModelTests {
 
         // When
         testInput.viewDidLoad.send()
-        
 
         fakeGlobalStore.updateState(newState)
         
         // Then: 1초 내에 "TestUser"가 되는지 확인
         try await withTimeout(seconds: 1.0) {
             var outputIterator = output.values.makeAsyncIterator()
-            _ = await outputIterator.next()
 
             while let state = await outputIterator.next() {
                 if await state.userName == "TestUser" {
@@ -172,7 +170,6 @@ final class SettingsViewModelTests {
         // Then
         try await withTimeout(seconds: 1.0) {
             var outputIterator = output.values.makeAsyncIterator()
-            _ = await outputIterator.next()
 
             while let state = await outputIterator.next() {
                 if let route = await state.route?.value, case .editProfile = route {
@@ -256,20 +253,3 @@ final class SettingsViewModelTests {
         }
     }
 }
-
-/// 타임아웃을 적용하는 헬퍼 함수
-func withTimeout(seconds: TimeInterval, operation: @escaping @Sendable () async -> Void) async throws {
-    try await withThrowingTaskGroup(of: Void.self) { group in
-        group.addTask {
-            await operation()
-        }
-        group.addTask {
-            try await Task.sleep(for: .seconds(seconds))
-            throw TimeoutError()
-        }
-        try await group.next()
-        group.cancelAll()
-    }
-}
-
-struct TimeoutError: Error {}
