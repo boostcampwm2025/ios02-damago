@@ -9,8 +9,6 @@ import UIKit
 import Combine
 
 final class PokePopupView: UIView {
-    weak var textFieldDelegate: UITextFieldDelegate?
-    
     let shortcutSelectedSubject = PassthroughSubject<String, Never>()
     let shortcutSummaryChangedSubject = PassthroughSubject<(index: Int, summary: String), Never>()
     let shortcutMessageChangedSubject = PassthroughSubject<(index: Int, message: String), Never>()
@@ -511,25 +509,4 @@ extension PokePopupView: UITextFieldDelegate {
         return true
     }
     
-    func textField(
-        _ textField: UITextField,
-        shouldChangeCharactersIn range: NSRange,
-        replacementString string: String
-    ) -> Bool {
-        // maxLength가 설정된 경우
-        guard let textField = textField as? DamagoTextField,
-              let maxLength = textField.maxLength else {
-            return true
-        }
-        
-        let currentText = textField.text ?? ""
-        let newLength = currentText.count + string.count - range.length
-        
-        // 백스페이스는 허용
-        if string.isEmpty {
-            return true
-        }
-        
-        return newLength <= maxLength
-    }
 }
