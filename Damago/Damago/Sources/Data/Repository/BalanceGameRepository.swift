@@ -114,9 +114,11 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
         option2: String,
         isUser1: Bool
     ) -> AnyPublisher<Result<BalanceGameDTO, Error>, Never> {
-        firestoreService.observe(
-            collection: "couples/\(coupleID)/balanceGameAnswers",
-            document: gameID
+        let firestorePath = FirestorePath.balanceGameAnswers(coupleID: coupleID, gameID: gameID)
+        
+        let publisher: AnyPublisher<Result<BalanceGameDTO, Error>, Never> = firestoreService.observe(
+            collection: firestorePath.collection,
+            document: firestorePath.document
         )
         .handleEvents(receiveOutput: { [weak self] result in
             if case .success(let response) = result {
@@ -162,6 +164,8 @@ final class BalanceGameRepository: BalanceGameRepositoryProtocol {
             }
         }
         .eraseToAnyPublisher()
+        
+        return publisher
     }
     // swiftlint:enable trailing_closure
 

@@ -85,11 +85,21 @@ final class UserRepository: UserRepositoryProtocol {
     }
 
     func observeCoupleSnapshot(coupleID: String) -> AnyPublisher<Result<CoupleSnapshotDTO, Error>, Never> {
-        firestoreService.observe(collection: "couples", document: coupleID)
+        let firestorePath = FirestorePath.couples(coupleID: coupleID)
+        
+        let publisher: AnyPublisher<Result<CoupleSnapshotDTO, Error>, Never> =
+        firestoreService.observe(collection: firestorePath.collection, document: firestorePath.document)
+        
+        return publisher
     }
 
     func observeUserSnapshot(uid: String) -> AnyPublisher<Result<UserSnapshotDTO, Error>, Never> {
-        firestoreService.observe(collection: "users", document: uid)
+        let firestorePath = FirestorePath.users(uid: uid)
+        
+        let publisher: AnyPublisher<Result<UserSnapshotDTO, Error>, Never> =
+        firestoreService.observe(collection: firestorePath.collection, document: firestorePath.document)
+        
+        return publisher
     }
 
     func updateUserInfo(

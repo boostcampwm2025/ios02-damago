@@ -56,10 +56,24 @@ final class DamagoRepository: DamagoRepositoryProtocol {
     }
 
     func observeDamagoSnapshot(damagoID: String) -> AnyPublisher<Result<DamagoSnapshotDTO, Error>, Never> {
-        firestoreService.observe(collection: "damagos", document: damagoID)
+        let firestorePath = FirestorePath.damagos(damagoID: damagoID)
+        
+        let publisher: AnyPublisher<Result<DamagoSnapshotDTO, Error>, Never> =
+        firestoreService.observe(collection: firestorePath.collection, document: firestorePath.document)
+        
+        return publisher
     }
 
     func observeOwnedDamagos(coupleID: String) -> AnyPublisher<Result<[DamagoSnapshotDTO], Error>, Never> {
-        firestoreService.observeQuery(collection: "damagos", field: "coupleID", value: coupleID)
+        let firestorePath = FirestorePath.ownedDamagos(coupleID: coupleID)
+        
+        guard let queryInfo = firestorePath.queryInfo else {
+            return Just(.failure(NSError(domain: "InvalidPath", code: -1))).eraseToAnyPublisher()
+        }
+        
+        let publisher: AnyPublisher<Result<[DamagoSnapshotDTO], Error>, Never> =
+        firestoreService.observeQuery(collection: firestorePath.collection, field: queryInfo.field, value: queryInfo.value)
+        
+        return publisher
     }
 }
