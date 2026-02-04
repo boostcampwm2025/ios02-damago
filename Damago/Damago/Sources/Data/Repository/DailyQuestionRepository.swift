@@ -112,9 +112,11 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
         questionContent: String,
         isUser1: Bool
     ) -> AnyPublisher<Result<DailyQuestionDTO, Error>, Never> {
-        firestoreService.observe(
-            collection: "couples/\(coupleID)/dailyQuestionAnswers",
-            document: questionID
+        let firestorePath = FirestorePath.dailyQuestionAnswers(coupleID: coupleID, questionID: questionID)
+        
+        let publisher: AnyPublisher<Result<DailyQuestionDTO, Error>, Never> = firestoreService.observe(
+            collection: firestorePath.collection,
+            document: firestorePath.document
         )
         .handleEvents(receiveOutput: { [weak self] result in
             if case .success(let response) = result {
@@ -146,6 +148,8 @@ final class DailyQuestionRepository: DailyQuestionRepositoryProtocol {
             }
         }
         .eraseToAnyPublisher()
+        
+        return publisher
     }
     // swiftlint:enable trailing_closure
 
