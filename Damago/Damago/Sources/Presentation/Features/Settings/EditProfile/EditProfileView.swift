@@ -52,13 +52,14 @@ final class EditProfileView: UIView {
         return view
     }()
     
-    lazy var nicknameTextField: UITextField = {
-        let textField = UITextField()
+    lazy var nicknameTextField: DamagoTextField = {
+        let textField = DamagoTextField()
         textField.font = .body1
         textField.textColor = .textPrimary
         textField.placeholder = "닉네임을 입력해 주세요"
         textField.returnKeyType = .done
         textField.delegate = self
+        textField.maxLength = 5
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }()
