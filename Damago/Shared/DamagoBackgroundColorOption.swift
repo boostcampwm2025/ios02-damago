@@ -15,7 +15,7 @@ enum DamagoBackgroundColorOption: String, CaseIterable, Hashable {
     case black
     case white
 
-    static var defaultOption: DamagoBackgroundColorOption { .damagoPrimary }
+    static var defaultOption: DamagoBackgroundColorOption { .black }
 
     var displayName: String {
         switch self {
