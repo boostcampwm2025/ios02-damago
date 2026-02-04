@@ -13,7 +13,8 @@ import Testing
 @testable import Damago
 @testable import DamagoNetwork
 
-extension DailyQuestionRepositoryTests {
+@MainActor
+extension DailyQuestionRepositoryTests.Submit {
     
     // MARK: - 시나리오: 답변 제출 성공
     // 1. 로컬 데이터를 가져와 업데이트한다.

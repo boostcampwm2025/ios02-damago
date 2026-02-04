@@ -10,5 +10,16 @@ import Testing
 @MainActor
 @Suite("DailyQuestionRepository 통합 테스트")
 struct DailyQuestionRepositoryTests {
-    // 공통적으로 사용될 수 있는 상태나 유틸리티가 필요할 경우 여기에 정의합니다.
+    
+    @MainActor
+    @Suite("Fetch 테스트")
+    struct Fetch { }
+    
+    @MainActor
+    @Suite("Submit 테스트")
+    struct Submit { }
+    
+    @MainActor
+    @Suite("Observe 테스트")
+    struct Observe { }
 }

@@ -13,7 +13,8 @@ import Testing
 @testable import Damago
 @testable import DamagoNetwork
 
-extension DailyQuestionRepositoryTests {
+@MainActor
+extension DailyQuestionRepositoryTests.Fetch {
     
     // MARK: - 시나리오 1, 4, 6
     // 1. 로컬 데이터가 오늘 데이터인 경우 방출하고 네트워크 조회로 넘어간다.
