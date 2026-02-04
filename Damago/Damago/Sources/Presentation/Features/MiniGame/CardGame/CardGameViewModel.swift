@@ -71,8 +71,10 @@ final class CardGameViewModel: ViewModel {
     }
 
     private func startMemorization() {
-        state.gameState = .memorizing
-        state.countdown = 3
+        var newState = state
+        newState.gameState = .memorizing
+        newState.countdown = 3
+        state = newState
         
         Timer.publish(every: 1.0, on: .main, in: .common)
             .autoconnect()
@@ -84,7 +86,9 @@ final class CardGameViewModel: ViewModel {
                     if nextCount > 0 {
                         self.state.countdown = nextCount
                     } else {
-                        self.state.countdown = nil
+                        var finalState = self.state
+                        finalState.countdown = nil
+                        self.state = finalState
                         self.startGame()
                     }
                 }
@@ -93,12 +97,14 @@ final class CardGameViewModel: ViewModel {
     }
 
     private func startGame() {
-        state.items = state.items.map {
+        var newState = state
+        newState.items = state.items.map {
             var card = $0
             card.isFlipped = false
             return card
         }
-        state.gameState = .playing
+        newState.gameState = .playing
+        state = newState
         startTimer()
     }
 
@@ -220,7 +226,7 @@ extension CardGameViewModel {
         case noPairsLeft = "남아있는 짝이 없습니다!"
     }
 
-    enum CardGameState {
+    nonisolated enum CardGameState {
         case ready
         case memorizing
         case playing

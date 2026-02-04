@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum CardGameDifficulty {
+nonisolated enum CardGameDifficulty {
     case easy
     case hard
 
