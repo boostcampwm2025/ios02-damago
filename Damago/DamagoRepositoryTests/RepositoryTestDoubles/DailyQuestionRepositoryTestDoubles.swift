@@ -12,7 +12,9 @@ import Combine
 
 final class MockNetworkProvider: NetworkProvider, @unchecked Sendable {
     var requestHandler: ((EndPoint) async throws -> Any)?
-    var requestSuccessHandler: ((EndPoint) async throws -> Bool)?
+    
+    var requestSuccessResult: Bool = true
+    var requestSuccessError: Error?
     
     var requestCalledWith: EndPoint?
 
@@ -31,7 +33,8 @@ final class MockNetworkProvider: NetworkProvider, @unchecked Sendable {
 
     func requestSuccess(_ endpoint: EndPoint) async throws -> Bool {
         requestCalledWith = endpoint
-        return try await requestSuccessHandler?(endpoint) ?? true
+        if let error = requestSuccessError { throw error }
+        return requestSuccessResult
     }
 }
 
@@ -49,6 +52,7 @@ final class MockTokenProvider: TokenProvider, @unchecked Sendable {
 
 final class MockFirestoreService: FirestoreService, @unchecked Sendable {
     var observeHandler: ((String, String) -> AnyPublisher<Result<Any, Error>, Never>)?
+    var observeCalledWith: (collection: String, document: String)?
     
     func observe<T: Decodable>(
         collection: String,
@@ -62,8 +66,6 @@ final class MockFirestoreService: FirestoreService, @unchecked Sendable {
         }
         return Empty().eraseToAnyPublisher()
     }
-    
-    var observeCalledWith: (collection: String, document: String)?
 
     func observeQuery<T: Decodable>(
         collection: String,
@@ -76,17 +78,39 @@ final class MockFirestoreService: FirestoreService, @unchecked Sendable {
 
 @MainActor
 final class MockDailyQuestionLocalDataSource: DailyQuestionLocalDataSourceProtocol, @unchecked Sendable {
+    var fetchQuestionResult: DailyQuestionEntity?
+    var fetchQuestionError: Error?
+    
     var fetchLatestQuestionHandler: (() async throws -> DailyQuestionEntity?)?
     var saveQuestionCalledWith: DailyQuestionEntity?
     
-    func fetchQuestion(id: String) async throws -> DailyQuestionEntity? { nil }
+    var updateAnswerCalledWith: (questionID: String, user1Answer: String?, user2Answer: String?, bothAnswered: Bool, lastAnsweredAt: Date?)?
+    var updateAnswerError: Error?
+    
+    func fetchQuestion(id: String) async throws -> DailyQuestionEntity? {
+        if let error = fetchQuestionError { throw error }
+        return fetchQuestionResult
+    }
+
     func fetchLatestQuestion() async throws -> DailyQuestionEntity? {
         return try await fetchLatestQuestionHandler?()
     }
+
     func saveQuestion(_ entity: DailyQuestionEntity) async throws {
         saveQuestionCalledWith = entity
     }
-    func updateAnswer(questionID: String, user1Answer: String?, user2Answer: String?, bothAnswered: Bool, lastAnsweredAt: Date?) async throws {}
+
+    func updateAnswer(
+        questionID: String,
+        user1Answer: String?,
+        user2Answer: String?,
+        bothAnswered: Bool,
+        lastAnsweredAt: Date?
+    ) async throws {
+        if let error = updateAnswerError { throw error }
+        updateAnswerCalledWith = (questionID, user1Answer, user2Answer, bothAnswered, lastAnsweredAt)
+    }
+
     func saveDraftAnswer(questionID: String, draftAnswer: String?) async throws {}
     func loadDraftAnswer(questionID: String) async throws -> String? { nil }
     func deleteDraftAnswer(questionID: String) async throws { }
