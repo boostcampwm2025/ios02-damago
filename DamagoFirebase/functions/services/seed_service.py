@@ -10,6 +10,7 @@ import csv
 import os
 from pathlib import Path
 from utils.firestore import get_db
+import utils.errors as errors
 
 def is_admin(req: https_fn.Request) -> bool:
     """
@@ -99,7 +100,7 @@ def seed_daily_questions(req: https_fn.Request) -> https_fn.Response:
     
     # 관리자 권한 확인 (에뮬레이터에서는 자동 통과)
     if not is_admin(req):
-        return https_fn.Response("Unauthorized: Admin access required", status=403)
+        return errors.error_response(errors.Forbidden.ADMIN_REQUIRED)
     
     try:
         import time
@@ -199,7 +200,7 @@ def seed_balance_games(req: https_fn.Request) -> https_fn.Response:
     
     # 관리자 권한 확인 (에뮬레이터에서는 자동 통과)
     if not is_admin(req):
-        return https_fn.Response("Unauthorized: Admin access required", status=403)
+        return errors.error_response(errors.Forbidden.ADMIN_REQUIRED)
     
     try:
         import time
@@ -300,7 +301,7 @@ def clear_seed_data(req: https_fn.Request) -> https_fn.Response:
     
     # 관리자 권한 확인 (에뮬레이터에서는 자동 통과)
     if not is_admin(req):
-        return https_fn.Response("Unauthorized: Admin access required", status=403)
+        return errors.error_response(errors.Forbidden.ADMIN_REQUIRED)
     
     try:
         # Firestore 클라이언트 초기화
