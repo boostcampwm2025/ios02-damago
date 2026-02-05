@@ -43,16 +43,13 @@ final class DamagoNamingPopupView: UIView {
         return label
     }()
     
-    let nameTextField: UITextField = {
-        let textField = UITextField()
+    let nameTextField: DamagoTextField = {
+        let textField = DamagoTextField()
         textField.font = .body1
         textField.textColor = .textPrimary
         textField.backgroundColor = .background
+        textField.maxLength = 10
         textField.layer.cornerRadius = .mediumButton
-        textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: .spacingM, height: 0))
-        textField.leftViewMode = .always
-        textField.rightView = UIView(frame: CGRect(x: 0, y: 0, width: .spacingM, height: 0))
-        textField.rightViewMode = .always
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }()

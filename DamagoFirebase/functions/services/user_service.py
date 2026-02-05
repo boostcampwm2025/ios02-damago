@@ -323,9 +323,16 @@ def update_fcm_token(req: https_fn.Request) -> https_fn.Response:
     # 해당 사용자가 존재하는지 확인
     doc = user_ref.get()
     if not doc.exists:
-        return errors.error_response(errors.NotFound.USER)
-        
-    user_ref.update({"fcmToken": fcm_token})
+        # 유저가 없으면 생성 (최초 로그인 시 FCM 토큰 업데이트가 먼저 호출될 수 있음)
+        user_ref.set({
+            "uid": uid,
+            "fcmToken": fcm_token,
+            "useFCM": True,
+            "createdAt": firestore.SERVER_TIMESTAMP,
+            "updatedAt": firestore.SERVER_TIMESTAMP
+        })
+    else:
+        user_ref.update({"fcmToken": fcm_token})
     
     return https_fn.Response(
         json.dumps({"message": "FCM token updated successfully"}),

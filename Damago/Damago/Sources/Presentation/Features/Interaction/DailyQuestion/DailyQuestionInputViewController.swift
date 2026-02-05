@@ -92,8 +92,6 @@ final class DailyQuestionInputViewController: UIViewController {
                 mainView.textView.text = state.currentText
             }
             mainView.placeholderLabel.isHidden = !state.currentText.isEmpty
-            mainView.textLimitLabel.text = state.textCount
-            
             mainView.updateSubmitButton(state: .init(
                 isEnabled: state.isSubmitButtonEnabled,
                 isLoading: state.isLoading
@@ -112,32 +110,4 @@ final class DailyQuestionInputViewController: UIViewController {
     }
 }
 
-extension DailyQuestionInputViewController: UITextViewDelegate {
-    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        guard let currentText = textView.text else { return true }
-        guard let stringRange = Range(range, in: currentText) else { return false }
-        
-        let updatedText = currentText.replacingCharacters(in: stringRange, with: text)
-        
-        // 제한을 초과하는 경우
-        if updatedText.count > 200 {
-            // 붙여넣기로 보이는 경우(텍스트가 길거나 범위가 큰 경우) 알럿 표시
-            if text.count > 10 || range.length > 0 {
-                showTextLimitAlert()
-            }
-            return false
-        }
-        
-        return true
-    }
-    
-    private func showTextLimitAlert() {
-        let alert = UIAlertController(
-            title: "글자 수 제한",
-            message: "답변은 최대 200자까지 입력할 수 있습니다.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
-    }
-}
+extension DailyQuestionInputViewController: UITextViewDelegate {}
