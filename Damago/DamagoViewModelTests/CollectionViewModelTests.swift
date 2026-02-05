@@ -132,6 +132,7 @@ final class CollectionViewModelTests {
             var outputIterator = output.values.makeAsyncIterator()
             while let state = await outputIterator.next() {
                 if await state.currentDamagoType == damagoType {
+                    // swiftlint:disable:next trailing_closure
                     #expect(state.currentDamagoType == damagoType)
                     return
                 }
