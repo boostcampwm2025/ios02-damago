@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct GlobalState: Equatable {
+nonisolated struct GlobalState: Equatable {
     // MARK: - User Content
     let nickname: String?
     let opponentName: String?

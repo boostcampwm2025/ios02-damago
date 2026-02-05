@@ -14,6 +14,7 @@ final class CardGameViewController: UIViewController {
     private var cancellables = Set<AnyCancellable>()
 
     private lazy var dataSource = CardGameDataSource(collectionView: mainView.collectionView)
+    private var imageCache = [Data: UIImage]()
 
     private let cardDidTapSubject = PassthroughSubject<Int, Never>()
     private let alertConfirmDidTapSubject = PassthroughSubject<Void, Never>()
@@ -34,7 +35,19 @@ final class CardGameViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupCollectionView()
+        setupDataSource()
         bind()
+    }
+    
+    private func setupDataSource() {
+        dataSource.imageProvider = { [weak self] data in
+            if let cached = self?.imageCache[data] {
+                return cached
+            }
+            let image = UIImage(data: data)
+            self?.imageCache[data] = image
+            return image
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {

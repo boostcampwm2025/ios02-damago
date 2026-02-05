@@ -14,7 +14,7 @@ final class CardGameConfigViewController: UIViewController {
     private let viewModel: CardGameConfigViewModel
     private var cancellables = Set<AnyCancellable>()
 
-    private let imagesSubject = PassthroughSubject<[UIImage], Never>()
+    private let imagesSubject = PassthroughSubject<[Data], Never>()
     
     init(viewModel: CardGameConfigViewModel) {
         self.viewModel = viewModel
@@ -75,7 +75,8 @@ final class CardGameConfigViewController: UIViewController {
             
         output
             .mapForUI(\.selectedImages)
-            .sink { [weak self] images in
+            .sink { [weak self] dataList in
+                let images = dataList.compactMap { UIImage(data: $0) }
                 self?.mainView.updateSelectedImages(images)
             }
             .store(in: &cancellables)
@@ -110,7 +111,7 @@ final class CardGameConfigViewController: UIViewController {
         self.present(picker, animated: true)
     }
     
-    private func navigateToGame(difficulty: CardGameDifficulty, images: [UIImage]) {
+    private func navigateToGame(difficulty: CardGameDifficulty, images: [Data]) {
         let adjustCoinUseCase = AppDIContainer.shared.resolve(AdjustCoinAmountUseCase.self)
         let vm = CardGameViewModel(
             difficulty: difficulty,
@@ -129,19 +130,23 @@ extension CardGameConfigViewController: PHPickerViewControllerDelegate {
         guard !results.isEmpty else { return }
 
         Task {
-            let images = await withTaskGroup(of: UIImage?.self) { group in
+            let imagesData = await withTaskGroup(of: Data?.self) { group in
                 for result in results where result.itemProvider.canLoadObject(ofClass: UIImage.self) {
-                    group.addTask { await self.loadHelper(provider: result.itemProvider) }
+                    group.addTask {
+                        let image = await self.loadHelper(provider: result.itemProvider)
+                        let resized = await image?.resized(maxDimension: 400)
+                        return resized?.jpegData(compressionQuality: 0.7)
+                    }
                 }
 
-                var loadedImages: [UIImage] = []
-                for await image in group {
-                    if let image = image { loadedImages.append(image) }
+                var loadedData: [Data] = []
+                for await data in group {
+                    if let data = data { loadedData.append(data) }
                 }
-                return loadedImages
+                return loadedData
             }
 
-            imagesSubject.send(images)
+            imagesSubject.send(imagesData)
         }
     }
 

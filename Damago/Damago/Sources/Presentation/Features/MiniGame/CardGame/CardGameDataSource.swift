@@ -8,14 +8,18 @@
 import UIKit
 
 final class CardGameDataSource: UICollectionViewDiffableDataSource<CardGameSection, CardItem> {
+    var imageProvider: ((Data) -> UIImage?)?
+
     init(collectionView: UICollectionView) {
-        let cellRegistration = UICollectionView.CellRegistration<CardGameCell, CardItem> { cell, _, item in
-            cell.configure(with: item)
+        let registration = UICollectionView.CellRegistration<CardGameCell, CardItem> { cell, _, item in
+            let dataSource = collectionView.dataSource as? CardGameDataSource
+            let image = item.image.flatMap { dataSource?.imageProvider?($0) }
+            cell.configure(with: item, image: image)
         }
 
         super.init(collectionView: collectionView) { collectionView, indexPath, itemIdentifier in
             collectionView.dequeueConfiguredReusableCell(
-                using: cellRegistration,
+                using: registration,
                 for: indexPath,
                 item: itemIdentifier
             )
