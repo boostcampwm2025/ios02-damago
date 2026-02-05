@@ -21,6 +21,7 @@ final class SignInViewModel: ViewModel {
     enum Route {
         case alert(errorMessage: String)
         case connection(opponentCode: String?)
+        case tabBar
     }
 
     @Published private var state = State()
@@ -28,10 +29,16 @@ final class SignInViewModel: ViewModel {
     private var cancellables = Set<AnyCancellable>()
 
     private let signInUseCase: SignInUseCase
+    private let checkConnectionUseCase: CheckConnectionUseCase
     private let opponentCode: String?
 
-    init(signInUseCase: SignInUseCase, opponentCode: String? = nil) {
+    init(
+        signInUseCase: SignInUseCase,
+        checkConnectionUseCase: CheckConnectionUseCase,
+        opponentCode: String? = nil
+    ) {
         self.signInUseCase = signInUseCase
+        self.checkConnectionUseCase = checkConnectionUseCase
         self.opponentCode = opponentCode
     }
 
@@ -57,7 +64,12 @@ final class SignInViewModel: ViewModel {
     func signIn() async {
         do {
             try await signInUseCase.signIn()
-            self.state.route = .init(.connection(opponentCode: opponentCode))
+            let isConnected = try await checkConnectionUseCase.execute()
+            if isConnected {
+                self.state.route = .init(.tabBar)
+            } else {
+                self.state.route = .init(.connection(opponentCode: opponentCode))
+            }
         } catch {
             self.state.route = .init(.alert(errorMessage: error.userFriendlyMessage))
         }

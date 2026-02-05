@@ -66,6 +66,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         } else {
             let signInVM = SignInViewModel(
                 signInUseCase: AppDIContainer.shared.resolve(SignInUseCase.self),
+                checkConnectionUseCase: AppDIContainer.shared.resolve(CheckConnectionUseCase.self),
                 opponentCode: code
             )
             let signInVC = SignInViewController(viewModel: signInVM)
@@ -92,7 +93,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 }
             }
         } else {
-            let signInVM = SignInViewModel(signInUseCase: AppDIContainer.shared.resolve(SignInUseCase.self))
+            let signInVM = SignInViewModel(
+                signInUseCase: AppDIContainer.shared.resolve(SignInUseCase.self),
+                checkConnectionUseCase: AppDIContainer.shared.resolve(CheckConnectionUseCase.self)
+            )
             let signInVC = SignInViewController(viewModel: signInVM)
             let navigationController = UINavigationController(rootViewController: signInVC)
             navigationController.setNavigationBarHidden(true, animated: false)
