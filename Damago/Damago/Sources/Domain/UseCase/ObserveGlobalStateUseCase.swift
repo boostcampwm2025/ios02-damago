@@ -89,6 +89,7 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
                     opponentName: partnerSnapshot?.nickname,
                     useFCM: userSnapshot.useFCM,
                     useLiveActivity: userSnapshot.useLiveActivity,
+                    todayPokeCount: self.calculatePokeCount(userSnapshot: userSnapshot),
                     // coupleSnapshot이 아직 로드되지 않았을 때(prepend(nil) 등) userSnapshot.coupleID로
                     // 폴백하여, 다마고 변경 등으로 스트림이 재생성될 때 잘못된 "연결 해제" 감지를 방지
                     coupleID: coupleSnapshot?.id ?? userSnapshot.coupleID,
@@ -113,5 +114,19 @@ final class ObserveGlobalStateUseCaseImpl: ObserveGlobalStateUseCase {
                 )
             }
             .eraseToAnyPublisher()
+    }
+    
+    private func calculatePokeCount(userSnapshot: UserSnapshotDTO) -> Int {
+        guard let lastDate = userSnapshot.lastPokeDate,
+              let count = userSnapshot.todayPokeCount else {
+            return 0
+        }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        let today = formatter.string(from: Date())
+        
+        return lastDate == today ? count : 0
     }
 }
