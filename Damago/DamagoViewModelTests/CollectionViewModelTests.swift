@@ -124,7 +124,7 @@ final class CollectionViewModelTests {
         let globalStore = FakeGlobalStore()
         let viewModel = CollectionViewModel(
             updateUserUseCase: SpyUpdateUserUseCase(),
-            fetchUserInfoUseCase: FakeFetchUserInfoUseCase(result: .failure(TestError),
+            fetchUserInfoUseCase: FakeFetchUserInfoUseCase(result: .failure(TestError.dummy)),
             globalStore: globalStore
         )
         let testInput = TestInput()

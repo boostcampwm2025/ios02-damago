@@ -15,11 +15,14 @@ func withTimeout(seconds: TimeInterval, operation: @escaping @Sendable () async 
         }
         group.addTask {
             try await Task.sleep(for: .seconds(seconds))
-            throw TimeoutError()
+            throw TestError.timeout
         }
         try await group.next()
         group.cancelAll()
     }
 }
 
-struct TimeoutError: Error {}
+enum TestError: Error {
+    case timeout
+    case dummy
+}
