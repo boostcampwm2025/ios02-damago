@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # Ruby 환경 설정 (Fastlane 구동용)
+    # Ruby 환경 설정
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
@@ -25,8 +25,7 @@ jobs:
     - name: Select Xcode 26.1
       run: sudo xcode-select -s /Applications/Xcode_26.1.app/Contents/Developer
 
-    # .gitignore로 누락된 파일 생성
-    # 실제 CI 동작을 위해 GitHub Secrets 설정
+    # GoogleService-Info.plist 생성
     - name: Create GoogleService-Info.plist
       run: |
         mkdir -p ./Damago/Damago/Resources
@@ -44,8 +43,28 @@ jobs:
         xcrun simctl shutdown all
         xcrun simctl erase all
 
+    # [추가] SPM 캐시 적용 (DerivedData 및 SPM 캐시 저장/복구)
+    - name: Cache Xcode DerivedData & SwiftPM
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/Library/Developer/Xcode/DerivedData
+          ~/Library/Caches/org.swift.swiftpm
+        # Package.resolved 파일이 변경될 때만 캐시를 새로 생성
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+
+    # 패키지 해결 (캐시가 있으면 매우 빠르게 넘어감)
+    - name: Resolve Package Dependencies
+      run: |
+        xcodebuild -resolvePackageDependencies \
+          -project ./Damago/Damago.xcodeproj \
+          -scheme Damago \
+          -configuration Debug
+
+    # Fastlane 실행
     - name: Run Fastlane Tests
-      # CI 환경에서도 Xcode 설정을 읽어오는 시간을 충분히 확보
       env:
         FASTLANE_XCODE_LIST_TIMEOUT: 120
         FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 120

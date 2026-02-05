@@ -1,29 +1,53 @@
 default_platform(:ios)
 
 platform :ios do
-  desc "Run tests and build verification"
+  desc "Run tests for Debug and Build verification for Release"
   lane :test do
-    # Xcode 26.1 환경에 맞춰 실행
+    # ----------------------------------------------------------------
+    # 1. 공통 설정 및 시뮬레이터 사전 부팅
+    # ----------------------------------------------------------------
+    device_name = "iPhone 17 Pro"
     
-    # 기본적으로 Debug 빌드는 항상 검증
-    configs_to_test = ["Debug"]
+    # xcodebuild가 시뮬레이터를 켜느라 멈추는 것을 방지하기 위해 미리 부팅
+    puts "📱 Booting #{device_name}..."
+    sh("xcrun simctl boot '#{device_name}' || true") 
+    sh("xcrun simctl bootstatus '#{device_name}'")
 
-    # main 브랜치인 경우에만 Release 빌드까지 추가 검증
+    # ----------------------------------------------------------------
+    # 2. Debug 모드: 단위 테스트(Test) 수행
+    # ----------------------------------------------------------------
+    puts "🚀 Testing Debug build..."
+    scan(
+      project: "./Damago/Damago.xcodeproj",
+      scheme: "Damago",
+      configuration: "Debug",
+      device: device_name,
+      clean: false,
+      
+      # [핵심] 30분 타임아웃 방지를 위해 병렬 테스트 비활성화
+      xcargs: "-skipPackagePluginValidation -parallel-testing-enabled NO ARCHS=arm64"
+    )
+
+    # ----------------------------------------------------------------
+    # 3. Main 브랜치인 경우: Release 모드 빌드 검증(Build Only)
+    # ----------------------------------------------------------------
     current_branch = git_branch
     if current_branch == "main" || ENV["GITHUB_REF_NAME"] == "main"
-      configs_to_test << "Release"
-    end
-
-    configs_to_test.each do |config|
-      puts "🚀 Testing #{config} build..."
-      scan(
+      puts "📦 Building Release build (Skip Tests)..."
+      
+      # scan(테스트) 대신 xcodebuild(빌드)만 실행
+      # Release 모드에서 컴파일 에러가 없는지만 빠르게 확인합니다.
+      xcodebuild(
         project: "./Damago/Damago.xcodeproj",
         scheme: "Damago",
-        configuration: config,
-        devices: ["iPhone 16 Pro"], # 테스트에서는 최신 기종 시뮬레이터 지정
-        clean: true,
-        # CI 환경에서 SwiftLint 등 빌드 툴 플러그인 신뢰 문제 해결
-        xcargs: "-skipPackagePluginValidation"
+        configuration: "Release",
+        clean: false,
+        build: true,      # 테스트 없이 빌드 액션만 수행
+        analyze: false,   # 정적 분석 생략 (속도 향상)
+        
+        # CI에 인증서 세팅이 없어도 빌드가 터지지 않도록 '시뮬레이터'용으로 빌드
+        destination: "platform=iOS Simulator,name=#{device_name}",
+        xcargs: "-skipPackagePluginValidation RUN_CLANG_STATIC_ANALYZER=NO ARCHS=arm64"
       )
     end
   end

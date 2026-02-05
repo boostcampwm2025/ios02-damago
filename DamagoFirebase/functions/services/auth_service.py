@@ -34,19 +34,20 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
         user_data = doc_snapshot.to_dict()
         existing_code = user_data.get("code")
         
-        partner_uid = user_data.get("partnerUID")
-        partner_code = None
-        
-        if partner_uid:
-            partner_doc = users_ref.document(partner_uid).get()
-            if partner_doc.exists:
-                partner_code = partner_doc.to_dict().get("code")
+        if existing_code:
+            partner_uid = user_data.get("partnerUID")
+            partner_code = None
+            
+            if partner_uid:
+                partner_doc = users_ref.document(partner_uid).get()
+                if partner_doc.exists:
+                    partner_code = partner_doc.to_dict().get("code")
 
-        return https_fn.Response(
-            json.dumps({"myCode": existing_code, "partnerCode": partner_code}), 
-            status=200,
-            mimetype='application/json'
-        )
+            return https_fn.Response(
+                json.dumps({"myCode": existing_code, "partnerCode": partner_code}), 
+                status=200,
+                mimetype='application/json'
+            )
 
     # --- [Step 2] 고유 코드 생성 (NanoID) ---
     safe_alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
@@ -63,8 +64,9 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
     if unique_code is None:
         return https_fn.Response("Unable to generate new code", status=500)
 
-    # --- [Step 3] 유저 생성 ---
-    doc_ref.set({
+    # --- [Step 3] 유저 생성 (또는 업데이트) ---
+    # fcmToken이 이미 존재할 수 있으므로 덮어쓰지 않도록 주의 (None으로 설정하지 않음)
+    user_data = {
         "uid": uid,  # udid -> uid 변경
         "code": unique_code,
         "partnerUID": None, # partnerUDID -> partnerUID 변경
@@ -72,14 +74,16 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
         "coupleID": None,
         "anniversaryDate": None,
         "nickname": None,
-        "fcmToken": None,
         "laStartToken": None,
         "laUpdateToken": None,
         "useFCM": True,
         "useLiveActivity": True,
         "createdAt": firestore.SERVER_TIMESTAMP,
         "updatedAt": firestore.SERVER_TIMESTAMP
-    })
+    }
+    
+    # merge=True를 사용하여 기존 필드(예: fcmToken)는 유지하고, 없는 필드는 추가/업데이트
+    doc_ref.set(user_data, merge=True)
 
     return https_fn.Response(
         json.dumps({"myCode": unique_code, "partnerCode": None}), 
