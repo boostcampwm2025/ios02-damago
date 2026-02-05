@@ -34,9 +34,10 @@ final class HomeViewModel: ViewModel {
         var foodCount = 0
         var lastFedAt: Date?
         var ownedDamagos: [DamagoType: Int] = [:]
+        var todayPokeCount = 0
 
         var isFeedButtonEnabled: Bool { foodCount > 0 && !isFeeding }
-        var isPokeButtonEnabled: Bool { true }
+        var isPokeButtonEnabled: Bool { todayPokeCount < 5 }
         var route: Pulse<Route>?
     }
 
@@ -242,6 +243,11 @@ final class HomeViewModel: ViewModel {
                     self?.state.dDay = 0
                 }
             }
+            .store(in: &cancellables)
+
+        globalStore.globalState
+            .map { $0.todayPokeCount }
+            .sink { [weak self] in self?.state.todayPokeCount = $0 }
             .store(in: &cancellables)
     }
 }

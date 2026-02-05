@@ -143,21 +143,53 @@ def poke(req: https_fn.Request) -> https_fn.Response:
 
     db = get_db()
 
-    # --- [Step 1] 파트너 조회 ---
+    # --- [Step 1] 파트너 조회 및 횟수 제한 확인 ---
     my_user_ref = db.collection("users").document(my_uid)
-    my_user_doc = my_user_ref.get()
+    
+    @firestore.transactional
+    def update_poke_count(transaction, user_ref):
+        snapshot = user_ref.get(transaction=transaction)
+        if not snapshot.exists:
+            return None, "User not found"
+        
+        user_data = snapshot.to_dict()
+        partner_uid = user_data.get("partnerUID")
+        
+        if not partner_uid:
+            return None, "User is not in a couple"
 
-    if not my_user_doc.exists:
-        return https_fn.Response("User not found", status=404)
+        # KST 기준 날짜 확인
+        kst = timezone(timedelta(hours=9))
+        today_str = datetime.now(kst).strftime("%Y-%m-%d")
+        
+        last_poke_date = user_data.get("lastPokeDate", "")
+        current_count = user_data.get("todayPokeCount", 0)
+        
+        if last_poke_date != today_str:
+            current_count = 0
+            
+        if current_count >= 5:
+            return None, "Daily limit reached"
+            
+        new_count = current_count + 1
+        transaction.update(user_ref, {
+            "lastPokeDate": today_str,
+            "todayPokeCount": new_count
+        })
+        
+        return (partner_uid, user_data.get("nickname"), new_count), None
 
-    my_user_data = my_user_doc.to_dict()
-    partner_uid = my_user_data.get("partnerUID")  # partnerUID 사용
-
-    if not partner_uid:
-        return https_fn.Response("User is not in a couple", status=400)
+    transaction = db.transaction()
+    result, error = update_poke_count(transaction, my_user_ref)
+    
+    if error:
+        status_code = 429 if error == "Daily limit reached" else 400
+        return https_fn.Response(error, status=status_code)
+        
+    partner_uid, nickname, new_count = result
 
     # --- [Step 2] FCM 전송 ---
-    nickname = my_user_data.get('nickname') or '상대방'
+    nickname = nickname or '상대방'
     final_body = custom_message if custom_message else f"{nickname}님이 당신을 콕 찔렀어요!"
     
     success = send_push_notification(
@@ -172,7 +204,10 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     )
 
     if success:
-        return https_fn.Response("Push notification sent successfully")
+        return https_fn.Response(json.dumps({
+            "message": "Push notification sent successfully", 
+            "remainingCount": 5 - new_count
+        }), status=200, headers={"Content-Type": "application/json"})
     else:
         return https_fn.Response("Failed to send push notification", status=500)
 
