@@ -15,7 +15,31 @@ final class CollectionViewModelTests {
     private var cancellables = Set<AnyCancellable>()
 
     private final class FakeGlobalStore: GlobalStoreProtocol {
-        private let globalStateSubject = CurrentValueSubject<GlobalState, Never>(.empty)
+        private let globalStateSubject = CurrentValueSubject<GlobalState, Never>(
+            GlobalState(
+                nickname: nil,
+                opponentName: nil,
+                useFCM: false,
+                useLiveActivity: false,
+                coupleID: nil,
+                totalCoin: nil,
+                foodCount: nil,
+                anniversaryDate: nil,
+                currentQuestionID: nil,
+                damagoID: nil,
+                damagoName: nil,
+                damagoType: nil,
+                level: nil,
+                currentExp: nil,
+                maxExp: nil,
+                isHungry: nil,
+                statusMessage: nil,
+                lastFedAt: nil,
+                totalPlayTime: nil,
+                lastActiveAt: nil,
+                ownedDamagos: [:]
+            )
+        )
 
         var globalState: AnyPublisher<GlobalState, Never> {
             globalStateSubject.eraseToAnyPublisher()
@@ -101,10 +125,6 @@ final class CollectionViewModelTests {
         )
         let testInput = TestInput()
         let output = viewModel.transform(testInput.input)
-        var latestState: CollectionViewModel.State?
-        output
-            .sink { latestState = $0 }
-            .store(in: &cancellables)
 
         testInput.viewDidLoad.send()
 
