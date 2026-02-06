@@ -209,6 +209,13 @@ def poke(req: https_fn.Request) -> https_fn.Response:
             "remainingCount": 5 - new_count
         }), status=200, headers={"Content-Type": "application/json"})
     else:
+        # FCM 전송 실패 시 DB 롤백
+        try:
+            my_user_ref.update({"todayPokeCount": firestore.Increment(-1)})
+            print(f"Reverted poke count for {my_uid} due to FCM failure")
+        except Exception as e:
+            print(f"Failed to revert poke count for {my_uid}: {e}")
+
         return https_fn.Response("Failed to send push notification", status=500)
 
 def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
