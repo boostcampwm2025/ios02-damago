@@ -13,6 +13,7 @@ final class HomeViewModel: ViewModel {
     struct Input {
         let viewDidLoad: AnyPublisher<Void, Never>
         let feedButtonDidTap: AnyPublisher<Void, Never>
+        let pokeButtonDidTap: AnyPublisher<Void, Never>
         let pokeMessageSelected: AnyPublisher<String, Never>
         let damagoNameChangeSubmitted: AnyPublisher<String, Never>
     }
@@ -37,12 +38,14 @@ final class HomeViewModel: ViewModel {
         var todayPokeCount = 0
 
         var isFeedButtonEnabled: Bool { foodCount > 0 && !isFeeding }
-        var isPokeButtonEnabled: Bool { todayPokeCount < 5 }
+        var isPokeButtonEnabled: Bool { true }
+        var toast: Pulse<String>?
         var route: Pulse<Route>?
     }
 
     enum Route: Equatable {
         case nameChangeSuccess
+        case showPokePopup
         case error(message: String)
     }
 
@@ -82,6 +85,18 @@ final class HomeViewModel: ViewModel {
         input.feedButtonDidTap
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in self?.feedDamago() }
+            .store(in: &cancellables)
+            
+        input.pokeButtonDidTap
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                guard let self else { return }
+                if self.state.todayPokeCount >= 5 {
+                    self.state.toast = Pulse("오늘 콕 찌르기 횟수를 모두 소진했어요.")
+                } else {
+                    self.state.route = Pulse(.showPokePopup)
+                }
+            }
             .store(in: &cancellables)
 
         input.pokeMessageSelected
@@ -146,8 +161,12 @@ final class HomeViewModel: ViewModel {
             do {
                 _ = try await pokeDamagoUseCase.execute(message: message)
                 SharedLogger.home.info("Poke sent with message: \(message)")
+                state.toast = Pulse("콕 찌르기를 보냈어요.")
             } catch {
                 SharedLogger.home.error("Error poking damago: \(error)")
+                
+                state.todayPokeCount = max(0, state.todayPokeCount - 1)
+                state.toast = Pulse("콕 찌르기를 실패했어요.")
             }
         }
     }

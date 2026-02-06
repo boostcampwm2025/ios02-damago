@@ -137,6 +137,15 @@ final class HomeView: UIView {
         return button
     }()
 
+    private let pokeBadge: CircleTextBadge = {
+        let badge = CircleTextBadge(padding: .spacingXS)
+        badge.backgroundColor = .damagoPink
+        badge.textColor = .white
+        badge.font = .caption
+        badge.translatesAutoresizingMaskIntoConstraints = false
+        return badge
+    }()
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -158,6 +167,7 @@ final class HomeView: UIView {
         cardShadowContainer.addSubview(cardContentContainer)
         [capsuleLabel, dDayLabel, nameStackView, cardShadowContainer, feedButton, pokeButton, expBar]
             .forEach { addSubview($0) }
+        pokeButton.addSubview(pokeBadge)
     }
 
     private func setupConstraints() {
@@ -167,6 +177,10 @@ final class HomeView: UIView {
 
             pokeButton.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
             pokeButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -.spacingM),
+            
+            pokeBadge.topAnchor.constraint(equalTo: pokeButton.topAnchor, constant: .spacingXS),
+            pokeBadge.trailingAnchor.constraint(equalTo: pokeButton.trailingAnchor, constant: -.spacingXS),
+            pokeBadge.widthAnchor.constraint(greaterThanOrEqualToConstant: .spacingM),
 
             dDayLabel.topAnchor.constraint(equalTo: capsuleLabel.bottomAnchor, constant: .spacingXL),
             dDayLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
@@ -265,14 +279,7 @@ extension HomeView {
     }
     
     func updatePokeButton(todayCount: Int) {
-        var config = pokeButton.configuration ?? UIButton.Configuration.plain()
         let remaining = max(0, 5 - todayCount)
-        
-        var container = AttributeContainer()
-        container.font = .body3
-        container.foregroundColor = .textSecondary
-        config.attributedSubtitle = AttributedString("\(remaining)/5", attributes: container)
-        
-        pokeButton.configuration = config
+        pokeBadge.text = "\(remaining)"
     }
 }
