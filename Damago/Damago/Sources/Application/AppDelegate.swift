@@ -61,26 +61,6 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // -> FCM 토큰 생성 및 갱신 이벤트를 감지하기 위함
         Messaging.messaging().delegate = self
 
-        // 6. 앱 실행 시 현재 토큰 확인 및 업데이트
-        Messaging.messaging().token { token, error in
-            if let error = error {
-                SharedLogger.apns.error("FCM 토큰 가져오기 실패: \(error)")
-            } else if let token = token {
-                SharedLogger.apns.info("앱 실행 시 FCM 토큰 확인: \(token)")
-                UserDefaults.standard.set(token, forKey: "fcmToken")
-                let useCase = AppDIContainer.shared.resolve(UpdateFCMTokenUseCase.self)
-                
-                Task {    
-                    do {
-                        try await useCase.execute(fcmToken: token)
-                        SharedLogger.apns.info("✅ 앱 실행 시 FCM token 업데이트 완료")
-                    } catch {
-                        SharedLogger.apns.error("❌ 앱 실행 시 FCM token 업데이트 실패: \(error.localizedDescription)")
-                    }
-                }
-            }
-        }
-
         // 라이브 액티비티 원격 실행을 위한 토큰 감시
         LiveActivityManager.shared.startMonitoring()
 
@@ -130,6 +110,17 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         #else
         Messaging.messaging().setAPNSToken(deviceToken, type: .prod)
         #endif
+        
+        // APNs 토큰 설정 후 FCM 토큰 확인 및 업데이트
+        Messaging.messaging().token { [weak self] token, error in
+            if let token {
+                let savedToken = UserDefaults.standard.string(forKey: "fcmToken")
+                
+                if token != savedToken {
+                    self?.updateFCMToken(token: token)
+                }
+            }
+        }
     }
 
     /// Apple(APNs)에서 기기 고유 토큰(Device Token)의 발급이 실패했을 때 호출됩니다.
@@ -192,20 +183,23 @@ extension AppDelegate: MessagingDelegate {
     /// - Note: 앱을 지웠다 깔거나, 새 기기에서 로그인할 때 갱신될 수 있습니다.
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         SharedLogger.apns.info("🔥 Firebase registration token: \(String(describing: fcmToken))")
-
-        UserDefaults.standard.set(fcmToken, forKey: "fcmToken")
-
-        NotificationCenter.default.post(name: .fcmTokenDidUpdate, object: nil)
-
         guard let fcmToken else { return }
 
+        self.updateFCMToken(token: fcmToken)
+    }
+
+    private func updateFCMToken(token: String) {
+        let useCase = AppDIContainer.shared.resolve(UpdateFCMTokenUseCase.self)
+        
         Task {
-            let useCase = AppDIContainer.shared.resolve(UpdateFCMTokenUseCase.self)
             do {
-                try await useCase.execute(fcmToken: fcmToken)
-                SharedLogger.apns.info("✅ FCM token 업데이트 완료")
+                try await useCase.execute(fcmToken: token)
+                // 서버 업데이트 성공 시 로컬 저장소 갱신
+                UserDefaults.standard.set(token, forKey: "fcmToken")
+                NotificationCenter.default.post(name: .fcmTokenDidUpdate, object: nil)
+                SharedLogger.apns.info("✅ FCM token 서버 동기화 및 로컬 저장 완료")
             } catch {
-                SharedLogger.apns.error("❌ FCM token 업데이트 실패: \(error.localizedDescription)")
+                SharedLogger.apns.error("❌ FCM token 서버 업데이트 실패: \(error.localizedDescription)")
             }
         }
     }
