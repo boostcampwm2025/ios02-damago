@@ -126,7 +126,7 @@ final class SettingsViewModelTests {
             nickname: "TestUser",
             opponentName: "Opponent",
             useFCM: true,
-            useLiveActivity: false,
+            useLiveActivity: false, todayPokeCount: 0,
             coupleID: nil, totalCoin: nil, foodCount: nil, anniversaryDate: Date(),
             currentQuestionID: nil, damagoID: nil, damagoName: nil, damagoType: nil,
             level: nil, currentExp: nil, maxExp: nil, isHungry: nil, statusMessage: nil,

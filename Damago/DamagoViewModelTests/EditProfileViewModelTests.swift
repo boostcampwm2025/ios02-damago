@@ -96,7 +96,7 @@ final class EditProfileViewModelTests {
             nickname: "InitialName",
             opponentName: nil,
             useFCM: false,
-            useLiveActivity: false,
+            useLiveActivity: false, todayPokeCount: 0,
             coupleID: nil, totalCoin: nil, foodCount: nil,
             anniversaryDate: testDate,
             currentQuestionID: nil, damagoID: nil, damagoName: nil, damagoType: nil,
