@@ -99,7 +99,11 @@ public final class NetworkProviderImpl: NetworkProvider {
                     continue
                 }
                 
-                throw NetworkError.connectionError(error)
+                if let networkError = error as? NetworkError {
+                    throw networkError
+                } else {
+                    throw NetworkError.connectionError(error)
+                }
             }
         }
     }

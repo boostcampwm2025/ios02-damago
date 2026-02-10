@@ -127,6 +127,7 @@ final class HomeViewModelTests {
     struct TestInput {
         let viewDidLoad = PassthroughSubject<Void, Never>()
         let feedButtonDidTap = PassthroughSubject<Void, Never>()
+        let pokeButtonDidTap = PassthroughSubject<Void, Never>()
         let pokeMessageSelected = PassthroughSubject<String, Never>()
         let damagoNameChangeSubmitted = PassthroughSubject<String, Never>()
         
@@ -134,6 +135,7 @@ final class HomeViewModelTests {
             HomeViewModel.Input(
                 viewDidLoad: viewDidLoad.eraseToAnyPublisher(),
                 feedButtonDidTap: feedButtonDidTap.eraseToAnyPublisher(),
+                pokeButtonDidTap: pokeButtonDidTap.eraseToAnyPublisher(),
                 pokeMessageSelected: pokeMessageSelected.eraseToAnyPublisher(),
                 damagoNameChangeSubmitted: damagoNameChangeSubmitted.eraseToAnyPublisher()
             )

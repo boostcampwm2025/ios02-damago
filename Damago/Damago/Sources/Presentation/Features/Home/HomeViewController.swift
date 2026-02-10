@@ -43,6 +43,9 @@ final class HomeViewController: UIViewController {
             HomeViewModel.Input(
                 viewDidLoad: viewDidLoadPublisher.eraseToAnyPublisher(),
                 feedButtonDidTap: mainView.feedButton.tapPublisher,
+                pokeButtonDidTap: mainView.pokeButton.tapPublisher
+                    .throttle(for: .seconds(1), scheduler: DispatchQueue.main, latest: false)
+                    .eraseToAnyPublisher(),
                 pokeMessageSelected: pokeMessageSelectedPublisher.eraseToAnyPublisher(),
                 damagoNameChangeSubmitted: damagoNameChangeSubmittedPublisher.eraseToAnyPublisher()
             )
@@ -66,12 +69,6 @@ final class HomeViewController: UIViewController {
     }
     
     private func setupActions() {
-        mainView.pokeButton.tapPublisher
-            .sink { [weak self] _ in
-                self?.showPokeMessagePopup()
-            }
-            .store(in: &cancellables)
-
         mainView.editNameButton.tapPublisher
             .sink { [weak self] in
                 self?.showEditDamagoNamePopup()
@@ -196,6 +193,13 @@ final class HomeViewController: UIViewController {
             .mapForUI { ExperienceBar.State(level: $0.level, currentExp: $0.currentExp, maxExp: $0.maxExp) }
             .sink { [weak self] in self?.mainView.expBar.update(with: $0) }
             .store(in: &cancellables)
+            
+        output
+            .pulse(\.toast)
+            .sink { [weak self] message in
+                self?.showToast(message: message)
+            }
+            .store(in: &cancellables)
     }
 
     private func handleRoute(_ route: HomeViewModel.Route) {
@@ -205,6 +209,8 @@ final class HomeViewController: UIViewController {
             let alert = UIAlertController(title: "완료", message: "이름이 변경됐어요.", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "확인", style: .default))
             present(alert, animated: true)
+        case .showPokePopup:
+            showPokeMessagePopup()
         case .error(let message):
             let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "확인", style: .default))

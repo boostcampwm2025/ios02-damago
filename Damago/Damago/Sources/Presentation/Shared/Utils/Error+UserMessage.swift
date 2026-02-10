@@ -9,25 +9,36 @@ import Foundation
 import DamagoNetwork
 
 extension Error {
+    var statusCode: Int? {
+        if let networkError = self as? NetworkError,
+           case .invalidStatusCode(let code, _) = networkError {
+            return code
+        }
+        return nil
+    }
+
     /// 사용자에게 표시할 친화적인 에러 메시지로 변환
     var userFriendlyMessage: String {
-        // NetworkError 처리
+        // 상태 코드가 있는 경우 처리
+        if let code = self.statusCode {
+            if code == 401 {
+                return "로그인이 필요합니다.\n다시 로그인해주세요."
+            } else if code == 403 {
+                return "권한이 없습니다.\n관리자에게 문의해주세요."
+            } else if code == 404 {
+                return "요청한 정보를 찾을 수 없습니다."
+            } else if code >= 500 {
+                return "서버에 문제가 발생했습니다.\n잠시 후 다시 시도해주세요."
+            } else {
+                return "요청 처리 중 오류가 발생했습니다.\n다시 시도해주세요."
+            }
+        }
+
+        // 기타 NetworkError 처리
         if let networkError = self as? NetworkError {
             switch networkError {
-            case .invalidStatusCode(let code, _):
-                if code == 401 {
-                    return "로그인이 필요합니다.\n다시 로그인해주세요."
-                } else if code == 403 {
-                    return "권한이 없습니다.\n관리자에게 문의해주세요."
-                } else if code == 404 {
-                    return "요청한 정보를 찾을 수 없습니다."
-                } else if code == 500 {
-                    return "서버에 문제가 발생했습니다.\n잠시 후 다시 시도해주세요."
-                } else if code >= 500 {
-                    return "서버에 문제가 발생했습니다.\n잠시 후 다시 시도해주세요."
-                } else {
-                    return "요청 처리 중 오류가 발생했습니다.\n다시 시도해주세요."
-                }
+            case .invalidStatusCode:
+                break
             case .invalidResponse:
                 return "서버 응답을 처리할 수 없습니다.\n다시 시도해주세요."
             case .invalidURL:

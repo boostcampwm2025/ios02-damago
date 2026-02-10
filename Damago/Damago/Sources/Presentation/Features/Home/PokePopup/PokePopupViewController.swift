@@ -71,17 +71,8 @@ final class PokePopupViewController: UIViewController {
     
     private func setupViewModelCallbacks() {
         viewModel.onMessageSelected = { [weak self] message in
-            self?.showProgressView()
             self?.onMessageSelected?(message)
-            // 전송 완료 시뮬레이션 (실제로는 네트워크 요청 완료 후 호출)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                self?.hideProgressView()
-                self?.showSendCompleteAlert {
-                    self?.dismiss(animated: true) {
-                        self?.onCancel?()
-                    }
-                }
-            }
+            self?.dismiss(animated: true)
         }
         
         viewModel.onCancel = { [weak self] in
