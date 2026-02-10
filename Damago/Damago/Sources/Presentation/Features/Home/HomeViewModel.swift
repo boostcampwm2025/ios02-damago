@@ -165,7 +165,6 @@ final class HomeViewModel: ViewModel {
             } catch {
                 SharedLogger.home.error("Error poking damago: \(error)")
                 
-                state.todayPokeCount = max(0, state.todayPokeCount - 1)
                 state.toast = Pulse("콕 찌르기를 실패했어요.")
             }
         }
