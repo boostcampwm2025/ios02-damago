@@ -337,10 +337,11 @@ final class CollectionViewModelTests {
         testInput.viewDidLoad.send()
         globalStore.updateState(Self.makeGlobalState(owned: [.basicBlack: 1, .siamese: 1]))
         testInput.damagoSelected.send(.siamese)
-        testInput.confirmChangeTapped.send()
 
         try await withTimeout(seconds: 1.0) {
             var outputIterator = output.values.makeAsyncIterator()
+            testInput.confirmChangeTapped.send()
+
             var sawLoadingTrue = false
             while let state = await outputIterator.next() {
                 if await state.isLoading {
