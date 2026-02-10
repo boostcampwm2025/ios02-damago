@@ -406,4 +406,154 @@ final class HomeViewModelTests {
         
         #expect(!mockUpdateUserUseCase.executeCalled)
     }
+
+    @Test("콕 찌르기 성공 시 횟수 차감")
+    func test_콕찌르기_성공_시_횟수_차감() async {
+        // Given
+        let mockGlobalStore = MockGlobalStore()
+        let mockFetchUserInfoUseCase = mockFetchUserInfoUseCase()
+        let mockFeedDamagoUseCase = mockFeedDamagoUseCase()
+        let mockPokeDamagoUseCase = mockPokeDamagoUseCase()
+        let mockUpdateUserUseCase = mockUpdateUserUseCase()
+
+        let initialState = GlobalState.empty.copy(todayPokeCount: 2)
+        mockGlobalStore.updateState(initialState)
+        
+        mockFetchUserInfoUseCase.executeResult = .success(UserInfo(
+            uid: "test", damagoID: "id", coupleID: nil, partnerUID: nil,
+            nickname: nil, damagoStatus: nil, totalCoin: 0, lastFedAt: nil
+        ))
+
+        let viewModel = HomeViewModel(
+            globalStore: mockGlobalStore,
+            fetchUserInfoUseCase: mockFetchUserInfoUseCase,
+            feedDamagoUseCase: mockFeedDamagoUseCase,
+            pokeDamagoUseCase: mockPokeDamagoUseCase,
+            updateUserUseCase: mockUpdateUserUseCase
+        )
+
+        let testInput = TestInput()
+        _ = viewModel.transform(testInput.input)
+        testInput.viewDidLoad.send(())
+        mockPokeDamagoUseCase.executeResult = .success(true)
+
+        // When
+        await confirmation("성공 시 UseCase 실행 확인") { confirm in
+            let stream = AsyncStream<Void> { continuation in
+                mockPokeDamagoUseCase.onExecute = { continuation.yield() }
+            }
+            var iterator = stream.makeAsyncIterator()
+
+            testInput.pokeMessageSelected.send("안녕")
+            await iterator.next()
+            confirm()
+        }
+
+        // Then 1: ViewModel은 GlobalStore 업데이트 전까지는 기존 상태
+        #expect(viewModel.state.todayPokeCount == 2)
+        
+        // Then 2: 서버 동기화 후 GlobalStore가 업데이트되면 반영
+        let updatedState = GlobalState.empty.copy(todayPokeCount: 3)
+        mockGlobalStore.updateState(updatedState)
+        
+        #expect(viewModel.state.todayPokeCount == 3)
+    }
+
+    @Test("콕 찌르기 실패 시 횟수 유지")
+    func test_콕찌르기_실패_시_횟수_유지() async {
+        // Given
+        let mockGlobalStore = MockGlobalStore()
+        let mockFetchUserInfoUseCase = mockFetchUserInfoUseCase()
+        let mockFeedDamagoUseCase = mockFeedDamagoUseCase()
+        let mockPokeDamagoUseCase = mockPokeDamagoUseCase()
+        let mockUpdateUserUseCase = mockUpdateUserUseCase()
+
+        let initialState = GlobalState.empty.copy(todayPokeCount: 2)
+        mockGlobalStore.updateState(initialState)
+        
+        mockFetchUserInfoUseCase.executeResult = .success(UserInfo(
+            uid: "test", damagoID: "id", coupleID: nil, partnerUID: nil,
+            nickname: nil, damagoStatus: nil, totalCoin: 0, lastFedAt: nil
+        ))
+
+        let viewModel = HomeViewModel(
+            globalStore: mockGlobalStore,
+            fetchUserInfoUseCase: mockFetchUserInfoUseCase,
+            feedDamagoUseCase: mockFeedDamagoUseCase,
+            pokeDamagoUseCase: mockPokeDamagoUseCase,
+            updateUserUseCase: mockUpdateUserUseCase
+        )
+
+        let testInput = TestInput()
+        _ = viewModel.transform(testInput.input)
+        testInput.viewDidLoad.send(())
+        mockPokeDamagoUseCase.executeResult = .failure(TestError.dummy)
+
+        // When
+        await confirmation("실패 시 UseCase 실행 확인") { confirm in
+            let stream = AsyncStream<Void> { continuation in
+                mockPokeDamagoUseCase.onExecute = { continuation.yield() }
+            }
+            var iterator = stream.makeAsyncIterator()
+
+            testInput.pokeMessageSelected.send("실패 메시지")
+            await iterator.next()
+            confirm()
+        }
+
+        // Then: 횟수가 감소하거나 변하지 않고 그대로 유지
+        #expect(viewModel.state.todayPokeCount == 2)
+    }
+}
+
+extension GlobalState {
+    func copy(
+        nickname: String?? = nil,
+        opponentName: String?? = nil,
+        useFCM: Bool? = nil,
+        useLiveActivity: Bool? = nil,
+        todayPokeCount: Int? = nil,
+        coupleID: String?? = nil,
+        totalCoin: Int?? = nil,
+        foodCount: Int?? = nil,
+        anniversaryDate: Date?? = nil,
+        currentQuestionID: String?? = nil,
+        damagoID: String?? = nil,
+        damagoName: String?? = nil,
+        damagoType: DamagoType?? = nil,
+        level: Int?? = nil,
+        currentExp: Int?? = nil,
+        maxExp: Int?? = nil,
+        isHungry: Bool?? = nil,
+        statusMessage: String?? = nil,
+        lastFedAt: Date?? = nil,
+        totalPlayTime: Int?? = nil,
+        lastActiveAt: Date?? = nil,
+        ownedDamagos: [DamagoType: Int]?? = nil
+    ) -> GlobalState {
+        return GlobalState(
+            nickname: (nickname ?? self.nickname) ?? nil,
+            opponentName: (opponentName ?? self.opponentName) ?? nil,
+            useFCM: useFCM ?? self.useFCM,
+            useLiveActivity: useLiveActivity ?? self.useLiveActivity,
+            todayPokeCount: todayPokeCount ?? self.todayPokeCount,
+            coupleID: (coupleID ?? self.coupleID) ?? nil,
+            totalCoin: (totalCoin ?? self.totalCoin) ?? nil,
+            foodCount: (foodCount ?? self.foodCount) ?? nil,
+            anniversaryDate: (anniversaryDate ?? self.anniversaryDate) ?? nil,
+            currentQuestionID: (currentQuestionID ?? self.currentQuestionID) ?? nil,
+            damagoID: (damagoID ?? self.damagoID) ?? nil,
+            damagoName: (damagoName ?? self.damagoName) ?? nil,
+            damagoType: (damagoType ?? self.damagoType) ?? nil,
+            level: (level ?? self.level) ?? nil,
+            currentExp: (currentExp ?? self.currentExp) ?? nil,
+            maxExp: (maxExp ?? self.maxExp) ?? nil,
+            isHungry: (isHungry ?? self.isHungry) ?? nil,
+            statusMessage: (statusMessage ?? self.statusMessage) ?? nil,
+            lastFedAt: (lastFedAt ?? self.lastFedAt) ?? nil,
+            totalPlayTime: (totalPlayTime ?? self.totalPlayTime) ?? nil,
+            lastActiveAt: (lastActiveAt ?? self.lastActiveAt) ?? nil,
+            ownedDamagos: (ownedDamagos ?? self.ownedDamagos) ?? nil
+        )
+    }
 }
