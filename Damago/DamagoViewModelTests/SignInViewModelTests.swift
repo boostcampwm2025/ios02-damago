@@ -34,6 +34,22 @@ final class SignInViewModelTests {
         }
     }
 
+    @MainActor
+    class MockCheckConnectionUseCase: CheckConnectionUseCase {
+        var executeCalled = false
+        var executeResult: Result<Bool, Error> = .success(false)
+        
+        func execute() async throws -> Bool {
+            executeCalled = true
+            switch executeResult {
+            case .success(let isConnected):
+                return isConnected
+            case .failure(let error):
+                throw error
+            }
+        }
+    }
+
     // MARK: - Test Input
 
     struct TestInput {
@@ -56,9 +72,13 @@ final class SignInViewModelTests {
         let mockSignInUseCase = MockSignInUseCase()
         mockSignInUseCase.executeResult = .success(())
         
+        let mockCheckConnectionUseCase = MockCheckConnectionUseCase()
+        mockCheckConnectionUseCase.executeResult = .success(false)
+        
         let expectedOpponentCode = "12345"
         let viewModel = SignInViewModel(
             signInUseCase: mockSignInUseCase,
+            checkConnectionUseCase: mockCheckConnectionUseCase,
             opponentCode: expectedOpponentCode
         )
         
@@ -117,8 +137,11 @@ final class SignInViewModelTests {
         }
         mockSignInUseCase.executeResult = .failure(TestError())
         
+        let mockCheckConnectionUseCase = MockCheckConnectionUseCase()
+        
         let viewModel = SignInViewModel(
             signInUseCase: mockSignInUseCase,
+            checkConnectionUseCase: mockCheckConnectionUseCase,
             opponentCode: nil
         )
         
