@@ -59,6 +59,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2903EFF02F33673800CB0EF8 /* Damago.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Damago.xctestplan; sourceTree = "<group>"; };
 		4B0AF0FC2F15184E00ED58FA /* DamagoNetwork */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = DamagoNetwork; sourceTree = "<group>"; };
 		4B1E302A2EF16EDC00EB96A1 /* DamagoWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DamagoWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B1E302C2EF16EDC00EB96A1 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
@@ -217,6 +218,7 @@
 		4B5FE2CB2EF130B6005E31DA = {
 			isa = PBXGroup;
 			children = (
+				2903EFF02F33673800CB0EF8 /* Damago.xctestplan */,
 				4B0AF0FC2F15184E00ED58FA /* DamagoNetwork */,
 				4B1E304A2EF1700900EB96A1 /* Shared */,
 				4B5FE2D62EF130B6005E31DA /* Damago */,
