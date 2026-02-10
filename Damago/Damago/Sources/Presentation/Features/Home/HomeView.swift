@@ -263,4 +263,16 @@ extension HomeView {
         let imageName = isHungry ? "\(damagoType.rawValue)Hungry" : "\(damagoType.rawValue)Base"
         damagoView.animate(spriteSheetName: imageName)
     }
+    
+    func updatePokeButton(todayCount: Int) {
+        var config = pokeButton.configuration ?? UIButton.Configuration.plain()
+        let remaining = max(0, 5 - todayCount)
+        
+        var container = AttributeContainer()
+        container.font = .body3
+        container.foregroundColor = .textSecondary
+        config.attributedSubtitle = AttributedString("\(remaining)/5", attributes: container)
+        
+        pokeButton.configuration = config
+    }
 }

@@ -22,10 +22,10 @@ platform :ios do
       scheme: "Damago",
       configuration: "Debug",
       device: device_name,
-      clean: true,
+      clean: false,
       
       # [핵심] 30분 타임아웃 방지를 위해 병렬 테스트 비활성화
-      xcargs: "-skipPackagePluginValidation -parallel-testing-enabled NO"
+      xcargs: "-skipPackagePluginValidation -parallel-testing-enabled NO ARCHS=arm64"
     )
 
     # ----------------------------------------------------------------
@@ -41,13 +41,13 @@ platform :ios do
         project: "./Damago/Damago.xcodeproj",
         scheme: "Damago",
         configuration: "Release",
-        clean: true,
+        clean: false,
         build: true,      # 테스트 없이 빌드 액션만 수행
         analyze: false,   # 정적 분석 생략 (속도 향상)
         
         # CI에 인증서 세팅이 없어도 빌드가 터지지 않도록 '시뮬레이터'용으로 빌드
         destination: "platform=iOS Simulator,name=#{device_name}",
-        xcargs: "-skipPackagePluginValidation"
+        xcargs: "-skipPackagePluginValidation RUN_CLANG_STATIC_ANALYZER=NO ARCHS=arm64"
       )
     end
   end

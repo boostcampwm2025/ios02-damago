@@ -61,6 +61,26 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         // -> FCM 토큰 생성 및 갱신 이벤트를 감지하기 위함
         Messaging.messaging().delegate = self
 
+        // 6. 앱 실행 시 현재 토큰 확인 및 업데이트
+        Messaging.messaging().token { token, error in
+            if let error = error {
+                SharedLogger.apns.error("FCM 토큰 가져오기 실패: \(error)")
+            } else if let token = token {
+                SharedLogger.apns.info("앱 실행 시 FCM 토큰 확인: \(token)")
+                UserDefaults.standard.set(token, forKey: "fcmToken")
+                let useCase = AppDIContainer.shared.resolve(UpdateFCMTokenUseCase.self)
+                
+                Task {    
+                    do {
+                        try await useCase.execute(fcmToken: token)
+                        SharedLogger.apns.info("✅ 앱 실행 시 FCM token 업데이트 완료")
+                    } catch {
+                        SharedLogger.apns.error("❌ 앱 실행 시 FCM token 업데이트 실패: \(error.localizedDescription)")
+                    }
+                }
+            }
+        }
+
         // 라이브 액티비티 원격 실행을 위한 토큰 감시
         LiveActivityManager.shared.startMonitoring()
 
