@@ -124,7 +124,7 @@ final class CollectionViewModelTests {
         let globalStore = FakeGlobalStore()
         let viewModel = CollectionViewModel(
             updateUserUseCase: SpyUpdateUserUseCase(),
-            fetchUserInfoUseCase: FakeFetchUserInfoUseCase(result: .failure(TestError),
+            fetchUserInfoUseCase: FakeFetchUserInfoUseCase(result: .failure(TestError.dummy)),
             globalStore: globalStore
         )
         let testInput = TestInput()
@@ -384,6 +384,7 @@ final class CollectionViewModelTests {
             opponentName: nil,
             useFCM: false,
             useLiveActivity: false,
+            todayPokeCount: 0,
             coupleID: nil,
             totalCoin: nil,
             foodCount: nil,
