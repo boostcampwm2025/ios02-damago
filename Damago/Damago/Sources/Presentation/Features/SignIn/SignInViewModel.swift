@@ -63,7 +63,7 @@ final class SignInViewModel: ViewModel {
 
     func signIn() async {
         do {
-            try await signInUseCase.signIn()
+            try await signInUseCase.execute()
             let isConnected = try await checkConnectionUseCase.execute()
             if isConnected {
                 self.state.route = .init(.tabBar)
