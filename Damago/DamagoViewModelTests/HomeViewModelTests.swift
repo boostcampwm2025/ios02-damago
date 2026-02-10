@@ -504,6 +504,71 @@ final class HomeViewModelTests {
         // Then: 횟수가 감소하거나 변하지 않고 그대로 유지
         #expect(viewModel.state.todayPokeCount == 2)
     }
+
+    @Test("콕 찌르기 제한 도달 시 토스트 출력")
+    func test_콕찌르기_제한_도달_시_토스트_출력() async {
+        // Given
+        let mockGlobalStore = MockGlobalStore()
+        let mockFetchUserInfoUseCase = mockFetchUserInfoUseCase()
+        let mockFeedDamagoUseCase = mockFeedDamagoUseCase()
+        let mockPokeDamagoUseCase = mockPokeDamagoUseCase()
+        let mockUpdateUserUseCase = mockUpdateUserUseCase()
+
+        // 횟수 제한 도달
+        let limitReachedState = GlobalState.empty.copy(todayPokeCount: 5)
+        mockGlobalStore.updateState(limitReachedState)
+        
+        mockFetchUserInfoUseCase.executeResult = .success(UserInfo(
+            uid: "test", damagoID: "id", coupleID: nil, partnerUID: nil,
+            nickname: nil, damagoStatus: nil, totalCoin: 0, lastFedAt: nil
+        ))
+
+        let viewModel = HomeViewModel(
+            globalStore: mockGlobalStore,
+            fetchUserInfoUseCase: mockFetchUserInfoUseCase,
+            feedDamagoUseCase: mockFeedDamagoUseCase,
+            pokeDamagoUseCase: mockPokeDamagoUseCase,
+            updateUserUseCase: mockUpdateUserUseCase
+        )
+
+        let testInput = TestInput()
+        let output = viewModel.transform(testInput.input)
+        
+        // When & Then
+        await confirmation("상태 반영 후 토스트 출력 확인") { confirm in
+            let countStream = AsyncStream<Int> { continuation in
+                output.map { $0.todayPokeCount }
+                    .removeDuplicates()
+                    .sink { continuation.yield($0) }
+                    .store(in: &cancellables)
+            }
+            var countIterator = countStream.makeAsyncIterator()
+            
+            let toastStream = AsyncStream<String> { continuation in
+                output.compactMap { $0.toast }
+                    .compactMap { $0.value }
+                    .sink { continuation.yield($0) }
+                    .store(in: &cancellables)
+            }
+            var toastIterator = toastStream.makeAsyncIterator()
+            
+            testInput.viewDidLoad.send(())
+            
+            while let count = await countIterator.next() {
+                if count == 5 { break }
+            }
+            
+            testInput.pokeButtonDidTap.send(())
+            
+            if let message = await toastIterator.next(),
+               message == "오늘 콕 찌르기 횟수를 모두 소진했어요." {
+                confirm()
+            }
+        }
+        
+        // UseCase는 호출되지 않아야 함
+        #expect(!mockPokeDamagoUseCase.executeCalled)
+    }
 }
 
 extension GlobalState {
