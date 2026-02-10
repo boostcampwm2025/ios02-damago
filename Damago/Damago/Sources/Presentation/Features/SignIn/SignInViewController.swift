@@ -73,7 +73,6 @@ final class SignInViewController: UIViewController {
 
     private func navigateToTabBar() {
         UserDefaults.standard.set(true, forKey: "isOnboardingCompleted")
-        let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
         startGlobalMonitoring()
         view.window?.rootViewController = TabBarViewController()
     }
