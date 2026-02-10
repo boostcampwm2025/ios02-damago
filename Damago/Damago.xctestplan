@@ -30,6 +30,13 @@
         "identifier" : "4B4640752F308262005E4F34",
         "name" : "DamagoViewModelTests"
       }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Damago.xcodeproj",
+        "identifier" : "7AF2803F2F33102E00FCB3CF",
+        "name" : "DamagoRepositoryTests"
+      }
     }
   ],
   "version" : 1
