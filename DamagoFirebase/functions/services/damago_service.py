@@ -22,6 +22,7 @@ from utils.constants import (
     HUNGER_DELAY_SECONDS,
     AVAILABLE_DAMAGO_TYPES
 )
+import utils.errors as errors
 from services.push_service import update_live_activity_internal
 
 def pick_random_damago() -> str:
@@ -48,7 +49,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
     damago_id = data.get("damagoID")
 
     if not damago_id:
-        return https_fn.Response("Missing damagoID", status=400)
+        return errors.error_response(errors.BadRequest.MISSING_DAMAGO_ID)
 
     db = get_db()
     damago_ref = db.collection("damagos").document(damago_id)
@@ -147,7 +148,7 @@ def feed(req: https_fn.Request) -> https_fn.Response:
     try:
         result = run_feed_transaction(db.transaction(), damago_ref)
         if result is None:
-             return https_fn.Response("Damago not found", status=404)
+             return errors.error_response(errors.NotFound.DAMAGO)
         
         # --- [Live Activity Update] ---
         # 밥 주기 성공 시 파트너에게만 Live Activity 업데이트 전송 (본인은 로컬에서 직접 업데이트)
@@ -246,14 +247,14 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
     damago_id = data.get("damagoID")
 
     if not damago_id:
-        return https_fn.Response("Missing damagoID", status=400)
+        return errors.error_response(errors.BadRequest.MISSING_DAMAGO_ID)
 
     db = get_db()
     damago_ref = db.collection("damagos").document(damago_id)
     
     doc = damago_ref.get()
     if not doc.exists:
-        return https_fn.Response("Damago not found", status=404)
+        return errors.error_response(errors.NotFound.DAMAGO)
         
     damago_data = doc.to_dict()
     
@@ -289,11 +290,18 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
         "lastUpdatedAt": firestore.SERVER_TIMESTAMP
     })
     
-    # --- [Notify Users] ---
-    # 해당 다마고를 보고 있는 커플 유저들을 찾아 알림 전송
     couple_id = damago_data.get("coupleID")
     if couple_id:
-        couple_doc = db.collection("couples").document(couple_id).get()
+        # --- [Food Reward] ---
+        # 배고픔 상태가 될 때 먹이 1개 지급
+        couple_ref = db.collection("couples").document(couple_id)
+        couple_ref.update({
+            "foodCount": firestore.Increment(1)
+        })
+
+        # --- [Notify Users] ---
+        # 해당 다마고를 보고 있는 커플 유저들을 찾아 알림 전송
+        couple_doc = couple_ref.get()
         if couple_doc.exists:
             couple_data = couple_doc.to_dict()
             # 변경된 필드명 사용 (user1UDID -> user1UID)
@@ -339,11 +347,11 @@ def create_damago(req: https_fn.Request) -> https_fn.Response:
     # 1. 유저 및 커플 ID 조회 (Transaction 밖에서 조회하여 쿼리 기반 마련)
     user_doc = db.collection("users").document(uid).get()
     if not user_doc.exists:
-        return https_fn.Response("User not found", status=404)
+        return errors.error_response(errors.NotFound.USER)
         
     couple_id = user_doc.to_dict().get("coupleID")
     if not couple_id:
-        return https_fn.Response("User has no couple", status=400)
+        return errors.error_response(errors.BadRequest.USER_HAS_NO_COUPLE)
         
     # 2. 랜덤 선택 (전체 목록에서 무작위 선택)
     target_type = pick_random_damago()

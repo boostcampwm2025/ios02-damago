@@ -7,6 +7,7 @@
 
 import Combine
 import UIKit
+import FirebaseAuth
 
 final class SignInViewController: UIViewController {
     private let mainView = SignInView()
@@ -53,6 +54,8 @@ final class SignInViewController: UIViewController {
                     presentAlert(message: errorMessage)
                 case let .connection(opponentCode):
                     navigateToConnection(code: opponentCode)
+                case .tabBar:
+                    navigateToTabBar()
                 }
             }
             .store(in: &cancellables)
@@ -68,6 +71,13 @@ final class SignInViewController: UIViewController {
         present(alert, animated: true, completion: nil)
     }
 
+    private func navigateToTabBar() {
+        UserDefaults.standard.set(true, forKey: "isOnboardingCompleted")
+        let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
+        startGlobalMonitoring()
+        view.window?.rootViewController = TabBarViewController()
+    }
+
     private func navigateToConnection(code: String?) {
         let fetchCodeUseCase = AppDIContainer.shared.resolve(FetchCodeUseCase.self)
         let connectCoupleUseCase = AppDIContainer.shared.resolve(ConnectCoupleUseCase.self)
@@ -78,5 +88,11 @@ final class SignInViewController: UIViewController {
         )
         let connectionVC = ConnectionViewController(viewModel: connectionVM)
         navigationController?.pushViewController(connectionVC, animated: true)
+    }
+
+    private func startGlobalMonitoring() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let globalStore = AppDIContainer.shared.resolve(GlobalStoreProtocol.self)
+        globalStore.startMonitoring(uid: uid)
     }
 }
