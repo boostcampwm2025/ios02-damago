@@ -290,11 +290,18 @@ def make_hungry(req: https_fn.Request) -> https_fn.Response:
         "lastUpdatedAt": firestore.SERVER_TIMESTAMP
     })
     
-    # --- [Notify Users] ---
-    # 해당 다마고를 보고 있는 커플 유저들을 찾아 알림 전송
     couple_id = damago_data.get("coupleID")
     if couple_id:
-        couple_doc = db.collection("couples").document(couple_id).get()
+        # --- [Food Reward] ---
+        # 배고픔 상태가 될 때 먹이 1개 지급
+        couple_ref = db.collection("couples").document(couple_id)
+        couple_ref.update({
+            "foodCount": firestore.Increment(1)
+        })
+
+        # --- [Notify Users] ---
+        # 해당 다마고를 보고 있는 커플 유저들을 찾아 알림 전송
+        couple_doc = couple_ref.get()
         if couple_doc.exists:
             couple_data = couple_doc.to_dict()
             # 변경된 필드명 사용 (user1UDID -> user1UID)

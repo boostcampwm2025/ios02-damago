@@ -15,4 +15,6 @@ struct UserSnapshotDTO: Decodable {
     let useFCM: Bool
     let useLiveActivity: Bool
     let nickname: String?
+    let todayPokeCount: Int?
+    let lastPokeDate: String?
 }

@@ -7,12 +7,13 @@
 
 import Foundation
 
-struct GlobalState: Equatable {
+nonisolated struct GlobalState: Equatable {
     // MARK: - User Content
     let nickname: String?
     let opponentName: String?
     let useFCM: Bool
     let useLiveActivity: Bool
+    let todayPokeCount: Int
     
     // MARK: - Couple Content
     let coupleID: String?
@@ -40,6 +41,7 @@ struct GlobalState: Equatable {
         opponentName: nil,
         useFCM: false,
         useLiveActivity: false,
+        todayPokeCount: 0,
         coupleID: nil,
         totalCoin: nil,
         foodCount: nil,
