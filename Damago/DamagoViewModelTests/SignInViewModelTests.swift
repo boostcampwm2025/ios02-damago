@@ -22,7 +22,7 @@ final class SignInViewModelTests {
         var executeResult: Result<Void, Error> = .success(())
         var onExecute: (() -> Void)?
         
-        func signIn() async throws {
+        func execute() async throws {
             executeCalled = true
             onExecute?()
             switch executeResult {
