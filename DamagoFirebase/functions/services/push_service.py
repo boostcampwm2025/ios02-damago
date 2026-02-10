@@ -4,6 +4,7 @@ from google.cloud import tasks_v2
 from google.protobuf import timestamp_pb2
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
+import utils.errors as errors
 import time
 import json
 from datetime import datetime, timezone, timedelta
@@ -150,13 +151,13 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     def update_poke_count(transaction, user_ref):
         snapshot = user_ref.get(transaction=transaction)
         if not snapshot.exists:
-            return None, "User not found"
+            return None, errors.NotFound.USER
         
         user_data = snapshot.to_dict()
         partner_uid = user_data.get("partnerUID")
         
         if not partner_uid:
-            return None, "User is not in a couple"
+            return None, errors.BadRequest.USER_HAS_NO_COUPLE
 
         # KST 기준 날짜 확인
         kst = timezone(timedelta(hours=9))
@@ -169,7 +170,7 @@ def poke(req: https_fn.Request) -> https_fn.Response:
             current_count = 0
             
         if current_count >= 5:
-            return None, "Daily limit reached"
+            return None, errors.ErrorInfo("Daily limit reached", 429)
             
         new_count = current_count + 1
         transaction.update(user_ref, {
@@ -183,8 +184,9 @@ def poke(req: https_fn.Request) -> https_fn.Response:
     result, error = update_poke_count(transaction, my_user_ref)
     
     if error:
-        status_code = 429 if error == "Daily limit reached" else 400
-        return https_fn.Response(error, status=status_code)
+        if isinstance(error, errors.ErrorInfo):
+            return errors.error_response(error)
+        return https_fn.Response(str(error), status=400)
         
     partner_uid, nickname, new_count = result
 
@@ -209,7 +211,7 @@ def poke(req: https_fn.Request) -> https_fn.Response:
             "remainingCount": 5 - new_count
         }), status=200, headers={"Content-Type": "application/json"})
     else:
-        return https_fn.Response("Failed to send push notification", status=500)
+        return errors.error_response(errors.Internal.FAILED_TO_SEND_PUSH_NOTIFICATION)
 
 def save_live_activity_token(req: https_fn.Request) -> https_fn.Response:
     """
@@ -245,7 +247,7 @@ def update_live_activity(req: https_fn.Request) -> https_fn.Response:
     content_state = data.get("contentState")
 
     if not target_uid or not content_state:
-        return https_fn.Response("Missing targetUID or contentState", status=400)
+        return errors.error_response(errors.BadRequest.MISSING_TARGET_UID_OR_CONTENT_STATE)
 
     success = update_live_activity_internal(target_uid, content_state)
 
@@ -377,13 +379,13 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
     content_state = data.get("contentState")
 
     if not target_uid or not attributes or not content_state:
-        return https_fn.Response("Missing parameters", status=400)
+        return errors.error_response(errors.BadRequest.MISSING_PARAMETERS)
 
     db = get_db()
 
     user_doc = db.collection("users").document(target_uid).get()
     if not user_doc.exists:
-        return https_fn.Response("User not found", status=404)
+        return errors.error_response(errors.NotFound.USER)
 
     user_data = user_doc.to_dict()
     fcm_token = user_data.get("fcmToken")
@@ -391,7 +393,7 @@ def start_live_activity(req: https_fn.Request) -> https_fn.Response:
     use_live_activity = user_data.get("useLiveActivity", True)
 
     if not fcm_token or not la_start_token or not use_live_activity:
-        return https_fn.Response("Start Token not found or Live Activity disabled", status=400)
+        return errors.error_response(errors.BadRequest.START_TOKEN_NOT_FOUND_OR_DISABLED)
 
     try:
         aps = messaging.Aps(
