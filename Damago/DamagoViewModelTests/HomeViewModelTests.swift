@@ -40,7 +40,7 @@ final class HomeViewModelTests {
     }
 
     @MainActor
-    class mockFetchUserInfoUseCase: FetchUserInfoUseCase {
+    class MockFetchUserInfoUseCase: FetchUserInfoUseCase {
         var executeResult: Result<UserInfo, Error>?
         var onExecute: (() -> Void)?
         
@@ -58,7 +58,7 @@ final class HomeViewModelTests {
     }
 
     @MainActor
-    class mockFeedDamagoUseCase: FeedDamagoUseCase {
+    class MockFeedDamagoUseCase: FeedDamagoUseCase {
         var executeCalled = false
         var executeResult: Result<Void, Error> = .success(())
         var onExecute: (() -> Void)?
@@ -76,7 +76,7 @@ final class HomeViewModelTests {
     }
 
     @MainActor
-    class mockPokeDamagoUseCase: PokeDamagoUseCase {
+    class MockPokeDamagoUseCase: PokeDamagoUseCase {
         var executeCalled = false
         var lastMessage: String?
         var executeResult: Result<Bool, Error> = .success(true)
@@ -96,7 +96,7 @@ final class HomeViewModelTests {
     }
 
     @MainActor
-    class mockUpdateUserUseCase: UpdateUserUseCase {
+    class MockUpdateUserUseCase: UpdateUserUseCase {
         var executeCalled = false
         var lastDamagoName: String?
         var executeResult: Result<Void, Error> = .success(())
@@ -148,10 +148,10 @@ final class HomeViewModelTests {
     func test_viewDidLoad_시_유저_정보를_가져오고_상태를_업데이트한다() async {
         // Given
         let mockGlobalStore = MockGlobalStore()
-        let mockFetchUserInfoUseCase = mockFetchUserInfoUseCase()
-        let mockFeedDamagoUseCase = mockFeedDamagoUseCase()
-        let mockPokeDamagoUseCase = mockPokeDamagoUseCase()
-        let mockUpdateUserUseCase = mockUpdateUserUseCase()
+        let mockFetchUserInfoUseCase = MockFetchUserInfoUseCase()
+        let mockFeedDamagoUseCase = MockFeedDamagoUseCase()
+        let mockPokeDamagoUseCase = MockPokeDamagoUseCase()
+        let mockUpdateUserUseCase = MockUpdateUserUseCase()
         
         let expectedUserInfo = UserInfo(
             uid: "testUID",
@@ -209,10 +209,10 @@ final class HomeViewModelTests {
     func test_먹이주기_버튼_탭_시_UseCase_실행() async {
         // Given
         let mockGlobalStore = MockGlobalStore()
-        let mockFetchUserInfoUseCase = mockFetchUserInfoUseCase()
-        let mockFeedDamagoUseCase = mockFeedDamagoUseCase()
-        let mockPokeDamagoUseCase = mockPokeDamagoUseCase()
-        let mockUpdateUserUseCase = mockUpdateUserUseCase()
+        let mockFetchUserInfoUseCase = MockFetchUserInfoUseCase()
+        let mockFeedDamagoUseCase = MockFeedDamagoUseCase()
+        let mockPokeDamagoUseCase = MockPokeDamagoUseCase()
+        let mockUpdateUserUseCase = MockUpdateUserUseCase()
         
         mockFetchUserInfoUseCase.executeResult = .success(UserInfo(
             uid: "uid",
@@ -269,10 +269,10 @@ final class HomeViewModelTests {
     func test_콕찌르기_메시지_선택_시_UseCase_실행() async {
         // Given
         let mockGlobalStore = MockGlobalStore()
-        let mockFetchUserInfoUseCase = mockFetchUserInfoUseCase()
-        let mockFeedDamagoUseCase = mockFeedDamagoUseCase()
-        let mockPokeDamagoUseCase = mockPokeDamagoUseCase()
-        let mockUpdateUserUseCase = mockUpdateUserUseCase()
+        let mockFetchUserInfoUseCase = MockFetchUserInfoUseCase()
+        let mockFeedDamagoUseCase = MockFeedDamagoUseCase()
+        let mockPokeDamagoUseCase = MockPokeDamagoUseCase()
+        let mockUpdateUserUseCase = MockUpdateUserUseCase()
         
         let viewModel = HomeViewModel(
             globalStore: mockGlobalStore,
@@ -307,10 +307,10 @@ final class HomeViewModelTests {
     func test_이름변경_제출_시_UseCase_실행_및_상태변경() async {
         // Given
         let mockGlobalStore = MockGlobalStore()
-        let mockFetchUserInfoUseCase = mockFetchUserInfoUseCase()
-        let mockFeedDamagoUseCase = mockFeedDamagoUseCase()
-        let mockPokeDamagoUseCase = mockPokeDamagoUseCase()
-        let mockUpdateUserUseCase = mockUpdateUserUseCase()
+        let mockFetchUserInfoUseCase = MockFetchUserInfoUseCase()
+        let mockFeedDamagoUseCase = MockFeedDamagoUseCase()
+        let mockPokeDamagoUseCase = MockPokeDamagoUseCase()
+        let mockUpdateUserUseCase = MockUpdateUserUseCase()
         
         let viewModel = HomeViewModel(
             globalStore: mockGlobalStore,
@@ -369,10 +369,10 @@ final class HomeViewModelTests {
     func test_빈이름_제출_시_에러_발생() async {
         // Given
         let mockGlobalStore = MockGlobalStore()
-        let mockFetchUserInfoUseCase = mockFetchUserInfoUseCase()
-        let mockFeedDamagoUseCase = mockFeedDamagoUseCase()
-        let mockPokeDamagoUseCase = mockPokeDamagoUseCase()
-        let mockUpdateUserUseCase = mockUpdateUserUseCase()
+        let mockFetchUserInfoUseCase = MockFetchUserInfoUseCase()
+        let mockFeedDamagoUseCase = MockFeedDamagoUseCase()
+        let mockPokeDamagoUseCase = MockPokeDamagoUseCase()
+        let mockUpdateUserUseCase = MockUpdateUserUseCase()
         
         let viewModel = HomeViewModel(
             globalStore: mockGlobalStore,
@@ -411,10 +411,10 @@ final class HomeViewModelTests {
     func test_콕찌르기_성공_시_횟수_차감() async {
         // Given
         let mockGlobalStore = MockGlobalStore()
-        let mockFetchUserInfoUseCase = mockFetchUserInfoUseCase()
-        let mockFeedDamagoUseCase = mockFeedDamagoUseCase()
-        let mockPokeDamagoUseCase = mockPokeDamagoUseCase()
-        let mockUpdateUserUseCase = mockUpdateUserUseCase()
+        let mockFetchUserInfoUseCase = MockFetchUserInfoUseCase()
+        let mockFeedDamagoUseCase = MockFeedDamagoUseCase()
+        let mockPokeDamagoUseCase = MockPokeDamagoUseCase()
+        let mockUpdateUserUseCase = MockUpdateUserUseCase()
 
         let initialState = GlobalState.empty.copy(todayPokeCount: 2)
         mockGlobalStore.updateState(initialState)
@@ -463,10 +463,10 @@ final class HomeViewModelTests {
     func test_콕찌르기_실패_시_횟수_유지() async {
         // Given
         let mockGlobalStore = MockGlobalStore()
-        let mockFetchUserInfoUseCase = mockFetchUserInfoUseCase()
-        let mockFeedDamagoUseCase = mockFeedDamagoUseCase()
-        let mockPokeDamagoUseCase = mockPokeDamagoUseCase()
-        let mockUpdateUserUseCase = mockUpdateUserUseCase()
+        let mockFetchUserInfoUseCase = MockFetchUserInfoUseCase()
+        let mockFeedDamagoUseCase = MockFeedDamagoUseCase()
+        let mockPokeDamagoUseCase = MockPokeDamagoUseCase()
+        let mockUpdateUserUseCase = MockUpdateUserUseCase()
 
         let initialState = GlobalState.empty.copy(todayPokeCount: 2)
         mockGlobalStore.updateState(initialState)
@@ -509,10 +509,10 @@ final class HomeViewModelTests {
     func test_콕찌르기_제한_도달_시_토스트_출력() async {
         // Given
         let mockGlobalStore = MockGlobalStore()
-        let mockFetchUserInfoUseCase = mockFetchUserInfoUseCase()
-        let mockFeedDamagoUseCase = mockFeedDamagoUseCase()
-        let mockPokeDamagoUseCase = mockPokeDamagoUseCase()
-        let mockUpdateUserUseCase = mockUpdateUserUseCase()
+        let mockFetchUserInfoUseCase = MockFetchUserInfoUseCase()
+        let mockFeedDamagoUseCase = MockFeedDamagoUseCase()
+        let mockPokeDamagoUseCase = MockPokeDamagoUseCase()
+        let mockUpdateUserUseCase = MockUpdateUserUseCase()
 
         // 횟수 제한 도달
         let limitReachedState = GlobalState.empty.copy(todayPokeCount: 5)
