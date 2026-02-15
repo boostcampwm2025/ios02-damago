@@ -10,7 +10,7 @@ import Foundation
 
 final class StoreViewModel: ViewModel {
     enum StorePolicy {
-        static let drawCost = 100
+        static let drawCost = 0
     }
     
     enum StoreStrings {
@@ -78,20 +78,27 @@ final class StoreViewModel: ViewModel {
     }
     
     private func tryDraw() {
-        guard state.coinAmount >= StorePolicy.drawCost else {
-            state.error = Pulse(.notEnoughCoin)
-            return
-        }
+//        guard state.coinAmount >= StorePolicy.drawCost else {
+//            state.error = Pulse(.notEnoughCoin)
+//            return
+//        }
         
         state.isLoading = true
+        defer { state.isLoading = false }
         
         Task {
-            do {
-                state.drawResult = try await createDamagoUseCase.execute()
-            } catch {
-                state.error = Pulse(.creationFailed)
+//            do {
+//                state.drawResult = try await createDamagoUseCase.execute()
+//            } catch {
+//                state.error = Pulse(.creationFailed)
+//            }
+            for _ in 0..<10 {
+                state.drawResult = nil
+                try? await Task.sleep(for: .milliseconds(50))
+                
+                state.drawResult = DrawResult(damagoType: .basicBlack, isNew: true)
+                try? await Task.sleep(for: .seconds(6))
             }
-            state.isLoading = false
         }
     }
 }

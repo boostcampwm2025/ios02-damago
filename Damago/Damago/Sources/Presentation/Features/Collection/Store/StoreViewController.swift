@@ -151,6 +151,10 @@ final class StoreViewController: UIViewController {
         UIView.animate(withDuration: 0.3) {
             self.mainView.resultView.alpha = 1.0
         }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.hideResultOverlay()
+        }
     }
     
     private func hideResultOverlay() {
