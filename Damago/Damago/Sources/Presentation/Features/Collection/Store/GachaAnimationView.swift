@@ -79,6 +79,7 @@ struct GachaAnimationView: View {
                 
                 Image(machineImageName)
                     .resizable()
+                    .interpolation(.medium)
                     .scaledToFit()
                     .frame(width: machineWidth, height: machineHeight)
                     .offset(x: shakeOffset)
@@ -87,6 +88,7 @@ struct GachaAnimationView: View {
                 if showCapsule {
                     Image(capsuleImageName)
                         .resizable()
+                        .interpolation(.medium)
                         .scaledToFit()
                         .frame(width: 40, height: 40)
                         .scaleEffect(capsuleScale)
@@ -112,6 +114,7 @@ struct GachaAnimationView: View {
                     .padding(.trailing, 20)
                 }
             }
+            .compositingGroup()
         }
         .background(Color.clear)
         .ignoresSafeArea()
