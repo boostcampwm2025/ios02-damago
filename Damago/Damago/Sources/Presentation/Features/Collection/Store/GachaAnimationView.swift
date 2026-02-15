@@ -6,8 +6,11 @@
 //
 
 import SwiftUI
+import os
 
 struct GachaAnimationView: View {
+    private static let signposter = OSSignposter(subsystem: "com.damago.app", category: "GachaAnimation")
+    
     private enum Constants {
         enum AnimationDuration {
             static let shakeCycle: Double = 0.05
@@ -138,6 +141,9 @@ struct GachaAnimationView: View {
     
     @MainActor
     private func play() async {
+        let state = Self.signposter.beginInterval("TotalAnimation")
+        defer { Self.signposter.endInterval("TotalAnimation", state) }
+
         await performShakeMachine()
         if isSkipped { return }
         
@@ -155,6 +161,9 @@ struct GachaAnimationView: View {
     
     @MainActor
     private func performShakeMachine() async {
+        let state = Self.signposter.beginInterval("ShakeMachine")
+        defer { Self.signposter.endInterval("ShakeMachine", state) }
+
         phase = .shaking
         let generator = UIImpactFeedbackGenerator(style: .medium)
         
@@ -177,6 +186,9 @@ struct GachaAnimationView: View {
     
     @MainActor
     private func performEjectCapsule() async {
+        let state = Self.signposter.beginInterval("EjectCapsule")
+        defer { Self.signposter.endInterval("EjectCapsule", state) }
+
         phase = .ejecting
         withAnimation(.spring(response: 0.8, dampingFraction: 0.6)) {
             capsuleOffset = Constants.Animation.capsuleEjectOffset
@@ -187,6 +199,9 @@ struct GachaAnimationView: View {
     
     @MainActor
     private func performWobbleCapsule() async {
+        let state = Self.signposter.beginInterval("WobbleCapsule")
+        defer { Self.signposter.endInterval("WobbleCapsule", state) }
+
         phase = .wobbling
         for _ in 0..<Constants.Animation.wobbleCount {
             if isSkipped { return }
@@ -205,6 +220,9 @@ struct GachaAnimationView: View {
     
     @MainActor
     private func performRevealResult() async {
+        let state = Self.signposter.beginInterval("RevealResult")
+        defer { Self.signposter.endInterval("RevealResult", state) }
+
         phase = .revealing
         
         withAnimation(.easeOut(duration: Constants.AnimationDuration.reveal)) {
