@@ -53,7 +53,7 @@ final class StoreViewController: UIViewController {
             .compactMapForUI { $0.drawResult }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] result in
-                guard let self = self else { return }
+                guard let self else { return }
                 self.triggerGachaAnimation(result: result)
             }
             .store(in: &cancellables)
@@ -112,37 +112,29 @@ final class StoreViewController: UIViewController {
         mainView.drawButton.isEnabled = false
         mainView.exitButton.isHidden = true
         
-        let animationView = GachaAnimationView { [weak self] in
+        let animationView = GachaAnimationView()
+        animationView.onFinish = { [weak self] in
             guard let self else { return }
             
             self.showResultOverlay(result: result)
             
-            if let hostingVC = self.children.first(where: { $0 is UIHostingController<GachaAnimationView> }) {
-                hostingVC.willMove(toParent: nil)
-                hostingVC.view.removeFromSuperview()
-                hostingVC.removeFromParent()
-            }
+            animationView.removeFromSuperview()
             
             self.mainView.machineImageView.isHidden = false
             self.mainView.drawButton.isEnabled = self.viewModel.state.isDrawButtonEnabled
             self.mainView.exitButton.isHidden = false
         }
         
-        let hostingController = UIHostingController(rootView: animationView)
-        hostingController.view.backgroundColor = .clear
-        
-        addChild(hostingController)
-        mainView.addSubview(hostingController.view)
-        
-        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        mainView.addSubview(animationView)
+        animationView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            hostingController.view.topAnchor.constraint(equalTo: mainView.topAnchor),
-            hostingController.view.leadingAnchor.constraint(equalTo: mainView.leadingAnchor),
-            hostingController.view.trailingAnchor.constraint(equalTo: mainView.trailingAnchor),
-            hostingController.view.bottomAnchor.constraint(equalTo: mainView.bottomAnchor)
+            animationView.topAnchor.constraint(equalTo: mainView.topAnchor),
+            animationView.leadingAnchor.constraint(equalTo: mainView.leadingAnchor),
+            animationView.trailingAnchor.constraint(equalTo: mainView.trailingAnchor),
+            animationView.bottomAnchor.constraint(equalTo: mainView.bottomAnchor)
         ])
         
-        hostingController.didMove(toParent: self)
+        animationView.startAnimation()
     }
     
     private func showResultOverlay(result: DrawResult) {
