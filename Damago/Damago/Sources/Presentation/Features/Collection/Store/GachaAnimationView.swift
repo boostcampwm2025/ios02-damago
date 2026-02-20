@@ -141,109 +141,126 @@ final class GachaAnimationView: UIView {
     }
     
     func startAnimation() {
-        let state = Self.signposter.beginInterval("TotalAnimation")
-        _totalAnimationState = state
-        playShakeAnimation()
+        _totalAnimationState = Self.signposter.beginInterval("TotalAnimation")
+        
+        Task { @MainActor in
+            await playShakeAnimation()
+            if isSkipped { return }
+            
+            await playEjectAnimation()
+            if isSkipped { return }
+            
+            await playWobbleAnimation()
+            if isSkipped { return }
+            
+            await playRevealAnimation()
+            if isSkipped { return }
+            
+            finish()
+        }
     }
 
-    private func playShakeAnimation() {
+    private func playShakeAnimation() async {
         let state = Self.signposter.beginInterval("ShakeMachine")
-        
-        let animation = CAKeyframeAnimation(keyPath: Constants.Keys.shakeX)
-        animation.values = [
-            0,
-            -Constants.Animation.shakeOffset,
-            Constants.Animation.shakeOffset,
-            -Constants.Animation.shakeOffset,
-            Constants.Animation.shakeOffset,
-            0
-        ]
-        animation.keyTimes = [0, 0.2, 0.4, 0.6, 0.8, 1]
-        animation.duration = Constants.Animation.shakeDuration
-        animation.repeatCount = Constants.Animation.shakeRepeatCount
-        animation.isRemovedOnCompletion = true
-        
-        CATransaction.begin()
-        CATransaction.setCompletionBlock { [weak self] in
-            Self.signposter.endInterval("ShakeMachine", state)
-            guard let self, !self.isFinished else { return }
-            self.playEjectAnimation()
+        await withCheckedContinuation { continuation in
+            let animation = CAKeyframeAnimation(keyPath: Constants.Keys.shakeX)
+            animation.values = [
+                0,
+                -Constants.Animation.shakeOffset,
+                Constants.Animation.shakeOffset,
+                -Constants.Animation.shakeOffset,
+                Constants.Animation.shakeOffset,
+                0
+            ]
+            animation.keyTimes = [0, 0.2, 0.4, 0.6, 0.8, 1]
+            animation.duration = Constants.Animation.shakeDuration
+            animation.repeatCount = Constants.Animation.shakeRepeatCount
+            animation.isRemovedOnCompletion = true
+            
+            CATransaction.begin()
+            CATransaction.setCompletionBlock {
+                Self.signposter.endInterval("ShakeMachine", state)
+                continuation.resume()
+            }
+            machineImageView.layer.add(animation, forKey: Constants.Keys.shakeAnim)
+            CATransaction.commit()
         }
-        machineImageView.layer.add(animation, forKey: Constants.Keys.shakeAnim)
-        CATransaction.commit()
     }
     
-    private func playEjectAnimation() {
+    private func playEjectAnimation() async {
         let state = Self.signposter.beginInterval("EjectCapsule")
         capsuleImageView.alpha = 1
         
-        let springAnimation = CASpringAnimation(keyPath: Constants.Keys.ejectY)
-        springAnimation.fromValue = 0
-        springAnimation.toValue = Constants.Animation.ejectTranslationY
-        springAnimation.damping = 7
-        springAnimation.stiffness = 100
-        springAnimation.mass = 1
-        springAnimation.initialVelocity = 0
-        springAnimation.duration = springAnimation.settlingDuration
-        
-        let scaleAnimation = CABasicAnimation(keyPath: Constants.Keys.scale)
-        scaleAnimation.fromValue = 0.5
-        scaleAnimation.toValue = Constants.Animation.ejectScale
-        scaleAnimation.duration = Constants.Animation.ejectDuration
-        
-        let group = CAAnimationGroup()
-        group.animations = [springAnimation, scaleAnimation]
-        group.duration = Constants.Animation.ejectDuration
-        group.fillMode = .forwards
-        group.isRemovedOnCompletion = false
-        
-        CATransaction.begin()
-        CATransaction.setCompletionBlock { [weak self] in
-            Self.signposter.endInterval("EjectCapsule", state)
-            guard let self, !self.isFinished else { return }
-            self.playWobbleAnimation()
+        await withCheckedContinuation { continuation in
+            let springAnimation = CASpringAnimation(keyPath: Constants.Keys.ejectY)
+            springAnimation.fromValue = 0
+            springAnimation.toValue = Constants.Animation.ejectTranslationY
+            springAnimation.damping = 7
+            springAnimation.stiffness = 100
+            springAnimation.mass = 1
+            springAnimation.initialVelocity = 0
+            springAnimation.duration = springAnimation.settlingDuration
+            
+            let scaleAnimation = CABasicAnimation(keyPath: Constants.Keys.scale)
+            scaleAnimation.fromValue = 0.5
+            scaleAnimation.toValue = Constants.Animation.ejectScale
+            scaleAnimation.duration = Constants.Animation.ejectDuration
+            
+            let group = CAAnimationGroup()
+            group.animations = [springAnimation, scaleAnimation]
+            group.duration = Constants.Animation.ejectDuration
+            group.fillMode = .forwards
+            group.isRemovedOnCompletion = false
+            
+            CATransaction.begin()
+            CATransaction.setCompletionBlock {
+                Self.signposter.endInterval("EjectCapsule", state)
+                continuation.resume()
+            }
+            capsuleImageView.layer.add(group, forKey: Constants.Keys.ejectAnim)
+            CATransaction.commit()
         }
-        capsuleImageView.layer.add(group, forKey: Constants.Keys.ejectAnim)
-        CATransaction.commit()
     }
     
-    private func playWobbleAnimation() {
+    private func playWobbleAnimation() async {
         let state = Self.signposter.beginInterval("WobbleCapsule")
-        let animation = CAKeyframeAnimation(keyPath: Constants.Keys.rotationZ)
-        animation.values = [0, -Constants.Animation.wobbleAngle, Constants.Animation.wobbleAngle, 0]
-        animation.keyTimes = [0, 0.33, 0.66, 1]
-        animation.duration = Constants.Animation.wobbleDuration
-        animation.repeatCount = Constants.Animation.wobbleRepeatCount
-        
-        CATransaction.begin()
-        CATransaction.setCompletionBlock { [weak self] in
-            Self.signposter.endInterval("WobbleCapsule", state)
-            guard let self, !self.isFinished else { return }
-            self.playRevealAnimation()
+        await withCheckedContinuation { continuation in
+            let animation = CAKeyframeAnimation(keyPath: Constants.Keys.rotationZ)
+            animation.values = [0, -Constants.Animation.wobbleAngle, Constants.Animation.wobbleAngle, 0]
+            animation.keyTimes = [0, 0.33, 0.66, 1]
+            animation.duration = Constants.Animation.wobbleDuration
+            animation.repeatCount = Constants.Animation.wobbleRepeatCount
+            
+            CATransaction.begin()
+            CATransaction.setCompletionBlock {
+                Self.signposter.endInterval("WobbleCapsule", state)
+                continuation.resume()
+            }
+            capsuleImageView.layer.add(animation, forKey: Constants.Keys.wobbleAnim)
+            CATransaction.commit()
         }
-        capsuleImageView.layer.add(animation, forKey: "wobbleAnim")
-        CATransaction.commit()
     }
     
-    private func playRevealAnimation() {
+    private func playRevealAnimation() async {
         guard !isSkipped else { return }
         let state = Self.signposter.beginInterval("RevealResult")
 
-        CATransaction.begin()
-        CATransaction.setCompletionBlock { [weak self] in
-            Self.signposter.endInterval("RevealResult", state)
-            self?.finish()
+        await withCheckedContinuation { continuation in
+            let fadeIn = CABasicAnimation(keyPath: Constants.Keys.opacity)
+            fadeIn.fromValue = 0
+            fadeIn.toValue = 1
+            fadeIn.duration = Constants.Animation.revealDuration
+            fadeIn.fillMode = .forwards
+            fadeIn.isRemovedOnCompletion = false
+            
+            CATransaction.begin()
+            CATransaction.setCompletionBlock {
+                Self.signposter.endInterval("RevealResult", state)
+                continuation.resume()
+            }
+            flashView.layer.add(fadeIn, forKey: Constants.Keys.fadeInAnim)
+            CATransaction.commit()
         }
-        
-        let fadeIn = CABasicAnimation(keyPath: Constants.Keys.opacity)
-        fadeIn.fromValue = 0
-        fadeIn.toValue = 1
-        fadeIn.duration = Constants.Animation.revealDuration
-        fadeIn.fillMode = .forwards
-        fadeIn.isRemovedOnCompletion = false
-        
-        flashView.layer.add(fadeIn, forKey: Constants.Keys.fadeInAnim)
-        CATransaction.commit()
     }
     
     @objc
