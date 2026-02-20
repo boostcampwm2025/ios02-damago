@@ -90,8 +90,8 @@ final class CollectionViewModel: ViewModel {
     private func changeDamago() {
         guard let selectedDamago = state.selectedDamago else { return }
 
+        state.isLoading = true
         Task {
-            state.isLoading = true
             defer { state.isLoading = false }
 
             do {
