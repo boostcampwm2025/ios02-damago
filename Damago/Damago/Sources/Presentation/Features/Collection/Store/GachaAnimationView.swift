@@ -9,8 +9,6 @@ import UIKit
 import os
 
 final class GachaAnimationView: UIView {
-    private static let signposter = OSSignposter(subsystem: "com.damago.app", category: "GachaAnimationUIKit")
-
     private enum Constants {
         enum Animation {
             static let shakeDuration: TimeInterval = 0.1
@@ -92,7 +90,6 @@ final class GachaAnimationView: UIView {
     var onFinish: (() -> Void)?
     private var isFinished = false
     private var isSkipped = false
-    private var _totalAnimationState: OSSignpostIntervalState?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -141,8 +138,6 @@ final class GachaAnimationView: UIView {
     }
     
     func startAnimation() {
-        _totalAnimationState = Self.signposter.beginInterval("TotalAnimation")
-        
         Task { @MainActor in
             await playShakeAnimation()
             if isSkipped { return }
@@ -161,7 +156,6 @@ final class GachaAnimationView: UIView {
     }
 
     private func playShakeAnimation() async {
-        let state = Self.signposter.beginInterval("ShakeMachine")
         await withCheckedContinuation { continuation in
             let animation = CAKeyframeAnimation(keyPath: Constants.Keys.shakeX)
             animation.values = [
@@ -179,7 +173,6 @@ final class GachaAnimationView: UIView {
             
             CATransaction.begin()
             CATransaction.setCompletionBlock {
-                Self.signposter.endInterval("ShakeMachine", state)
                 continuation.resume()
             }
             machineImageView.layer.add(animation, forKey: Constants.Keys.shakeAnim)
@@ -188,7 +181,6 @@ final class GachaAnimationView: UIView {
     }
     
     private func playEjectAnimation() async {
-        let state = Self.signposter.beginInterval("EjectCapsule")
         capsuleImageView.alpha = 1
         
         await withCheckedContinuation { continuation in
@@ -214,7 +206,6 @@ final class GachaAnimationView: UIView {
             
             CATransaction.begin()
             CATransaction.setCompletionBlock {
-                Self.signposter.endInterval("EjectCapsule", state)
                 continuation.resume()
             }
             capsuleImageView.layer.add(group, forKey: Constants.Keys.ejectAnim)
@@ -223,7 +214,6 @@ final class GachaAnimationView: UIView {
     }
     
     private func playWobbleAnimation() async {
-        let state = Self.signposter.beginInterval("WobbleCapsule")
         await withCheckedContinuation { continuation in
             let animation = CAKeyframeAnimation(keyPath: Constants.Keys.rotationZ)
             animation.values = [0, -Constants.Animation.wobbleAngle, Constants.Animation.wobbleAngle, 0]
@@ -233,7 +223,6 @@ final class GachaAnimationView: UIView {
             
             CATransaction.begin()
             CATransaction.setCompletionBlock {
-                Self.signposter.endInterval("WobbleCapsule", state)
                 continuation.resume()
             }
             capsuleImageView.layer.add(animation, forKey: Constants.Keys.wobbleAnim)
@@ -243,7 +232,6 @@ final class GachaAnimationView: UIView {
     
     private func playRevealAnimation() async {
         guard !isSkipped else { return }
-        let state = Self.signposter.beginInterval("RevealResult")
 
         await withCheckedContinuation { continuation in
             let fadeIn = CABasicAnimation(keyPath: Constants.Keys.opacity)
@@ -255,7 +243,6 @@ final class GachaAnimationView: UIView {
             
             CATransaction.begin()
             CATransaction.setCompletionBlock {
-                Self.signposter.endInterval("RevealResult", state)
                 continuation.resume()
             }
             flashView.layer.add(fadeIn, forKey: Constants.Keys.fadeInAnim)
@@ -275,10 +262,6 @@ final class GachaAnimationView: UIView {
     private func finish() {
         guard !isFinished else { return }
         isFinished = true
-        if let state = _totalAnimationState {
-            Self.signposter.endInterval("TotalAnimation", state)
-            _totalAnimationState = nil
-        }
         onFinish?()
     }
 }
