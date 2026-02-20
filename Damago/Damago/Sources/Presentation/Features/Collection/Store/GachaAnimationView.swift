@@ -5,274 +5,177 @@
 //  Created by 김재영 on 1/29/26.
 //
 
-import UIKit
+import SwiftUI
 import os
 
-final class GachaAnimationView: UIView {
-    private static let signposter = OSSignposter(subsystem: "com.damago.app", category: "GachaAnimationUIKit")
-
+struct GachaAnimationView: View {
+    private static let signposter = OSSignposter(subsystem: "com.damago.app", category: "GachaAnimation")
+    
     private enum Constants {
+        enum AnimationDuration {
+            static let total: Double = 4.5
+            static let shakeCycle: Double = 0.05
+            static let shakeTotal: Double = 2.0
+            static let eject: Double = 1.0
+            static let wobbleCycle: Double = 0.15
+            static let reveal: Double = 0.5
+            static let fadeOut: Double = 0.3
+        }
+        
         enum Animation {
-            static let shakeDuration: TimeInterval = 0.1
-            static let shakeRepeatCount: Float = 20
+            static let shakeCount = 20
+            static let wobbleCount = 3
             static let shakeOffset: CGFloat = 8
-            
-            static let ejectDuration: TimeInterval = 0.8
-            static let ejectTranslationY: CGFloat = -150
-            static let ejectScale: CGFloat = 3.0
-            
-            static let wobbleDuration: TimeInterval = 0.2
-            static let wobbleRepeatCount: Float = 3
-            static let wobbleAngle: Double = 15 * .pi / 180
-            
-            static let revealDuration: TimeInterval = 0.5
-        }
-        
-        enum Keys {
-            static let shakeX = "transform.translation.x"
-            static let ejectY = "transform.translation.y"
-            static let scale = "transform.scale"
-            static let rotationZ = "transform.rotation.z"
-            static let opacity = "opacity"
-            
-            static let shakeAnim = "shake"
-            static let ejectAnim = "eject"
-            static let wobbleAnim = "wobble"
-            static let fadeInAnim = "fadeIn"
+            static let capsuleEjectOffset = CGSize(width: 0, height: -150)
+            static let capsuleEjectScale: CGFloat = 3.0
+            static let wobbleAngle: Double = 15
         }
     }
+    
+    struct AnimationValues {
+        var shakeOffset: CGFloat = 0
+        var capsuleOffset = CGSize(width: 0, height: 150)
+        var capsuleScale: CGFloat = 0.5
+        var capsuleRotation: Double = 0
+        var flashOpacity: Double = 0
+        var capsuleOpacity: Double = 0
+    }
 
-    private let machineImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(named: "machine")
-        imageView.contentMode = .scaleAspectFit
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
+    @State private var animationTrigger = false
+    @State private var isSkipped = false
+    @State private var isFinished = false
+    @State private var animationTaskID = UUID()
     
-    private let capsuleImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(named: "capsule")
-        imageView.contentMode = .scaleAspectFit
-        imageView.alpha = 0
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
-    
-    private let flashView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.alpha = 0
-        view.isUserInteractionEnabled = false
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-    
-    private lazy var skipButton: UIButton = {
-        let button = UIButton(type: .system)
-        var config = UIButton.Configuration.filled()
-        config.title = ">> SKIP"
-        config.baseForegroundColor = .damagoPrimary
-        config.baseBackgroundColor = .black.withAlphaComponent(0.5)
-        config.contentInsets = NSDirectionalEdgeInsets(
-            top: .spacingS,
-            leading: .spacingM,
-            bottom: .spacingS,
-            trailing: .spacingM
-        )
-        
-        button.configuration = config
-        button.layer.cornerRadius = 12
-        button.clipsToBounds = true
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.addTarget(self, action: #selector(handleSkip), for: .touchUpInside)
-        return button
-    }()
-    
+    let machineImageName: String = "machine"
+    let capsuleImageName: String = "capsule"
+
     var onFinish: (() -> Void)?
-    private var isFinished = false
-    private var isSkipped = false
-    private var _totalAnimationState: OSSignpostIntervalState?
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupUI()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setupUI() {
-        backgroundColor = .clear
-        setupHierarchy()
-        setupConstraints()
-    }
-    
-    private func setupHierarchy() {
-        [machineImageView, capsuleImageView, flashView, skipButton].forEach { addSubview($0) }
-    }
-    
-    private func setupConstraints() {
-        NSLayoutConstraint.activate(
-            [
-                machineImageView.centerXAnchor.constraint(equalTo: centerXAnchor),
-                machineImageView.centerYAnchor.constraint(
-                    equalTo: centerYAnchor,
-                    constant: -UIScreen.main.bounds.height * 0.15
-                ),
-                machineImageView.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.7),
-                machineImageView.heightAnchor.constraint(equalTo: machineImageView.widthAnchor, multiplier: 1.2),
+    var body: some View {
+        GeometryReader { geometry in
+            let screenWidth = geometry.size.width
+            let screenHeight = geometry.size.height
+            
+            let machineWidth = screenWidth * 0.7
+            let machineHeight = machineWidth * 1.2
+            
+            let verticalOffset = screenHeight * 0.15
+            let machinePositionX = screenWidth / 2
+            let machinePositionY = (screenHeight / 2) - verticalOffset
+            
+            ZStack {
+                Color.black.opacity(isFinished ? 0 : 0.3)
+                    .ignoresSafeArea()
+                    .opacity(animationTrigger ? 1 : 0)
                 
-                capsuleImageView.centerXAnchor.constraint(equalTo: centerXAnchor),
-                capsuleImageView.bottomAnchor.constraint(equalTo: machineImageView.bottomAnchor, constant: -20),
-                capsuleImageView.widthAnchor.constraint(equalToConstant: 40),
-                capsuleImageView.heightAnchor.constraint(equalToConstant: 40),
+                Group {
+                    Color.clear
+                }
+                .keyframeAnimator(
+                    initialValue: AnimationValues(),
+                    trigger: animationTrigger
+                ) { _, values in
+                    ZStack {
+                        Image(machineImageName)
+                            .resizable()
+                            .interpolation(.medium)
+                            .scaledToFit()
+                            .frame(width: machineWidth, height: machineHeight)
+                            .offset(x: values.shakeOffset)
+                            .position(x: machinePositionX, y: machinePositionY)
+                        
+                        Image(capsuleImageName)
+                            .resizable()
+                            .interpolation(.medium)
+                            .scaledToFit()
+                            .frame(width: 40, height: 40)
+                            .scaleEffect(values.capsuleScale)
+                            .rotationEffect(.degrees(values.capsuleRotation))
+                            .offset(values.capsuleOffset)
+                            .position(
+                                x: machinePositionX,
+                                y: machinePositionY + (machineHeight / 2) - 20
+                            )
+                            .opacity(values.capsuleOpacity)
+                            .opacity(values.flashOpacity > 0.8 ? 0 : 1)
+                        
+                        Color.white.opacity(values.flashOpacity)
+                            .ignoresSafeArea()
+                    }
+                } keyframes: { _ in
+                    shakeMachineTrack()
+                    capsuleOpacityTrack()
+                    capsuleOffsetTrack()
+                    capsuleScaleTrack()
+                    capsuleRotationTrack()
+                    revealFlashTrack()
+                }
                 
-                flashView.topAnchor.constraint(equalTo: topAnchor),
-                flashView.leadingAnchor.constraint(equalTo: leadingAnchor),
-                flashView.trailingAnchor.constraint(equalTo: trailingAnchor),
-                flashView.bottomAnchor.constraint(equalTo: bottomAnchor),
-                
-                skipButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
-                skipButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -60)
-            ]
-        )
-    }
-    
-    func startAnimation() {
-        _totalAnimationState = Self.signposter.beginInterval("TotalAnimation")
-        
-        Task { @MainActor in
-            await playShakeAnimation()
-            if isSkipped { return }
-            
-            await playEjectAnimation()
-            if isSkipped { return }
-            
-            await playWobbleAnimation()
-            if isSkipped { return }
-            
-            await playRevealAnimation()
-            if isSkipped { return }
-            
-            finish()
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        skipButton
+                    }
+                    .padding(.bottom, 60)
+                    .padding(.trailing, 20)
+                }
+            }
+            .compositingGroup()
         }
+        .background(Color.clear)
+        .ignoresSafeArea()
+        .task(id: animationTaskID) {
+            await runAnimationSequence()
+        }
+        .onAppear {
+            start()
+        }
+    }
+    
+    private var skipButton: some View {
+        Button(action: skip) {
+            Text(">> SKIP")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.damagoPrimary)
+                .padding(.horizontal, .spacingM)
+                .padding(.vertical, .spacingS)
+                .background(Color.black.opacity(0.5))
+                .cornerRadius(.largeCard)
+        }
+        .opacity(isFinished ? 0 : 1)
     }
 
-    private func playShakeAnimation() async {
-        let state = Self.signposter.beginInterval("ShakeMachine")
-        await withCheckedContinuation { continuation in
-            let animation = CAKeyframeAnimation(keyPath: Constants.Keys.shakeX)
-            animation.values = [
-                0,
-                -Constants.Animation.shakeOffset,
-                Constants.Animation.shakeOffset,
-                -Constants.Animation.shakeOffset,
-                Constants.Animation.shakeOffset,
-                0
-            ]
-            animation.keyTimes = [0, 0.2, 0.4, 0.6, 0.8, 1]
-            animation.duration = Constants.Animation.shakeDuration
-            animation.repeatCount = Constants.Animation.shakeRepeatCount
-            animation.isRemovedOnCompletion = true
-            
-            CATransaction.begin()
-            CATransaction.setCompletionBlock {
-                Self.signposter.endInterval("ShakeMachine", state)
-                continuation.resume()
-            }
-            machineImageView.layer.add(animation, forKey: Constants.Keys.shakeAnim)
-            CATransaction.commit()
-        }
+    private func start() {
+        animationTrigger = true
     }
-    
-    private func playEjectAnimation() async {
-        let state = Self.signposter.beginInterval("EjectCapsule")
-        capsuleImageView.alpha = 1
-        
-        await withCheckedContinuation { continuation in
-            let springAnimation = CASpringAnimation(keyPath: Constants.Keys.ejectY)
-            springAnimation.fromValue = 0
-            springAnimation.toValue = Constants.Animation.ejectTranslationY
-            springAnimation.damping = 7
-            springAnimation.stiffness = 100
-            springAnimation.mass = 1
-            springAnimation.initialVelocity = 0
-            springAnimation.duration = springAnimation.settlingDuration
-            
-            let scaleAnimation = CABasicAnimation(keyPath: Constants.Keys.scale)
-            scaleAnimation.fromValue = 0.5
-            scaleAnimation.toValue = Constants.Animation.ejectScale
-            scaleAnimation.duration = Constants.Animation.ejectDuration
-            
-            let group = CAAnimationGroup()
-            group.animations = [springAnimation, scaleAnimation]
-            group.duration = Constants.Animation.ejectDuration
-            group.fillMode = .forwards
-            group.isRemovedOnCompletion = false
-            
-            CATransaction.begin()
-            CATransaction.setCompletionBlock {
-                Self.signposter.endInterval("EjectCapsule", state)
-                continuation.resume()
-            }
-            capsuleImageView.layer.add(group, forKey: Constants.Keys.ejectAnim)
-            CATransaction.commit()
-        }
-    }
-    
-    private func playWobbleAnimation() async {
-        let state = Self.signposter.beginInterval("WobbleCapsule")
-        await withCheckedContinuation { continuation in
-            let animation = CAKeyframeAnimation(keyPath: Constants.Keys.rotationZ)
-            animation.values = [0, -Constants.Animation.wobbleAngle, Constants.Animation.wobbleAngle, 0]
-            animation.keyTimes = [0, 0.33, 0.66, 1]
-            animation.duration = Constants.Animation.wobbleDuration
-            animation.repeatCount = Constants.Animation.wobbleRepeatCount
-            
-            CATransaction.begin()
-            CATransaction.setCompletionBlock {
-                Self.signposter.endInterval("WobbleCapsule", state)
-                continuation.resume()
-            }
-            capsuleImageView.layer.add(animation, forKey: Constants.Keys.wobbleAnim)
-            CATransaction.commit()
-        }
-    }
-    
-    private func playRevealAnimation() async {
-        guard !isSkipped else { return }
-        let state = Self.signposter.beginInterval("RevealResult")
 
-        await withCheckedContinuation { continuation in
-            let fadeIn = CABasicAnimation(keyPath: Constants.Keys.opacity)
-            fadeIn.fromValue = 0
-            fadeIn.toValue = 1
-            fadeIn.duration = Constants.Animation.revealDuration
-            fadeIn.fillMode = .forwards
-            fadeIn.isRemovedOnCompletion = false
-            
-            CATransaction.begin()
-            CATransaction.setCompletionBlock {
-                Self.signposter.endInterval("RevealResult", state)
-                continuation.resume()
-            }
-            flashView.layer.add(fadeIn, forKey: Constants.Keys.fadeInAnim)
-            CATransaction.commit()
-        }
-    }
-    
-    @objc
-    private func handleSkip() {
+    private func skip() {
+        guard !isFinished else { return }
         isSkipped = true
-        machineImageView.layer.removeAllAnimations()
-        capsuleImageView.layer.removeAllAnimations()
-        flashView.layer.removeAllAnimations()
-        finish()
+        animationTaskID = UUID()
     }
     
-    private func finish() {
+    private func runAnimationSequence() async {
+        if isSkipped {
+            finishAnimation()
+            return
+        }
+        
+        guard animationTrigger else { return }
+        
+        let state = Self.signposter.beginInterval("TotalAnimation")
+        
+        do {
+            try await Task.sleep(for: .seconds(Constants.AnimationDuration.total))
+            Self.signposter.endInterval("TotalAnimation", state)
+            finishAnimation()
+        } catch {
+            Self.signposter.endInterval("TotalAnimation", state, "Cancelled by Skip")
+        }
+    }
+    
+    private func finishAnimation() {
         guard !isFinished else { return }
         isFinished = true
         if let state = _totalAnimationState {
@@ -281,4 +184,82 @@ final class GachaAnimationView: UIView {
         }
         onFinish?()
     }
+    
+    @KeyframesBuilder<AnimationValues>
+    private func shakeMachineTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.shakeOffset) {
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            SpringKeyframe(0, duration: 0.2)
+        }
+    }
+
+    @KeyframesBuilder<AnimationValues>
+    private func capsuleOpacityTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.capsuleOpacity) {
+            LinearKeyframe(0, duration: Constants.AnimationDuration.shakeTotal)
+            LinearKeyframe(1.0, duration: 0.01)
+        }
+    }
+
+    @KeyframesBuilder<AnimationValues>
+    private func capsuleOffsetTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.capsuleOffset) {
+            LinearKeyframe(CGSize(width: 0, height: 150), duration: Constants.AnimationDuration.shakeTotal)
+            SpringKeyframe(Constants.Animation.capsuleEjectOffset, duration: Constants.AnimationDuration.eject)
+        }
+    }
+
+    @KeyframesBuilder<AnimationValues>
+    private func capsuleScaleTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.capsuleScale) {
+            LinearKeyframe(0.5, duration: Constants.AnimationDuration.shakeTotal)
+            SpringKeyframe(Constants.Animation.capsuleEjectScale, duration: Constants.AnimationDuration.eject)
+        }
+    }
+
+    @KeyframesBuilder<AnimationValues>
+    private func capsuleRotationTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.capsuleRotation) {
+            LinearKeyframe(0, duration: Constants.AnimationDuration.shakeTotal + Constants.AnimationDuration.eject)
+            LinearKeyframe(-Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            LinearKeyframe(Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            LinearKeyframe(-Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            LinearKeyframe(Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            LinearKeyframe(-Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            LinearKeyframe(Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            SpringKeyframe(0, duration: 0.2)
+        }
+    }
+
+    @KeyframesBuilder<AnimationValues>
+    private func revealFlashTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.flashOpacity) {
+            LinearKeyframe(0, duration: 4.0)
+            CubicKeyframe(1.0, duration: Constants.AnimationDuration.reveal)
+            LinearKeyframe(0, duration: Constants.AnimationDuration.fadeOut)
+        }
+    }
+}
+
+#Preview {
+    GachaAnimationView()
 }
