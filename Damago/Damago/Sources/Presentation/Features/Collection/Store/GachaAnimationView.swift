@@ -10,18 +10,13 @@ import SwiftUI
 struct GachaAnimationView: View {
     private enum Constants {
         enum AnimationDuration {
+            static let total: Double = 4.5
             static let shakeCycle: Double = 0.05
-            static let wobbleCycle: Double = 0.1
+            static let shakeTotal: Double = 2.0
+            static let eject: Double = 1.0
+            static let wobbleCycle: Double = 0.15
             static let reveal: Double = 0.5
             static let fadeOut: Double = 0.3
-            static let finishDelay: Double = 0.3
-        }
-        
-        enum Sleep {
-            static let shakeStep = Duration.seconds(0.05)
-            static let ejectWait = Duration.seconds(1.0)
-            static let wobbleStep = Duration.seconds(0.15)
-            static let revealWait = Duration.seconds(0.5)
         }
         
         enum Animation {
@@ -34,24 +29,19 @@ struct GachaAnimationView: View {
         }
     }
     
-    enum Phase {
-        case idle
-        case shaking
-        case ejecting
-        case wobbling
-        case revealing
-        case finished
+    struct AnimationValues {
+        var shakeOffset: CGFloat = 0
+        var capsuleOffset = CGSize(width: 0, height: 150)
+        var capsuleScale: CGFloat = 0.5
+        var capsuleRotation: Double = 0
+        var flashOpacity: Double = 0
+        var capsuleOpacity: Double = 0
     }
 
-    @State private var phase: Phase = .idle
-    @State private var shakeOffset: CGFloat = 0
-    @State private var capsuleOffset = CGSize(width: 0, height: 150)
-    @State private var capsuleScale: CGFloat = 0.5
-    @State private var capsuleRotation: Double = 0
-    @State private var flashOpacity: Double = 0
-    
+    @State private var animationTrigger = false
     @State private var isSkipped = false
     @State private var isFinished = false
+    @State private var animationTaskID = UUID()
     
     let machineImageName: String = "machine"
     let capsuleImageName: String = "capsule"
@@ -71,33 +61,52 @@ struct GachaAnimationView: View {
             let machinePositionY = (screenHeight / 2) - verticalOffset
             
             ZStack {
-                Color.black.opacity(phase == .revealing ? 0.3 : 0)
+                Color.black.opacity(isFinished ? 0 : 0.3)
                     .ignoresSafeArea()
+                    .opacity(animationTrigger ? 1 : 0)
                 
-                Image(machineImageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: machineWidth, height: machineHeight)
-                    .offset(x: shakeOffset)
-                    .position(x: machinePositionX, y: machinePositionY)
-                
-                if showCapsule {
-                    Image(capsuleImageName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 40, height: 40)
-                        .scaleEffect(capsuleScale)
-                        .rotationEffect(.degrees(capsuleRotation))
-                        .offset(capsuleOffset)
-                        .position(
-                            x: machinePositionX,
-                            y: machinePositionY + (machineHeight / 2) - 20
-                        )
-                        .opacity(phase == .revealing ? 0 : 1)
+                Group {
+                    Color.clear
                 }
-                
-                Color.white.opacity(flashOpacity)
-                    .ignoresSafeArea()
+                .keyframeAnimator(
+                    initialValue: AnimationValues(),
+                    trigger: animationTrigger
+                ) { _, values in
+                    ZStack {
+                        Image(machineImageName)
+                            .resizable()
+                            .interpolation(.medium)
+                            .scaledToFit()
+                            .frame(width: machineWidth, height: machineHeight)
+                            .offset(x: values.shakeOffset)
+                            .position(x: machinePositionX, y: machinePositionY)
+                        
+                        Image(capsuleImageName)
+                            .resizable()
+                            .interpolation(.medium)
+                            .scaledToFit()
+                            .frame(width: 40, height: 40)
+                            .scaleEffect(values.capsuleScale)
+                            .rotationEffect(.degrees(values.capsuleRotation))
+                            .offset(values.capsuleOffset)
+                            .position(
+                                x: machinePositionX,
+                                y: machinePositionY + (machineHeight / 2) - 20
+                            )
+                            .opacity(values.capsuleOpacity)
+                            .opacity(values.flashOpacity > 0.8 ? 0 : 1)
+                        
+                        Color.white.opacity(values.flashOpacity)
+                            .ignoresSafeArea()
+                    }
+                } keyframes: { _ in
+                    shakeMachineTrack()
+                    capsuleOpacityTrack()
+                    capsuleOffsetTrack()
+                    capsuleScaleTrack()
+                    capsuleRotationTrack()
+                    revealFlashTrack()
+                }
                 
                 VStack {
                     Spacer()
@@ -109,16 +118,16 @@ struct GachaAnimationView: View {
                     .padding(.trailing, 20)
                 }
             }
+            .compositingGroup()
         }
         .background(Color.clear)
         .ignoresSafeArea()
-        .task {
-            await play()
+        .task(id: animationTaskID) {
+            await runAnimationSequence()
         }
-    }
-    
-    private var showCapsule: Bool {
-        phase != .idle && phase != .shaking && phase != .finished
+        .onAppear {
+            start()
+        }
     }
     
     private var skipButton: some View {
@@ -134,102 +143,106 @@ struct GachaAnimationView: View {
         .opacity(isFinished ? 0 : 1)
     }
 
-    // MARK: - Animation Logic
-    
-    @MainActor
-    private func play() async {
-        await performShakeMachine()
-        if isSkipped { return }
-        
-        await performEjectCapsule()
-        if isSkipped { return }
-        
-        await performWobbleCapsule()
-        if isSkipped { return }
-        
-        await performRevealResult()
-        if isSkipped { return }
-        
-        finishAnimation()
+    private func start() {
+        animationTrigger = true
     }
-    
-    @MainActor
-    private func performShakeMachine() async {
-        phase = .shaking
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        
-        for _ in 0..<Constants.Animation.shakeCount {
-            if isSkipped { return }
-            generator.impactOccurred()
-            withAnimation(.linear(duration: Constants.AnimationDuration.shakeCycle)) {
-                shakeOffset = -Constants.Animation.shakeOffset
-            }
-            try? await Task.sleep(for: Constants.Sleep.shakeStep)
-            
-            withAnimation(.linear(duration: Constants.AnimationDuration.shakeCycle)) {
-                shakeOffset = Constants.Animation.shakeOffset
-            }
-            try? await Task.sleep(for: Constants.Sleep.shakeStep)
-        }
-        
-        withAnimation(.spring()) { shakeOffset = 0 }
-    }
-    
-    @MainActor
-    private func performEjectCapsule() async {
-        phase = .ejecting
-        withAnimation(.spring(response: 0.8, dampingFraction: 0.6)) {
-            capsuleOffset = Constants.Animation.capsuleEjectOffset
-            capsuleScale = Constants.Animation.capsuleEjectScale
-        }
-        try? await Task.sleep(for: Constants.Sleep.ejectWait)
-    }
-    
-    @MainActor
-    private func performWobbleCapsule() async {
-        phase = .wobbling
-        for _ in 0..<Constants.Animation.wobbleCount {
-            if isSkipped { return }
-            withAnimation(.linear(duration: Constants.AnimationDuration.wobbleCycle)) {
-                capsuleRotation = -Constants.Animation.wobbleAngle
-            }
-            try? await Task.sleep(for: Constants.Sleep.wobbleStep)
-            
-            withAnimation(.linear(duration: Constants.AnimationDuration.wobbleCycle)) {
-                capsuleRotation = Constants.Animation.wobbleAngle
-            }
-            try? await Task.sleep(for: Constants.Sleep.wobbleStep)
-        }
-        withAnimation(.spring()) { capsuleRotation = 0 }
-    }
-    
-    @MainActor
-    private func performRevealResult() async {
-        phase = .revealing
-        
-        withAnimation(.easeOut(duration: Constants.AnimationDuration.reveal)) {
-            flashOpacity = 1.0
-        }
-        try? await Task.sleep(for: Constants.Sleep.revealWait)
-    }
-    
+
     private func skip() {
         guard !isFinished else { return }
         isSkipped = true
+        animationTaskID = UUID()
+    }
+    
+    private func runAnimationSequence() async {
+        if isSkipped {
+            finishAnimation()
+            return
+        }
+        
+        guard animationTrigger else { return }
+        
+        try? await Task.sleep(for: .seconds(Constants.AnimationDuration.total))
+        
         finishAnimation()
     }
     
     private func finishAnimation() {
         guard !isFinished else { return }
         isFinished = true
-        
-        phase = .finished
-        withAnimation(.easeOut(duration: Constants.AnimationDuration.fadeOut)) {
-            flashOpacity = 0
+        onFinish?()
+    }
+    
+    @KeyframesBuilder<AnimationValues>
+    private func shakeMachineTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.shakeOffset) {
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(-Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            LinearKeyframe(Constants.Animation.shakeOffset, duration: Constants.AnimationDuration.shakeCycle)
+            SpringKeyframe(0, duration: 0.2)
         }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + Constants.AnimationDuration.finishDelay) {
-            onFinish?()
+    }
+
+    @KeyframesBuilder<AnimationValues>
+    private func capsuleOpacityTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.capsuleOpacity) {
+            LinearKeyframe(0, duration: Constants.AnimationDuration.shakeTotal)
+            LinearKeyframe(1.0, duration: 0.01)
+        }
+    }
+
+    @KeyframesBuilder<AnimationValues>
+    private func capsuleOffsetTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.capsuleOffset) {
+            LinearKeyframe(CGSize(width: 0, height: 150), duration: Constants.AnimationDuration.shakeTotal)
+            SpringKeyframe(Constants.Animation.capsuleEjectOffset, duration: Constants.AnimationDuration.eject)
+        }
+    }
+
+    @KeyframesBuilder<AnimationValues>
+    private func capsuleScaleTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.capsuleScale) {
+            LinearKeyframe(0.5, duration: Constants.AnimationDuration.shakeTotal)
+            SpringKeyframe(Constants.Animation.capsuleEjectScale, duration: Constants.AnimationDuration.eject)
+        }
+    }
+
+    @KeyframesBuilder<AnimationValues>
+    private func capsuleRotationTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.capsuleRotation) {
+            LinearKeyframe(0, duration: Constants.AnimationDuration.shakeTotal + Constants.AnimationDuration.eject)
+            LinearKeyframe(-Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            LinearKeyframe(Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            LinearKeyframe(-Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            LinearKeyframe(Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            LinearKeyframe(-Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            LinearKeyframe(Constants.Animation.wobbleAngle, duration: Constants.AnimationDuration.wobbleCycle)
+            SpringKeyframe(0, duration: 0.2)
+        }
+    }
+
+    @KeyframesBuilder<AnimationValues>
+    private func revealFlashTrack() -> some Keyframes<AnimationValues> {
+        KeyframeTrack(\.flashOpacity) {
+            LinearKeyframe(0, duration: 4.0)
+            CubicKeyframe(1.0, duration: Constants.AnimationDuration.reveal)
+            LinearKeyframe(0, duration: Constants.AnimationDuration.fadeOut)
         }
     }
 }
