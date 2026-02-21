@@ -86,6 +86,7 @@ final class StoreViewModel: ViewModel {
         state.isLoading = true
         
         Task {
+            defer { state.isLoading = false }
             do {
                 state.drawResult = try await createDamagoUseCase.execute()
             } catch {

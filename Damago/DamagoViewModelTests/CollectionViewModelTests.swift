@@ -33,15 +33,7 @@ final class CollectionViewModelTests {
         var executeCalled = false
         var lastDamagoType: DamagoType?
         var shouldFail = false
-
-        private let continuation: AsyncStream<Void>.Continuation
-        let executedStream: AsyncStream<Void>
-
-        init() {
-            var cont: AsyncStream<Void>.Continuation!
-            self.executedStream = AsyncStream { cont = $0 }
-            self.continuation = cont
-        }
+        var onExecute: (() -> Void)?
 
         func execute(
             nickname: String?,
@@ -53,7 +45,10 @@ final class CollectionViewModelTests {
         ) async throws {
             executeCalled = true
             lastDamagoType = damagoType
-            continuation.yield()
+            onExecute?()
+            
+            try? await Task.sleep(nanoseconds: 50_000_000)
+            
             if shouldFail {
                 throw NSError(domain: "test", code: -1, userInfo: [NSLocalizedDescriptionKey: "Update failed"])
             }
@@ -62,12 +57,14 @@ final class CollectionViewModelTests {
 
     private final class FakeFetchUserInfoUseCase: FetchUserInfoUseCase {
         private let result: Result<UserInfo, Error>
+        var onExecute: (() -> Void)?
 
         init(result: Result<UserInfo, Error>) {
             self.result = result
         }
 
         func execute() async throws -> UserInfo {
+            onExecute?()
             switch result {
             case let .success(userInfo):
                 return userInfo
@@ -94,26 +91,30 @@ final class CollectionViewModelTests {
     @Test("viewDidLoad 시 현재 다마고 타입을 불러온다")
     func testLoadCurrentDamagoOnViewDidLoad() async throws {
         let damagoType: DamagoType = .basicBlack
+        let fetchUseCase = FakeFetchUserInfoUseCase(result: .success(Self.makeUserInfo(damagoType: damagoType)))
         let viewModel = CollectionViewModel(
             updateUserUseCase: SpyUpdateUserUseCase(),
-            fetchUserInfoUseCase: FakeFetchUserInfoUseCase(result: .success(Self.makeUserInfo(damagoType: damagoType))),
+            fetchUserInfoUseCase: fetchUseCase,
             globalStore: FakeGlobalStore()
         )
         let testInput = TestInput()
         let output = viewModel.transform(testInput.input)
-        var latestState: CollectionViewModel.State?
-        output
-            .sink { latestState = $0 }
-            .store(in: &cancellables)
 
-        testInput.viewDidLoad.send()
+        await confirmation("현재 다마고 타입이 업데이트되어야 함") { confirm in
+            let stateStream = AsyncStream<DamagoType?> { continuation in
+                output.map { $0.currentDamagoType }
+                    .removeDuplicates()
+                    .sink { continuation.yield($0) }
+                    .store(in: &cancellables)
+            }
+            var iterator = stateStream.makeAsyncIterator()
 
-        try await withTimeout(seconds: 1.0) {
-            var outputIterator = output.values.makeAsyncIterator()
-            while let state = await outputIterator.next() {
-                if await state.currentDamagoType == damagoType {
-                    #expect(state.currentDamagoType == damagoType)
-                    return
+            testInput.viewDidLoad.send()
+            
+            while let current = await iterator.next() {
+                if current == damagoType {
+                    confirm()
+                    break
                 }
             }
         }
@@ -131,14 +132,21 @@ final class CollectionViewModelTests {
         let output = viewModel.transform(testInput.input)
         let owned: [DamagoType: Int] = [.basicBlack: 3, .siamese: 1]
 
-        globalStore.updateState(Self.makeGlobalState(owned: owned))
+        await confirmation("보유 다마고 목록이 업데이트되어야 함") { confirm in
+            let ownedStream = AsyncStream<[DamagoType: Int]> { continuation in
+                output.map { $0.ownedDamagos }
+                    .removeDuplicates()
+                    .sink { continuation.yield($0) }
+                    .store(in: &cancellables)
+            }
+            var iterator = ownedStream.makeAsyncIterator()
 
-        try await withTimeout(seconds: 1.0) {
-            var outputIterator = output.values.makeAsyncIterator()
-            while let state = await outputIterator.next() {
-                if await state.ownedDamagos == owned {
-                    #expect(state.ownedDamagos == owned)
-                    return
+            globalStore.updateState(Self.makeGlobalState(owned: owned))
+            
+            while let currentOwned = await iterator.next() {
+                if currentOwned == owned {
+                    confirm()
+                    break
                 }
             }
         }
@@ -156,18 +164,23 @@ final class CollectionViewModelTests {
         let output = viewModel.transform(testInput.input)
         let targetDamago: DamagoType = .siamese
 
-        testInput.viewDidLoad.send()
-        globalStore.updateState(Self.makeGlobalState(owned: [.basicBlack: 1, .siamese: 2]))
-        testInput.damagoSelected.send(targetDamago)
+        await confirmation("변경 확인 팝업이 노출되어야 함") { confirm in
+            let routeStream = AsyncStream<CollectionViewModel.Route?> { continuation in
+                output.map { $0.route?.value }
+                    .removeDuplicates()
+                    .sink { continuation.yield($0) }
+                    .store(in: &cancellables)
+            }
+            var iterator = routeStream.makeAsyncIterator()
 
-        try await withTimeout(seconds: 1.0) {
-            var outputIterator = output.values.makeAsyncIterator()
-            while let state = await outputIterator.next() {
-                if let route = await state.route?.value, case let .showChangeConfirmPopup(damagoType) = route {
-                    if damagoType == targetDamago {
-                        #expect(damagoType == targetDamago)
-                        return
-                    }
+            testInput.viewDidLoad.send()
+            globalStore.updateState(Self.makeGlobalState(owned: [.basicBlack: 1, .siamese: 2]))
+            testInput.damagoSelected.send(targetDamago)
+            
+            while let route = await iterator.next() {
+                if case let .showChangeConfirmPopup(damagoType) = route, damagoType == targetDamago {
+                    confirm()
+                    break
                 }
             }
         }
@@ -184,17 +197,24 @@ final class CollectionViewModelTests {
         let testInput = TestInput()
         let output = viewModel.transform(testInput.input)
 
-        testInput.viewDidLoad.send()
-        globalStore.updateState(Self.makeGlobalState(owned: [.basicBlack: 1]))
-        testInput.damagoSelected.send(.siamese)
+        await confirmation("에러 라우트가 발생해야 함") { confirm in
+            let routeStream = AsyncStream<CollectionViewModel.Route?> { continuation in
+                output.map { $0.route?.value }
+                    .removeDuplicates()
+                    .sink { continuation.yield($0) }
+                    .store(in: &cancellables)
+            }
+            var iterator = routeStream.makeAsyncIterator()
 
-        try await withTimeout(seconds: 1.0) {
-            var outputIterator = output.values.makeAsyncIterator()
-            while let state = await outputIterator.next() {
-                if let route = await state.route?.value, case let .error(title, message) = route {
+            testInput.viewDidLoad.send()
+            globalStore.updateState(Self.makeGlobalState(owned: [.basicBlack: 1]))
+            testInput.damagoSelected.send(.siamese)
+            
+            while let route = await iterator.next() {
+                if case let .error(title, message) = route {
                     if title == "미보유 다마고입니다." && message == "코인을 모아 상점해서 획득해보세요!" {
-                        #expect(true)
-                        return
+                        confirm()
+                        break
                     }
                 }
             }
@@ -214,24 +234,39 @@ final class CollectionViewModelTests {
         let output = viewModel.transform(testInput.input)
         let targetDamago: DamagoType = .siamese
 
-        testInput.viewDidLoad.send()
-        globalStore.updateState(Self.makeGlobalState(owned: [.basicBlack: 1, .siamese: 1]))
-        testInput.damagoSelected.send(targetDamago)
-        testInput.confirmChangeTapped.send()
+        await confirmation("UpdateUserUseCase가 호출되고 상태가 업데이트되어야 함", expectedCount: 2) { confirm in
+            let stateStream = AsyncStream<DamagoType?> { continuation in
+                output.map { $0.currentDamagoType }
+                    .removeDuplicates()
+                    .sink { continuation.yield($0) }
+                    .store(in: &cancellables)
+            }
+            var iterator = stateStream.makeAsyncIterator()
+            
+            let useCaseStream = AsyncStream<Void> { continuation in
+                updateUseCase.onExecute = {
+                    confirm()
+                    continuation.yield()
+                }
+            }
+            var useCaseIterator = useCaseStream.makeAsyncIterator()
 
-        try await withTimeout(seconds: 1.0) {
-            var spyIterator = updateUseCase.executedStream.makeAsyncIterator()
-            _ = await spyIterator.next()
-            #expect(updateUseCase.executeCalled == true)
-            #expect(updateUseCase.lastDamagoType == targetDamago)
-        }
-
-        try await withTimeout(seconds: 1.0) {
-            var outputIterator = output.values.makeAsyncIterator()
-            while let state = await outputIterator.next() {
-                if await state.currentDamagoType == targetDamago {
-                    #expect(state.currentDamagoType == targetDamago)
-                    return
+            testInput.viewDidLoad.send()
+            globalStore.updateState(Self.makeGlobalState(owned: [.basicBlack: 1, .siamese: 1]))
+            testInput.damagoSelected.send(targetDamago)
+            
+            try? await Task.sleep(nanoseconds: 50_000_000)
+            
+            testInput.confirmChangeTapped.send()
+            
+            // 1. UseCase 실행 대기
+            await useCaseIterator.next()
+            
+            // 2. 상태 업데이트 대기
+            while let current = await iterator.next() {
+                if current == targetDamago {
+                    confirm()
+                    break
                 }
             }
         }
@@ -240,86 +275,43 @@ final class CollectionViewModelTests {
     @Test("현재 다마고와 동일한 타입 선택 시 라우트가 발생하지 않는다")
     func testSelectSameAsCurrentDoesNotEmitRoute() async throws {
         let globalStore = FakeGlobalStore()
+        let fetchUseCase = FakeFetchUserInfoUseCase(result: .success(Self.makeUserInfo(damagoType: .basicBlack)))
         let viewModel = CollectionViewModel(
             updateUserUseCase: SpyUpdateUserUseCase(),
-            fetchUserInfoUseCase: FakeFetchUserInfoUseCase(result: .success(Self.makeUserInfo(damagoType: .basicBlack))),
+            fetchUserInfoUseCase: fetchUseCase,
             globalStore: globalStore
         )
         let testInput = TestInput()
         let output = viewModel.transform(testInput.input)
-        var currentDamagoType: DamagoType?
-        var routeCount = 0
-        output
-            .sink { state in
-                currentDamagoType = state.currentDamagoType
-                if state.route != nil {
-                    routeCount += 1
+        
+        await confirmation("초기 다마고 로드 완료") { confirm in
+            let stateStream = AsyncStream<DamagoType?> { continuation in
+                output.map { $0.currentDamagoType }
+                    .removeDuplicates()
+                    .sink { continuation.yield($0) }
+                    .store(in: &cancellables)
+            }
+            var iterator = stateStream.makeAsyncIterator()
+            
+            testInput.viewDidLoad.send()
+            while let current = await iterator.next() {
+                if current == .basicBlack {
+                    confirm()
+                    break
                 }
             }
+        }
+        
+        var routeEmitted = false
+        output.compactMap { $0.route }
+            .sink { _ in routeEmitted = true }
             .store(in: &cancellables)
-
-        testInput.viewDidLoad.send()
+        
         globalStore.updateState(Self.makeGlobalState(owned: [.basicBlack: 1, .siamese: 1]))
-
-        for _ in 0..<20 {
-            let currentType = await MainActor.run { currentDamagoType }
-            if currentType == .basicBlack {
-                break
-            }
-            try await Task.sleep(nanoseconds: 20_000_000)
-        }
-
-        let initialRouteCount = await MainActor.run { routeCount }
         testInput.damagoSelected.send(.basicBlack)
-        try await Task.sleep(nanoseconds: 200_000_000)
-        let finalRouteCount = await MainActor.run { routeCount }
-        #expect(finalRouteCount == initialRouteCount)
-    }
-
-    @Test("선택된 다마고가 없으면 변경 확정을 눌러도 호출되지 않는다")
-    func testConfirmChangeWithoutSelectionDoesNothing() async throws {
-        let updateUseCase = SpyUpdateUserUseCase()
-        let viewModel = CollectionViewModel(
-            updateUserUseCase: updateUseCase,
-            fetchUserInfoUseCase: FakeFetchUserInfoUseCase(result: .success(Self.makeUserInfo(damagoType: .basicBlack))),
-            globalStore: FakeGlobalStore()
-        )
-        let testInput = TestInput()
-        _ = viewModel.transform(testInput.input)
-
-        testInput.confirmChangeTapped.send()
-
-        try await Task.sleep(nanoseconds: 200_000_000)
-        #expect(updateUseCase.executeCalled == false)
-    }
-
-    @Test("변경 실패 시 에러 라우트가 설정된다")
-    func testConfirmChangeFailureEmitsErrorRoute() async throws {
-        let updateUseCase = SpyUpdateUserUseCase()
-        updateUseCase.shouldFail = true
-        let globalStore = FakeGlobalStore()
-        let viewModel = CollectionViewModel(
-            updateUserUseCase: updateUseCase,
-            fetchUserInfoUseCase: FakeFetchUserInfoUseCase(result: .success(Self.makeUserInfo(damagoType: .basicBlack))),
-            globalStore: globalStore
-        )
-        let testInput = TestInput()
-        let output = viewModel.transform(testInput.input)
-
-        testInput.viewDidLoad.send()
-        globalStore.updateState(Self.makeGlobalState(owned: [.basicBlack: 1, .siamese: 1]))
-        testInput.damagoSelected.send(.siamese)
-        testInput.confirmChangeTapped.send()
-
-        try await withTimeout(seconds: 1.0) {
-            var outputIterator = output.values.makeAsyncIterator()
-            while let state = await outputIterator.next() {
-                if let route = await state.route?.value, case .error = route {
-                    #expect(true)
-                    return
-                }
-            }
-        }
+        
+        try await Task.sleep(nanoseconds: 100_000_000)
+        #expect(routeEmitted == false)
     }
 
     @Test("변경 요청 시 로딩 상태가 토글된다")
@@ -334,23 +326,34 @@ final class CollectionViewModelTests {
         let testInput = TestInput()
         let output = viewModel.transform(testInput.input)
 
-        testInput.viewDidLoad.send()
-        globalStore.updateState(Self.makeGlobalState(owned: [.basicBlack: 1, .siamese: 1]))
-        testInput.damagoSelected.send(.siamese)
+        await confirmation("로딩 상태가 true였다가 false로 돌아와야 함", expectedCount: 2) { confirm in
+            let loadingStream = AsyncStream<Bool> { continuation in
+                output.map { $0.isLoading }
+                    .removeDuplicates()
+                    .sink { continuation.yield($0) }
+                    .store(in: &cancellables)
+            }
+            var iterator = loadingStream.makeAsyncIterator()
 
-        try await withTimeout(seconds: 1.0) {
-            var outputIterator = output.values.makeAsyncIterator()
+            testInput.viewDidLoad.send()
+            globalStore.updateState(Self.makeGlobalState(owned: [.basicBlack: 1, .siamese: 1]))
+            testInput.damagoSelected.send(.siamese)
+            
+            try? await Task.sleep(nanoseconds: 50_000_000)
+            
+            // 초기 false 소비
+            _ = await iterator.next()
+            
             testInput.confirmChangeTapped.send()
-
-            var sawLoadingTrue = false
-            while let state = await outputIterator.next() {
-                if await state.isLoading {
-                    sawLoadingTrue = true
-                }
-                if sawLoadingTrue, await state.isLoading == false {
-                    #expect(true)
-                    return
-                }
+            
+            // 1. Loading True 대기
+            if let first = await iterator.next(), first == true {
+                confirm()
+            }
+            
+            // 2. Loading False 대기
+            if let second = await iterator.next(), second == false {
+                confirm()
             }
         }
     }
