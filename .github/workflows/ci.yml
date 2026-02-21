@@ -63,12 +63,19 @@ jobs:
           -scheme Damago \
           -configuration Debug
 
+    # Swift Testing 로그 출력용
+    - name: Install xcbeautify
+      run: brew install xcbeautify
+
     # Fastlane 실행
     - name: Run Fastlane Tests
       env:
         FASTLANE_XCODE_LIST_TIMEOUT: 120
         FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 120
-      run: bundle exec fastlane test
+        BUNDLE_FROZEN: "false"
+      run: |
+        bundle install
+        bundle exec fastlane test
 
 # Merge 시에 함수 배포
   deploy-functions:

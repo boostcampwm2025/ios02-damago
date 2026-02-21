@@ -22,6 +22,7 @@ platform :ios do
       configuration: "Debug",
       device: "iPhone 17 Pro (26.2)", 
       clean: false,
+      xcodebuild_formatter: "xcbeautify",
       xcargs: "-skipPackagePluginValidation -parallel-testing-enabled NO"
     )
 
