@@ -68,10 +68,7 @@ jobs:
       env:
         FASTLANE_XCODE_LIST_TIMEOUT: 120
         FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: 120
-        BUNDLE_FROZEN: "false"
-      run: |
-        bundle install
-        bundle exec fastlane test
+      run: bundle exec fastlane test
 
 # Merge 시에 함수 배포
   deploy-functions:
