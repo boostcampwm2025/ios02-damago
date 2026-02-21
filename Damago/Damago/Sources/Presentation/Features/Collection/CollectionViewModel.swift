@@ -26,7 +26,7 @@ final class CollectionViewModel: ViewModel {
         var route: Pulse<Route>?
     }
 
-    enum Route {
+    enum Route: Equatable {
         case showChangeConfirmPopup(damagoType: DamagoType)
         case error(title: String, message: String)
     }
