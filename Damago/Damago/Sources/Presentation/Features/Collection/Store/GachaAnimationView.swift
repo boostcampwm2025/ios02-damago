@@ -6,11 +6,8 @@
 //
 
 import SwiftUI
-import os
 
 struct GachaAnimationView: View {
-    private static let signposter = OSSignposter(subsystem: "com.damago.app", category: "GachaAnimation")
-    
     private enum Constants {
         enum AnimationDuration {
             static let total: Double = 4.5
@@ -164,24 +161,14 @@ struct GachaAnimationView: View {
         
         guard animationTrigger else { return }
         
-        let state = Self.signposter.beginInterval("TotalAnimation")
+        try? await Task.sleep(for: .seconds(Constants.AnimationDuration.total))
         
-        do {
-            try await Task.sleep(for: .seconds(Constants.AnimationDuration.total))
-            Self.signposter.endInterval("TotalAnimation", state)
-            finishAnimation()
-        } catch {
-            Self.signposter.endInterval("TotalAnimation", state, "Cancelled by Skip")
-        }
+        finishAnimation()
     }
     
     private func finishAnimation() {
         guard !isFinished else { return }
         isFinished = true
-        if let state = _totalAnimationState {
-            Self.signposter.endInterval("TotalAnimation", state)
-            _totalAnimationState = nil
-        }
         onFinish?()
     }
     
