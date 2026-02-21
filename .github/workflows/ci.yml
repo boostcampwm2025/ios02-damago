@@ -63,10 +63,6 @@ jobs:
           -scheme Damago \
           -configuration Debug
 
-    # Swift Testing 로그 출력용
-    - name: Install xcbeautify
-      run: brew install xcbeautify
-
     # Fastlane 실행
     - name: Run Fastlane Tests
       env:
