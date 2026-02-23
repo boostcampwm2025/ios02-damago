@@ -84,15 +84,14 @@ final class StoreViewModel: ViewModel {
         }
         
         state.isLoading = true
+        defer { state.isLoading = false }
         
         Task {
-            defer { state.isLoading = false }
             do {
                 state.drawResult = try await createDamagoUseCase.execute()
             } catch {
                 state.error = Pulse(.creationFailed)
             }
-            state.isLoading = false
         }
     }
 }

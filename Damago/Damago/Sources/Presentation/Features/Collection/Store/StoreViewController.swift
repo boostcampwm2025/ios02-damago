@@ -53,7 +53,7 @@ final class StoreViewController: UIViewController {
             .compactMapForUI { $0.drawResult }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] result in
-                guard let self = self else { return }
+                guard let self else { return }
                 self.triggerGachaAnimation(result: result)
             }
             .store(in: &cancellables)
