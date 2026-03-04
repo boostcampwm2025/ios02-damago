@@ -78,6 +78,8 @@ final class StoreViewModel: ViewModel {
     }
     
     private func tryDraw() {
+        guard !state.isLoading else { return }
+        
         guard state.coinAmount >= StorePolicy.drawCost else {
             state.error = Pulse(.notEnoughCoin)
             return
