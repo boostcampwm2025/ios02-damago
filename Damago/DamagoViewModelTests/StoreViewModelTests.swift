@@ -279,4 +279,49 @@ final class StoreViewModelTests {
             await iterator.next()
         }
     }
+
+    @Test("뽑기 작업이 진행 중일 때 들어온 추가 뽑기 요청은 무시되어야 한다")
+    func test_중복_뽑기_요청_무시() async {
+        // Given
+        let mockGlobalStore = MockGlobalStore()
+        let mockCreateDamagoUseCase = MockCreateDamagoUseCase()
+        let viewModel = StoreViewModel(
+            globalStore: mockGlobalStore,
+            createDamagoUseCase: mockCreateDamagoUseCase
+        )
+        
+        // 실행 횟수 추적
+        var executionCount = 0
+        let (stream, continuation) = AsyncStream<Void>.makeStream()
+        mockCreateDamagoUseCase.onExecute = { 
+            executionCount += 1
+            continuation.yield(())
+        }
+        mockCreateDamagoUseCase.executeResult = .success(DrawResult(damagoType: .basicBlack, isNew: true))
+        
+        let initialState = GlobalState(
+            nickname: nil, opponentName: nil, useFCM: false, useLiveActivity: false, todayPokeCount: 0,
+            coupleID: nil, totalCoin: 1000, foodCount: nil, anniversaryDate: nil, currentQuestionID: nil,
+            damagoID: nil, damagoName: nil, damagoType: nil, level: nil, currentExp: nil, maxExp: nil,
+            isHungry: nil, statusMessage: nil, lastFedAt: nil, totalPlayTime: nil, lastActiveAt: nil, ownedDamagos: [:]
+        )
+        mockGlobalStore.updateState(initialState)
+        
+        let testInput = TestInput()
+        _ = viewModel.transform(testInput.input)
+        
+        // When
+        // 1. 첫 번째 탭 전송
+        testInput.drawButtonDidTap.send(())
+        
+        // 2. UseCase가 실행될 때까지 대기
+        var iterator = stream.makeAsyncIterator()
+        await iterator.next() 
+        
+        // 3. 로딩 중인 상태에서 두 번째 탭 전송
+        testInput.drawButtonDidTap.send(())
+        
+        // Then
+        #expect(executionCount == 1, "로딩 중에는 추가 요청이 무시되어야 함")
+    }
 }
