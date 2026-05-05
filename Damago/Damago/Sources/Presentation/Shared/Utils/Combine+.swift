@@ -22,11 +22,19 @@ struct Pulse<R>: Equatable {
 }
 
 extension Publisher where Failure == Never {
+    func receiveOnMainIfNecessary() -> AnyPublisher<Output, Failure> {
+        if Thread.isMainThread {
+            return self.eraseToAnyPublisher()
+        } else {
+            return self.receive(on: DispatchQueue.main).eraseToAnyPublisher()
+        }
+    }
+
     func mapForUI<T: Equatable>(
         _ transform: @escaping (Output) -> T
     ) -> AnyPublisher<T, Failure> {
         self
-            .receive(on: DispatchQueue.main)
+            .receiveOnMainIfNecessary()
             .map(transform)
             .removeDuplicates()
             .eraseToAnyPublisher()
@@ -37,7 +45,7 @@ extension Publisher where Failure == Never {
         isDuplicate: @escaping (T, T) -> Bool
     ) -> AnyPublisher<T, Failure> {
         self
-            .receive(on: DispatchQueue.main)
+            .receiveOnMainIfNecessary()
             .map(transform)
             .removeDuplicates(by: isDuplicate)
             .eraseToAnyPublisher()
@@ -47,7 +55,7 @@ extension Publisher where Failure == Never {
         _ transform: @escaping (Output) -> T?
     ) -> AnyPublisher<T, Failure> {
         self
-            .receive(on: DispatchQueue.main)
+            .receiveOnMainIfNecessary()
             .compactMap(transform)
             .removeDuplicates()
             .eraseToAnyPublisher()
@@ -58,7 +66,7 @@ extension Publisher where Failure == Never {
         isDuplicate: @escaping (T, T) -> Bool
     ) -> AnyPublisher<T, Failure> {
         self
-            .receive(on: DispatchQueue.main)
+            .receiveOnMainIfNecessary()
             .compactMap(transform)
             .removeDuplicates(by: isDuplicate)
             .eraseToAnyPublisher()
@@ -68,7 +76,7 @@ extension Publisher where Failure == Never {
         _ keyPath: KeyPath<Output, Pulse<R>?>
     ) -> AnyPublisher<R, Failure> {
         self
-            .receive(on: DispatchQueue.main)
+            .receiveOnMainIfNecessary()
             .map(keyPath)
             .removeDuplicates()
             .compactMap { $0?.value }
