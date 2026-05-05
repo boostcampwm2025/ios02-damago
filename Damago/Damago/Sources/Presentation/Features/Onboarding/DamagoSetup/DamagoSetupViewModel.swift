@@ -60,7 +60,7 @@ final class DamagoSetupViewModel: ViewModel {
             .store(in: &cancellables)
 
         globalStore.globalState
-            .map { $0.ownedDamagos ?? [:] }
+            .mapForUI { $0.ownedDamagos ?? [:] }
             .assign(to: \.state.ownedDamagos, on: self)
             .store(in: &cancellables)
 

@@ -200,7 +200,7 @@ final class HomeViewModel: ViewModel {
 
     private func bindGlobalState() {
         globalStore.globalState
-            .compactMap { $0.damagoID }
+            .compactMapForUI { $0.damagoID }
             .sink { [weak self] in self?.damagoID = $0 }
             .store(in: &cancellables)
 
@@ -215,7 +215,7 @@ final class HomeViewModel: ViewModel {
             .store(in: &cancellables)
         
         globalStore.globalState
-            .map { $0.ownedDamagos ?? [:] }
+            .mapForUI { $0.ownedDamagos ?? [:] }
             .assign(to: \.state.ownedDamagos, on: self)
             .store(in: &cancellables)
 
@@ -230,7 +230,7 @@ final class HomeViewModel: ViewModel {
             .store(in: &cancellables)
 
         globalStore.globalState
-            .compactMap { $0.currentExp }
+            .compactMapForUI { $0.currentExp }
             .sink { [weak self] in self?.state.currentExp = $0 }
             .store(in: &cancellables)
 
@@ -264,7 +264,7 @@ final class HomeViewModel: ViewModel {
             .store(in: &cancellables)
 
         globalStore.globalState
-            .map { $0.todayPokeCount }
+            .mapForUI { $0.todayPokeCount }
             .sink { [weak self] in self?.state.todayPokeCount = $0 }
             .store(in: &cancellables)
     }
