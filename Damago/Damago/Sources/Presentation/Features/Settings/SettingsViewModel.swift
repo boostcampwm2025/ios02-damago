@@ -89,6 +89,7 @@ final class SettingsViewModel: ViewModel {
 
     func transform(_ input: Input) -> AnyPublisher<State, Never> {
         input.viewDidLoad
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] in
                 self?.loadDamagoBackgroundOption()
                 self?.refreshPermissionsAndBind()
@@ -96,24 +97,28 @@ final class SettingsViewModel: ViewModel {
             .store(in: &cancellables)
 
         input.toggleChanged
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] type, isOn in
                 self?.handleToggle(type: type, isOn: isOn)
             }
             .store(in: &cancellables)
 
         input.itemSelected
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] item in
                 self?.handleSelection(item: item)
             }
             .store(in: &cancellables)
 
         input.damagoBackgroundChanged
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] option in
                 self?.handleDamagoBackgroundChange(option)
             }
             .store(in: &cancellables)
 
         input.alertActionDidConfirm
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] type in
                 self?.performAction(type)
             }
@@ -125,9 +130,13 @@ final class SettingsViewModel: ViewModel {
     private func refreshPermissionsAndBind() {
         Task {
             let notiSettings = await UNUserNotificationCenter.current().notificationSettings()
-            state.notificationCurrentPermission = (notiSettings.authorizationStatus == .authorized)
-            state.activityCurrentPermission = ActivityAuthorizationInfo().areActivitiesEnabled
-            bindGlobalState()
+            let activityEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
+            
+            await MainActor.run {
+                state.notificationCurrentPermission = (notiSettings.authorizationStatus == .authorized)
+                state.activityCurrentPermission = activityEnabled
+                bindGlobalState()
+            }
         }
     }
 
@@ -162,6 +171,7 @@ final class SettingsViewModel: ViewModel {
 
         globalStore.globalState
             .compactMap { $0.anniversaryDate }
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] date in
                 self?.state.anniversaryDate = date.toString()
                 self?.state.dDay = date.daysBetween(to: Date()) ?? 0

@@ -26,9 +26,9 @@ extension Publisher where Failure == Never {
         _ transform: @escaping (Output) -> T
     ) -> AnyPublisher<T, Failure> {
         self
+            .receive(on: DispatchQueue.main)
             .map(transform)
             .removeDuplicates()
-            .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
 
@@ -37,9 +37,9 @@ extension Publisher where Failure == Never {
         isDuplicate: @escaping (T, T) -> Bool
     ) -> AnyPublisher<T, Failure> {
         self
+            .receive(on: DispatchQueue.main)
             .map(transform)
             .removeDuplicates(by: isDuplicate)
-            .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
 
@@ -47,9 +47,9 @@ extension Publisher where Failure == Never {
         _ transform: @escaping (Output) -> T?
     ) -> AnyPublisher<T, Failure> {
         self
+            .receive(on: DispatchQueue.main)
             .compactMap(transform)
             .removeDuplicates()
-            .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
 
@@ -58,9 +58,9 @@ extension Publisher where Failure == Never {
         isDuplicate: @escaping (T, T) -> Bool
     ) -> AnyPublisher<T, Failure> {
         self
+            .receive(on: DispatchQueue.main)
             .compactMap(transform)
             .removeDuplicates(by: isDuplicate)
-            .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
 
@@ -68,10 +68,10 @@ extension Publisher where Failure == Never {
         _ keyPath: KeyPath<Output, Pulse<R>?>
     ) -> AnyPublisher<R, Failure> {
         self
+            .receive(on: DispatchQueue.main)
             .map(keyPath)
             .removeDuplicates()
             .compactMap { $0?.value }
-            .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
 }
