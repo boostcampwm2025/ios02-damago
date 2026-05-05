@@ -97,21 +97,21 @@ final class InteractionViewModel: ViewModel {
         return $state.eraseToAnyPublisher()
     }
 
-    // swiftlint:disable trailing_closure
     private func bindGlobalStore() {
         globalStore.globalState
-            .handleEvents(receiveOutput: { [weak self] state in
-                self?.coupleID = state.coupleID
-            })
             .compactMapForUI { $0.coupleID }
-            .first()
-            .sink { [weak self] _ in
-                self?.fetchDailyQuestionData()
-                self?.fetchBalanceGameData()
+            .sink { [weak self] coupleID in
+                guard let self else { return }
+                let isFirstTime = self.coupleID == nil
+                self.coupleID = coupleID
+                
+                if isFirstTime {
+                    self.fetchDailyQuestionData()
+                    self.fetchBalanceGameData()
+                }
             }
             .store(in: &cancellables)
     }
-    // swiftlint:enable trailing_closure
 
     // MARK: - Daily Question
     private func fetchDailyQuestionData() {

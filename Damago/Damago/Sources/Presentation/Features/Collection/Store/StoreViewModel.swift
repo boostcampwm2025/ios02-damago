@@ -65,15 +65,14 @@ final class StoreViewModel: ViewModel {
             .store(in: &cancellables)
         
         globalStore.globalState
-            .map { $0.ownedDamagos ?? [:] }
+            .mapForUI { $0.ownedDamagos ?? [:] }
             .assign(to: \.state.ownedDamagos, on: self)
             .store(in: &cancellables)
-        
+
         globalStore.globalState
-            .map { $0.totalCoin ?? 0 }
+            .mapForUI { $0.totalCoin ?? 0 }
             .assign(to: \.state.coinAmount, on: self)
-            .store(in: &cancellables)
-        
+            .store(in: &cancellables)        
         return $state.eraseToAnyPublisher()
     }
     
