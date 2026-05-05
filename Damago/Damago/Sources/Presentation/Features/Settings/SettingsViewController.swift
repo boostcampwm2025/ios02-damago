@@ -184,14 +184,14 @@ final class SettingsViewController: UIViewController {
         let popupView = DamagoBackgroundColorPopupView(initialOption: current)
         popupView.translatesAutoresizingMaskIntoConstraints = false
 
-        let targetView = tabBarController?.view ?? view
-        targetView?.addSubview(popupView)
+        guard let targetView = tabBarController?.view ?? view else { return }
+        targetView.addSubview(popupView)
 
         NSLayoutConstraint.activate([
-            popupView.topAnchor.constraint(equalTo: targetView!.topAnchor),
-            popupView.leadingAnchor.constraint(equalTo: targetView!.leadingAnchor),
-            popupView.trailingAnchor.constraint(equalTo: targetView!.trailingAnchor),
-            popupView.bottomAnchor.constraint(equalTo: targetView!.bottomAnchor)
+            popupView.topAnchor.constraint(equalTo: targetView.topAnchor),
+            popupView.leadingAnchor.constraint(equalTo: targetView.leadingAnchor),
+            popupView.trailingAnchor.constraint(equalTo: targetView.trailingAnchor),
+            popupView.bottomAnchor.constraint(equalTo: targetView.bottomAnchor)
         ])
 
         popupView.confirmButtonTappedSubject
@@ -339,6 +339,8 @@ extension SettingsViewController: UIPopoverPresentationControllerDelegate {
 
         // 다이내믹 아일랜드(Live Activity) 토글 셀 찾기
         let snapshot = dataSource.snapshot()
+        guard snapshot.sectionIdentifiers.contains(.preferences) else { return }
+        
         let items = snapshot.itemIdentifiers(inSection: .preferences)
         
         guard let liveActivityItem = items.first(where: {
