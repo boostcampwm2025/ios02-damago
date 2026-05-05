@@ -33,8 +33,8 @@ final class CardGameCell: UICollectionViewCell {
         overlayImageView.image = nil
     }
 
-    func configure(with item: CardItem) {
-        flipCardView.configure(image: item.image)
+    func configure(with item: CardItem, image: UIImage?) {
+        flipCardView.configure(image: image)
 
         if flipCardView.isFlipped != item.isFlipped { flipCardView.setFlipped(item.isFlipped, animated: true) }
 

@@ -65,19 +65,20 @@ final class StoreViewModel: ViewModel {
             .store(in: &cancellables)
         
         globalStore.globalState
-            .map { $0.ownedDamagos ?? [:] }
+            .mapForUI { $0.ownedDamagos ?? [:] }
             .assign(to: \.state.ownedDamagos, on: self)
             .store(in: &cancellables)
-        
+
         globalStore.globalState
-            .map { $0.totalCoin ?? 0 }
+            .mapForUI { $0.totalCoin ?? 0 }
             .assign(to: \.state.coinAmount, on: self)
-            .store(in: &cancellables)
-        
+            .store(in: &cancellables)        
         return $state.eraseToAnyPublisher()
     }
     
     private func tryDraw() {
+        guard !state.isLoading else { return }
+        
         guard state.coinAmount >= StorePolicy.drawCost else {
             state.error = Pulse(.notEnoughCoin)
             return
@@ -86,12 +87,13 @@ final class StoreViewModel: ViewModel {
         state.isLoading = true
         
         Task {
+            defer { state.isLoading = false }
+            
             do {
                 state.drawResult = try await createDamagoUseCase.execute()
             } catch {
                 state.error = Pulse(.creationFailed)
             }
-            state.isLoading = false
         }
     }
 }

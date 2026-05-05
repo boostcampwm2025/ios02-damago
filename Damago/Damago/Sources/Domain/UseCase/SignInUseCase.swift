@@ -6,7 +6,7 @@
 //
 
 protocol SignInUseCase {
-    func signIn() async throws
+    func execute() async throws
 }
 
 final class SignInUseCaseImpl: SignInUseCase {
@@ -16,7 +16,7 @@ final class SignInUseCaseImpl: SignInUseCase {
         self.repository = repository
     }
 
-    func signIn() async throws {
+    func execute() async throws {
         try await repository.signIn()
         try await repository.updateFCMToken(fcmToken: nil)
     }

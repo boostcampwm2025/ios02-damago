@@ -6,12 +6,12 @@
 //
 
 import Combine
-import UIKit
+import Foundation
 
 final class CardGameConfigViewModel: ViewModel {
     struct Input {
         let difficultyChanged: AnyPublisher<Int, Never>
-        let imagesSelected: AnyPublisher<[UIImage], Never>
+        let imagesSelected: AnyPublisher<[Data], Never>
         let imageRemoved: AnyPublisher<Int, Never>
         let selectPhotoButtonDidTap: AnyPublisher<Void, Never>
         let startButtonDidTap: AnyPublisher<Void, Never>
@@ -19,7 +19,7 @@ final class CardGameConfigViewModel: ViewModel {
     
     struct State {
         var difficulty: CardGameDifficulty = .easy
-        var selectedImages: [UIImage] = []
+        var selectedImages: [Data] = []
         var route: Pulse<Route>?
 
         var isValid: Bool {
@@ -57,7 +57,7 @@ final class CardGameConfigViewModel: ViewModel {
     
     enum Route {
         case showImagePicker(limit: Int)
-        case startGame(difficulty: CardGameDifficulty, images: [UIImage])
+        case startGame(difficulty: CardGameDifficulty, images: [Data])
     }
     
     @Published private var state = State()
@@ -100,7 +100,7 @@ final class CardGameConfigViewModel: ViewModel {
             .sink { [weak self] in
                 guard let self = self, self.state.isValid else { return }
                 
-                self.state.route = .init(.startGame(difficulty: state.difficulty, images: state.selectedImages))
+                self.state.route = .init(.startGame(difficulty: self.state.difficulty, images: self.state.selectedImages))
             }
             .store(in: &cancellables)
         

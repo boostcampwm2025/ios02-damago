@@ -7,6 +7,7 @@ import json
 from utils.constants import AVAILABLE_DAMAGO_TYPES, BASIC_DAMAGO_TYPES, get_default_damago_name, XP_TABLE
 from utils.firestore import get_db
 from utils.middleware import get_uid_from_request
+import utils.errors as errors
 
 def generate_code(req: https_fn.Request) -> https_fn.Response:
     """
@@ -62,7 +63,7 @@ def generate_code(req: https_fn.Request) -> https_fn.Response:
             break
 
     if unique_code is None:
-        return https_fn.Response("Unable to generate new code", status=500)
+        return errors.error_response(errors.Internal.UNABLE_TO_GENERATE_NEW_CODE)
 
     # --- [Step 3] 유저 생성 (또는 업데이트) ---
     # fcmToken이 이미 존재할 수 있으므로 덮어쓰지 않도록 주의 (None으로 설정하지 않음)
@@ -110,7 +111,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     target_code = data.get("targetCode")
 
     if not target_code:
-        return https_fn.Response("Missing 'targetCode'", status=400)
+        return errors.error_response(errors.BadRequest.MISSING_TARGET_CODE)
 
     db = get_db()
     users_ref = db.collection("users")
@@ -121,7 +122,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     my_doc = my_doc_ref.get()
 
     if not my_doc.exists:
-        return https_fn.Response("User not found (Token Invalid)", status=404)
+        return errors.error_response(errors.NotFound.USER_TOKEN_INVALID)
     
     my_code = my_doc.to_dict().get("code")
 
@@ -132,7 +133,7 @@ def connect_couple(req: https_fn.Request) -> https_fn.Response:
     target_snapshot = users_ref.where("code", "==", target_code).limit(1).get()
 
     if not target_snapshot:
-        return https_fn.Response("Target user not found (Invalid Code)", status=404)
+        return errors.error_response(errors.NotFound.TARGET_USER_INVALID_CODE)
 
     target_doc = target_snapshot[0]
 
@@ -245,7 +246,7 @@ def withdraw_user(req: https_fn.Request) -> https_fn.Response:
     # 유저 정보 조회
     user_doc = user_ref.get()
     if not user_doc.exists:
-        return https_fn.Response("User not found", status=404)
+        return errors.error_response(errors.NotFound.USER)
 
     user_data = user_doc.to_dict()
     couple_id = user_data.get("coupleID")
